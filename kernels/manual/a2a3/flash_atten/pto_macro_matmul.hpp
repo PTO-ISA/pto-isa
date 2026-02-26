@@ -12,6 +12,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #define PTO_MACRO_MATMUL_HPP
 
 #include <pto/pto-inst.hpp>
+#include <pto/common/memory.hpp>
 
 #define CUBE_K_256 256
 #define CUBE_K_128 128
