@@ -219,16 +219,6 @@ enum class TileLayoutCustom : uint8_t
     NONE,
 };
 
-// ============================================================================
-// ReduceOp: Reduction operators for TREDUCE
-// ============================================================================
-enum class ReduceOp : uint8_t
-{
-    Sum = 0, // Element-wise sum
-    Max = 1, // Element-wise maximum
-    Min = 2, // Element-wise minimum
-};
-
 namespace GlobalTensorDim {
 constexpr int DIM_0 = 0;
 constexpr int DIM_1 = 1;

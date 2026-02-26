@@ -12,6 +12,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <pto/pto-inst.hpp>
 #include <gtest/gtest.h>
 #include "pto/common/type.hpp"
+#include "pto/comm/comm_types.hpp"
 
 using namespace std;
 using namespace PtoTestCommon;
@@ -34,9 +35,9 @@ std::string GetGoldenDir()
 }
 
 template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_>
-void LaunchTReduce(T *src0, T *src1, T *dst, pto::ReduceOp op, void *stream);
+void LaunchTReduce(T *src0, T *src1, T *dst, pto::comm::ReduceOp op, void *stream);
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, pto::ReduceOp op>
+template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, pto::comm::ReduceOp op>
 void test_treduce()
 {
     size_t fileSize = kGRows_ * kGCols_ * sizeof(T);
@@ -97,9 +98,9 @@ void test_treduce()
 // ============================================================================
 TEST_F(TREDUCETest, case1)
 {
-    test_treduce<int32_t, 64, 64, 64, 64, pto::ReduceOp::Max>();
+    test_treduce<int32_t, 64, 64, 64, 64, pto::comm::ReduceOp::Max>();
 }
 TEST_F(TREDUCETest, case2)
 {
-    test_treduce<int32_t, 64, 64, 64, 64, pto::ReduceOp::Sum>();
+    test_treduce<int32_t, 64, 64, 64, 64, pto::comm::ReduceOp::Sum>();
 }

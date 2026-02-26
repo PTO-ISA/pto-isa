@@ -50,17 +50,17 @@ namespace detail {
 
 // Element-wise reduction helper
 template <typename TileData>
-PTO_INTERNAL void ReduceTiles(TileData &acc, TileData &recv, ReduceOp op)
+PTO_INTERNAL void ReduceTiles(TileData &acc, TileData &recv, pto::comm::ReduceOp op)
 {
     // Perform element-wise reduction based on op
     switch (op) {
-        case ReduceOp::Sum:
+        case pto::comm::ReduceOp::Sum:
             TADD(acc, acc, recv);
             break;
-        case ReduceOp::Max:
+        case pto::comm::ReduceOp::Max:
             TMAX(acc, acc, recv);
             break;
-        case ReduceOp::Min:
+        case pto::comm::ReduceOp::Min:
             TMIN(acc, acc, recv);
             break;
         default:
@@ -78,7 +78,7 @@ PTO_INTERNAL int GetRemoteRank(int rootIdx, int remoteOrdinal)
 
 template <typename ParallelGroupType, typename GlobalDstData, typename TileData>
 PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData, TileData &accTileData,
-                               TileData &recvTileData, ReduceOp op)
+                               TileData &recvTileData, pto::comm::ReduceOp op)
 {
     using GlobalSrcData = typename pto::comm::ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
     using T = typename GlobalSrcData::RawDType;
@@ -269,7 +269,7 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
 // ============================================================================
 template <typename ParallelGroupType, typename GlobalDstData, typename TileData>
 PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData, TileData &accTileData,
-                               TileData &pingTile, TileData &pongTile, ReduceOp op)
+                               TileData &pingTile, TileData &pongTile, pto::comm::ReduceOp op)
 {
     using GlobalSrcData = typename pto::comm::ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
     using T = typename GlobalSrcData::RawDType;
