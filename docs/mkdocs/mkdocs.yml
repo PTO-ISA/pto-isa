@@ -2,15 +2,16 @@ site_name: PTO Virtual ISA Architectural Manual
 
 theme:
   name: readthedocs
+  language: en
 
 docs_dir: src
 site_dir: ../../site
 
 plugins:
-  - search
   - gen-files:
       scripts:
         - gen_pages.py
+  - search
 
 markdown_extensions:
   - toc:
@@ -23,6 +24,7 @@ markdown_extensions:
 extra_javascript:
   - assets/javascripts/mathjax.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - assets/javascripts/language-switcher.js
 
 nav:
   - Home: index.md
@@ -44,24 +46,6 @@ nav:
       - Instruction Contract Template: manual/appendix-b-instruction-contract-template.md
       - Diagnostics Taxonomy: manual/appendix-c-diagnostics-taxonomy.md
       - Instruction Family Matrix: manual/appendix-d-instruction-family-matrix.md
-  - PTO Virtual ISA Manual (ZH):
-      - 前言: manual/index_zh.md
-      - 总览: manual/01-overview_zh.md
-      - 执行模型: manual/02-machine-model_zh.md
-      - 状态与类型: manual/03-state-and-types_zh.md
-      - Tile 与 GlobalTensor: manual/04-tiles-and-globaltensor_zh.md
-      - 同步: manual/05-synchronization_zh.md
-      - PTO 汇编 (PTO-AS): manual/06-assembly_zh.md
-      - 指令体系: manual/07-instructions_zh.md
-      - 编程指南: manual/08-programming_zh.md
-      - 虚拟 ISA 与 IR: manual/09-virtual-isa-and-ir_zh.md
-      - 字节码与工具链: manual/10-bytecode-and-toolchain_zh.md
-      - 内存顺序与一致性: manual/11-memory-ordering-and-consistency_zh.md
-      - 后端画像与一致性: manual/12-backend-profiles-and-conformance_zh.md
-      - 术语表: manual/appendix-a-glossary_zh.md
-      - 指令契约模板: manual/appendix-b-instruction-contract-template_zh.md
-      - 诊断分类体系: manual/appendix-c-diagnostics-taxonomy_zh.md
-      - 指令族矩阵: manual/appendix-d-instruction-family-matrix_zh.md
   - Programming Model:
       - Overview: docs/coding/ProgrammingModel.md
       - Tile: docs/coding/Tile.md
@@ -75,38 +59,15 @@ nav:
       - "Example: GEMM": docs/coding/tutorials/gemm.md
       - Optimization: docs/coding/opt.md
       - Debugging: docs/coding/debug.md
-  - Programming Model (ZH):
-      - 总览: docs/coding/README_zh.md
-      - 编程模型: docs/coding/ProgrammingModel_zh.md
-      - Tile: docs/coding/Tile_zh.md
-      - GlobalTensor: docs/coding/GlobalTensor_zh.md
-      - Scalar: docs/coding/Scalar_zh.md
-      - Event: docs/coding/Event_zh.md
-      - 快速上手: docs/coding/tutorial_zh.md
-      - 教程索引: docs/coding/tutorials/README_zh.md
-      - "示例：向量加": docs/coding/tutorials/vec-add_zh.md
-      - "示例：行 Softmax": docs/coding/tutorials/row-softmax_zh.md
-      - "示例：GEMM": docs/coding/tutorials/gemm_zh.md
-      - 优化指南: docs/coding/opt_zh.md
   - ISA Reference:
       - ISA index: docs/isa/README.md
-      - ISA index (ZH): docs/isa/README_zh.md
       - PTO IR ops index: docs/ir/README.md
-      - PTO IR ops index (ZH): docs/ir/README_zh.md
-      - PTO IR ops (L1/L2): docs/ir/PTO-IR-ops.md
-      - PTO IR ops (L1/L2, ZH): docs/ir/PTO-IR-ops_zh.md
       - ISA conventions: docs/isa/conventions.md
-      - ISA conventions (ZH): docs/isa/conventions_zh.md
       - PTO ISA table: docs/PTOISA.md
-      - PTO ISA table (ZH): docs/PTOISA_zh.md
       - Intrinsics header: docs/reference/pto-intrinsics-header.md
-      - Intrinsics header (ZH): docs/reference/pto-intrinsics-header_zh.md
       - PTO-AS spec: docs/grammar/PTO-AS.md
-      - PTO-AS spec (ZH): docs/grammar/PTO-AS_zh.md
       - Grammar conventions: docs/grammar/conventions.md
-      - Grammar conventions (ZH): docs/grammar/conventions_zh.md
       - Grammar index: docs/grammar/README.md
-      - Grammar index (ZH): docs/grammar/README_zh.md
   - Machine Model:
       - Abstract machine: docs/machine/abstract-machine.md
       - Machine index: docs/machine/README.md
@@ -120,7 +81,6 @@ nav:
       - Test scripts: tests/script/README.md
   - Documentation:
       - Docs index: docs/README.md
-      - Docs index (ZH): docs/README_zh.md
       - Build this site: docs/website.md
       - Root README: README.md
   - Full Index: all-pages.md
