@@ -41,7 +41,7 @@ if [ "$ENABLE_A3" = "true" ]; then
   bash run.sh -r $RUN_TYPE -v $CARD_NAME
   cd ../../../../
 
-  cd kernels/manual/a2a3/flash_atten
+  cd kernels/manual/a2a3/gemm_performance
   python3 scripts/gen_data.py
   bash run.sh -r $RUN_TYPE -v $CARD_NAME -n 0 --cases "128,16384,16384,128,128" --qk-preload 2
   cd ../../../../
@@ -50,6 +50,7 @@ if [ "$ENABLE_A3" = "true" ]; then
   python3 scripts/gen_data.py
   bash run.sh -r $RUN_TYPE -v $CARD_NAME
   cd ../../../../
+  echo "run kernels success"
 fi
 
 if [ "$ENABLE_A5" = "true" ]; then
@@ -58,9 +59,16 @@ if [ "$ENABLE_A5" = "true" ]; then
   bash run.sh -r $RUN_TYPE -v $CARD_NAME
   cd ../../../../
 
-  cd kernels/manual/a5/flash_atten
+  cd kernels/manual/a5/matmul_mxfp4_performance
   python3 scripts/gen_data.py
   bash run.sh -r $RUN_TYPE -v $CARD_NAME -n 0 --cases "128,16384,16384,128,128" --qk-preload 2 --mode 1
   cd ../../../../
+
+  cd kernels/manual/a5/matmul_mxfp8_performance
+  python3 scripts/gen_data.py
+  bash run.sh -r $RUN_TYPE -v $CARD_NAME -n 0 --cases "128,16384,16384,128,128" --qk-preload 2 --mode 1
+  cd ../../../../
+  
+  echo "run kernels success"
 fi
 
