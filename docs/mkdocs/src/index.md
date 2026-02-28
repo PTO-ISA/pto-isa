@@ -4,8 +4,7 @@ This site is the **PTO Virtual ISA Architectural Manual**, organized in a PTX/Ti
 
 ## Start here
 
-- Manual entry page (EN): `docs/PTO-Virtual-ISA-Manual.md`
-- Manual entry page (ZH): `docs/PTO-Virtual-ISA-Manual_zh.md`
+- Manual entry page: `docs/PTO-Virtual-ISA-Manual.md`
 - Manual preface and reading order: `manual/index.md`
 - Instruction reference (one page per instruction): `docs/isa/README.md`
 - PTO IR non-ISA ops index: `docs/ir/README.md`

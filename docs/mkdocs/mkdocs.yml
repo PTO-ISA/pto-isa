@@ -24,6 +24,7 @@ markdown_extensions:
 extra_javascript:
   - assets/javascripts/mathjax.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - assets/javascripts/nav-translator.js
   - assets/javascripts/language-switcher.js
 
 nav:
@@ -82,5 +83,4 @@ nav:
   - Documentation:
       - Docs index: docs/README.md
       - Build this site: docs/website.md
-      - Root README: README.md
   - Full Index: all-pages.md
