@@ -20,12 +20,12 @@ AICORE void runTROWEXPANDOP(__gm__ T __out__ *out, __gm__ T __in__ *src0, __gm__
     using GlobStridDim5 = Stride<1, 1, 1, kTCols_, 1>;
     using GlobalMat = GlobalTensor<T, GlobShapeDim5, GlobStridDim5>;
 
-    using GlobShapeVec = Shape<1, 1, 1, 1, kTCols_>;
+    using GlobShapeVec = Shape<1, 1, 1, kTRows_, 1>;
     using GlobStrideVec = Stride<1, 1, 1, 1, 1>;
     using GlobalVec = GlobalTensor<T, GlobShapeVec, GlobStrideVec>;
 
     using TileMat = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    using TileVec = Tile<TileType::Vec, T, 1, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileVec = Tile<TileType::Vec, T, kTRows_, 1, BLayout::ColMajor, -1, -1>;
     TileMat src0Tile(kTRows_, kTCols_);
     TileVec src1Tile(kTRows_, 1);
     TileMat dstTile(kTRows_, kTCols_);
@@ -45,7 +45,7 @@ template <typename T, int kTRows_, int kTCols_>
 void LaunchTROWEXPANDDIV(T *out, T *src0, T *src1, void *stream)
 {
     using TileDst = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    using TileSrc1 = Tile<TileType::Vec, T, 1, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileSrc1 = Tile<TileType::Vec, T, kTRows_, 1, BLayout::ColMajor, -1, -1>;
     if constexpr (std::is_same_v<T, aclFloat16>) {
         runTROWEXPANDOP<half, kTRows_, kTCols_>(
             (half *)(out), (half *)(src0), (half *)(src1),
@@ -60,7 +60,7 @@ template <typename T, int kTRows_, int kTCols_>
 void LaunchTROWEXPANDMUL(T *out, T *src0, T *src1, void *stream)
 {
     using TileDst = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    using TileSrc1 = Tile<TileType::Vec, T, 1, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileSrc1 = Tile<TileType::Vec, T, kTRows_, 1, BLayout::ColMajor, -1, -1>;
     if constexpr (std::is_same_v<T, aclFloat16>) {
         runTROWEXPANDOP<half, kTRows_, kTCols_>(
             (half *)(out), (half *)(src0), (half *)(src1),
@@ -75,7 +75,7 @@ template <typename T, int kTRows_, int kTCols_>
 void LaunchTROWEXPANDSUB(T *out, T *src0, T *src1, void *stream)
 {
     using TileDst = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    using TileSrc1 = Tile<TileType::Vec, T, 1, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileSrc1 = Tile<TileType::Vec, T, kTRows_, 1, BLayout::ColMajor, -1, -1>;
     if constexpr (std::is_same_v<T, aclFloat16>) {
         runTROWEXPANDOP<half, kTRows_, kTCols_>(
             (half *)(out), (half *)(src0), (half *)(src1),
@@ -90,7 +90,7 @@ template <typename T, int kTRows_, int kTCols_>
 void LaunchTROWEXPANDADD(T *out, T *src0, T *src1, void *stream)
 {
     using TileDst = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    using TileSrc1 = Tile<TileType::Vec, T, 1, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileSrc1 = Tile<TileType::Vec, T, kTRows_, 1, BLayout::ColMajor, -1, -1>;
     if constexpr (std::is_same_v<T, aclFloat16>) {
         runTROWEXPANDOP<half, kTRows_, kTCols_>(
             (half *)(out), (half *)(src0), (half *)(src1),
@@ -105,7 +105,7 @@ template <typename T, int kTRows_, int kTCols_>
 void LaunchTROWEXPANDMAX(T *out, T *src0, T *src1, void *stream)
 {
     using TileDst = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    using TileSrc1 = Tile<TileType::Vec, T, 1, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileSrc1 = Tile<TileType::Vec, T, kTRows_, 1, BLayout::ColMajor, -1, -1>;
     if constexpr (std::is_same_v<T, aclFloat16>) {
         runTROWEXPANDOP<half, kTRows_, kTCols_>(
             (half *)(out), (half *)(src0), (half *)(src1),
@@ -120,7 +120,7 @@ template <typename T, int kTRows_, int kTCols_>
 void LaunchTROWEXPANDMIN(T *out, T *src0, T *src1, void *stream)
 {
     using TileDst = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    using TileSrc1 = Tile<TileType::Vec, T, 1, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileSrc1 = Tile<TileType::Vec, T, kTRows_, 1, BLayout::ColMajor, -1, -1>;
     if constexpr (std::is_same_v<T, aclFloat16>) {
         runTROWEXPANDOP<half, kTRows_, kTCols_>(
             (half *)(out), (half *)(src0), (half *)(src1),
@@ -135,7 +135,7 @@ template <typename T, int kTRows_, int kTCols_>
 void LaunchTROWEXPANDEXPDIF(T *out, T *src0, T *src1, void *stream)
 {
     using TileDst = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    using TileSrc1 = Tile<TileType::Vec, T, 1, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileSrc1 = Tile<TileType::Vec, T, kTRows_, 1, BLayout::ColMajor, -1, -1>;
     if constexpr (std::is_same_v<T, aclFloat16>) {
         runTROWEXPANDOP<half, kTRows_, kTCols_>(
             (half *)(out), (half *)(src0), (half *)(src1),
