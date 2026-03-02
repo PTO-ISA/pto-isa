@@ -26,7 +26,7 @@ PTO_INTERNAL void LargeTmpBufferImpl(__ubuf__ T *dstPtr, __ubuf__ T *srcPtr, __u
                                      unsigned srcTailPerRow, unsigned srcTailRepeatNum)
 {
     T minVal = -(0.0 / 0.0);
-    auto loopNum = ((repeatNumPerRow + REPEAT_MAX) - 1) / REPEAT_MAX;
+    auto loopNum = ((repeatNumPerRow + 1 + REPEAT_MAX) - 1) / REPEAT_MAX;
     constexpr uint32_t typeCoef = (sizeof(T) == sizeof(float)) ? FLOAT_DST_STRIDE_COEF : HALF_DST_STRIDE_COEF;
     for (int32_t i = 0; i < validRow; i++) {
         for (int32_t j = 0; j < loopNum; j++) {
@@ -113,7 +113,7 @@ __tf__ AICORE void TSort32Impl(typename DstTileData::TileDType __out__ dst, type
     __ubuf__ T *tmpPtr = (__ubuf__ T *)__cce_get_tile_ptr(tmp);
 
     T minVal = -(0.0 / 0.0);
-    if (srcShapeBytesPerRow * sizeof(float) / sizeof(T) <= MAX_UB_TMP) {
+    if (srcShapeBytesPerRow / sizeof(T) <= MAX_UB_TMP) {
         for (int32_t i = 0; i < validRow; i++) {
             // copy row src cbuf to tmp cbuf
             uint16_t lenBurst = (srcShapeBytesPerRow + BLOCK_SIZE - 1) / BLOCK_SIZE;
