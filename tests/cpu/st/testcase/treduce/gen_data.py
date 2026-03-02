@@ -54,8 +54,8 @@ if __name__ == "__main__":
         os.makedirs(testcases_dir)
 
     case_name_list = [
-        "TReduceTest.case1",
-        "TReduceTest.case2",
+        "TREDUCETest.case1",
+        "TREDUCETest.case2",
     ]
     case_params_list = [
         TReduceParams(np.int32, 64, 64, 64, 64, 64, 64, np.maximum), 
