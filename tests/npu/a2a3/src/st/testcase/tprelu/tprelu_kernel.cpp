@@ -17,14 +17,21 @@ using namespace pto;
 template <typename T, int kTRows_, int kTCols_, int vRows, int vCols>
 __global__ AICORE void runTPrelu(__gm__ T __out__ *out, __gm__ T __in__ *src0, __gm__ T __in__ *src1)
 {
+    constexpr unsigned tmpRow = kTRows_;
+    constexpr unsigned tmpCol = (((kTCols_ + 7) / 8 + 31) / 32) * 32; // 除以8后向上取整，然后向上取32B对齐
+    // tmp的vaild row/col在运算中不生效，不需要打印出来的话不用在意
+    constexpr unsigned tmpVRow = vRows;
+    constexpr unsigned tmpVCol = (vCols + 7) / 8;
+
     using DynShapeDim5 = Shape<1, 1, 1, vRows, vCols>;
     using DynStridDim5 = pto::Stride<1, 1, 1, vCols, 1>;
     using GlobalData = GlobalTensor<T, DynShapeDim5, DynStridDim5>;
     using TileData = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
+    using TileDataTmp = Tile<TileType::Vec, uint8_t, tmpRow, tmpCol, BLayout::RowMajor, -1, -1>;
     TileData src0Tile(vRows, vCols);
     TileData src1Tile(vRows, vCols);
     TileData dstTile(vRows, vCols);
-    TileData tmpTile(vRows, vCols);
+    TileDataTmp tmpTile(tmpVRow, tmpVCol);
     size_t size = kTRows_ * kTCols_ * sizeof(T);
     TASSIGN(src0Tile, 0x0);
     TASSIGN(src1Tile, size);

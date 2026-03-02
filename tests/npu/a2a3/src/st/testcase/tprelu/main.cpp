@@ -79,12 +79,14 @@ void test_tshl()
     aclrtResetDevice(0);
     aclFinalize();
 
-    std::vector<T> golden(fileSize);
-    std::vector<T> devFinal(fileSize);
+    using U = std::conditional_t<std::is_same_v<T, aclFloat16>, _Float16, T>;
+
+    std::vector<U> golden(fileSize);
+    std::vector<U> devFinal(fileSize);
     ReadFile(GetGoldenDir() + "/golden.bin", fileSize, golden.data(), fileSize);
     ReadFile(GetGoldenDir() + "/output.bin", fileSize, devFinal.data(), fileSize);
 
-    bool ret = ResultCmp<T>(golden, devFinal, 0.001f);
+    bool ret = ResultCmp<U>(golden, devFinal, 0.001f);
 
     EXPECT_TRUE(ret);
 }

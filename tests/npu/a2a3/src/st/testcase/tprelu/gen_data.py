@@ -24,6 +24,11 @@ def gen_golden_data_tshl(case_name, param):
     input1 = np.random.uniform(-100, 100, size=h_valid * w_valid).astype(dtype)
     input2 = np.random.uniform(-100, 100, size=h_valid * w_valid).astype(dtype)
 
+    # Set specific values for input1 and input2
+    for i in range(8):
+        input1[i] = dtype('inf')
+        input2[i] = dtype('-inf')
+
     # Perform the andbtraction
     golden = np.where(input1 > 0, input1, input1 * input2).astype(dtype)
 
