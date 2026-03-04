@@ -139,25 +139,63 @@ def run_gen_data(golden_path):
     finally:
         os.chdir(original_dir)
 
-def run_binary(testcase, run_mode, args="all"):
+def find_mpirun():
+    """Find mpirun executable, checking MPI_HOME and common paths."""
+    mpi_home = os.environ.get("MPI_HOME", "")
+    if mpi_home:
+        candidate = os.path.join(mpi_home, "bin", "mpirun")
+        if os.path.isfile(candidate):
+            return candidate
+
+    candidates = [
+        "/usr/local/mpich/bin/mpirun",
+        "/usr/local/bin/mpirun",
+        "/usr/bin/mpirun",
+    ]
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+
+    result = shutil.which("mpirun")
+    if result:
+        return result
+
+    return None
+
+def run_binary(testcase, run_mode, args="all", is_comm=False, nranks=2):
     original_dir = os.getcwd()
     try:
         build_dir = "build/bin/"
         os.chdir(build_dir)
 
+        cmd = ["./" + testcase]
         if args != "all":
             if run_mode == "sim":
                 os.environ["CAMODEL_LOG_PATH"] = f"../{args}"
-            single_case = "--gtest_filter=" + args
-            cmd = ["./" + testcase, single_case]
-            print(f"run single testcase : {args}")
-            output = run_command(cmd)
-            print(output)
-        else : # all
-            cmd = ["./" + testcase]
-            print(f"run testcase : {testcase}")
-            output = run_command(cmd)
-            print(output)
+            cmd.append("--gtest_filter=" + args)
+
+        if is_comm:
+            mpirun = find_mpirun()
+            if not mpirun:
+                raise RuntimeError(
+                    "mpirun not found. Install MPICH/OpenMPI or set MPI_HOME env.\n"
+                    "Also set MPI_LIB_PATH to point to libmpi.so for runtime loading.")
+            mpi_cmd = [mpirun, "-n", str(nranks)]
+            try:
+                ver = subprocess.run([mpirun, "--version"], capture_output=True, text=True)
+                ver_text = ver.stdout + ver.stderr
+                if "open mpi" in ver_text.lower() or "openmpi" in ver_text.lower():
+                    mpi_cmd.append("--allow-run-as-root")
+            except Exception:
+                pass
+            cmd = mpi_cmd + cmd
+            mpi_lib_dir = os.path.dirname(mpirun).replace("/bin", "/lib")
+            if os.path.isdir(mpi_lib_dir):
+                os.environ["MPI_LIB_PATH"] = os.path.join(mpi_lib_dir, "libmpi.so")
+
+        print(f"run command: {' '.join(cmd)}")
+        output = run_command(cmd)
+        print(output)
 
     except Exception as e:
         print(f"run binary failed: {e}")
@@ -174,6 +212,7 @@ def main():
     parser.add_argument("-g", "--gtest_filter", required=False, help="可选 需要执行的具体case名")
     parser.add_argument("-d", "--debug-enable", action='store_true', help="开启debug检查")
     parser.add_argument("-w", "--without-build", action='store_true', help="关闭编译（需要预先编译）")
+    parser.add_argument("-n", "--nranks", type=int, default=2, help="comm测试的MPI rank数量（默认2）")
 
     args = parser.parse_args()
     default_soc_version = "Ascend910B1"
@@ -199,9 +238,9 @@ def main():
         script_path = os.path.abspath(__file__)
         target_dir = os.path.dirname(os.path.dirname(script_path))
 
-        if is_comm:
-            if args.soc_version != "a3":
-                raise ValueError("comm 暂时仅支持 a3")
+        if is_comm and args.soc_version == "a5":
+            target_dir = target_dir + "/npu/a5/comm/st"
+        elif is_comm:
             target_dir = target_dir + "/npu/a2a3/comm/st"
         elif args.soc_version == "a3":
             target_dir = target_dir + "/npu/a2a3/src/st"
@@ -229,7 +268,8 @@ def main():
         run_gen_data(golden_path)
 
         # 执行二进制文件
-        run_binary(testcase, args.run_mode, default_cases)
+        run_binary(testcase, args.run_mode, default_cases,
+                   is_comm=is_comm, nranks=args.nranks)
 
     except Exception as e:
         print(f"run failed: {str(e)}", file=sys.stderr)

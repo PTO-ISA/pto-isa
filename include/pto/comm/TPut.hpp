@@ -75,7 +75,7 @@ PTO_INTERNAL void TPUT_IMPL(GlobalDstData &dstGlobalData, GlobalSrcData &srcGlob
         TLOAD(stagingTileData, srcGlobalData);
         set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
         wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-        TSTORE<TileData, GlobalDstData, atomicType>(dstGlobalData, stagingTileData);
+        TSTORE_IMPL<TileData, GlobalDstData, atomicType>(dstGlobalData, stagingTileData);
         set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
         wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
         return;
@@ -170,7 +170,7 @@ PTO_INTERNAL void TPUT_IMPL(GlobalDstData &dstGlobalData, GlobalSrcData &srcGlob
                         TLOAD(stagingTileData, srcView);
                         set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
                         wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-                        TSTORE<TileData, DstViewT, atomicType>(dstView, stagingTileData);
+                        TSTORE_IMPL<TileData, DstViewT, atomicType>(dstView, stagingTileData);
                         set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
                         wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
                     }
@@ -232,7 +232,7 @@ PTO_INTERNAL void TPUT_IMPL(GlobalDstData &dstGlobalData, GlobalSrcData &srcGlob
         TLOAD(pingTile, srcGlobalData);
         set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
         wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-        TSTORE<TileData, GlobalDstData, atomicType>(dstGlobalData, pingTile);
+        TSTORE_IMPL<TileData, GlobalDstData, atomicType>(dstGlobalData, pingTile);
         set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
         wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
         return;
@@ -341,7 +341,7 @@ PTO_INTERNAL void TPUT_IMPL(GlobalDstData &dstGlobalData, GlobalSrcData &srcGlob
                             DstViewT pendView(dstGlobalData.data() + pendingDstOffset, pendShape, dstChunkStride);
 
                             // Issue TSTORE + TLOAD concurrently (MTE3 and MTE2 in parallel)
-                            TSTORE<TileData, DstViewT, atomicType>(pendView, storeTile);
+                            TSTORE_IMPL<TileData, DstViewT, atomicType>(pendView, storeTile);
                             TLOAD(loadTile, srcView);
 
                             set_flag(PIPE_MTE3, PIPE_MTE2, prevEvent); // storeTile TSTORE done
@@ -381,7 +381,7 @@ PTO_INTERNAL void TPUT_IMPL(GlobalDstData &dstGlobalData, GlobalSrcData &srcGlob
         DynShape lastShape(1, 1, 1, pendingRows, pendingCols);
         DstViewT lastView(dstGlobalData.data() + pendingDstOffset, lastShape, dstChunkStride);
 
-        TSTORE<TileData, DstViewT, atomicType>(lastView, lastTile);
+        TSTORE_IMPL<TileData, DstViewT, atomicType>(lastView, lastTile);
         set_flag(PIPE_MTE3, PIPE_MTE2, lastEvent);
         wait_flag(PIPE_MTE3, PIPE_MTE2, lastEvent);
     }

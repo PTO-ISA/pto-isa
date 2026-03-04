@@ -14,19 +14,22 @@ set -euo pipefail
 # ============================================================================
 usage() {
   cat <<EOF
-Usage: $(basename "$0") [-n NPU_COUNT] [-t TESTCASE]
+Usage: $(basename "$0") [-n NPU_COUNT] [-v VERSION] [-t TESTCASE] [-d]
 
 Options:
   -n NPU_COUNT   Number of NPUs (devices) available: 2, 4, or 8 (default: 8)
                  Only test cases requiring <= NPU_COUNT ranks will run.
+  -v VERSION     SoC version: a3 (Ascend910B, default) or a5 (Ascend910_9599).
   -t TESTCASE    Run only the specified testcase (e.g. tput, treduce).
                  Can be specified multiple times. Default: run all.
+  -d             Enable debug mode (extra logging at each sync point).
   -h             Show this help message.
 
 Examples:
-  $(basename "$0")              # Run all tests with 8 NPUs
-  $(basename "$0") -n 2         # Run only 2-rank tests
-  $(basename "$0") -n 4 -t tput # Run tput tests requiring <= 4 ranks
+  $(basename "$0")                   # Run all tests with 8 NPUs on a3
+  $(basename "$0") -n 2              # Run only 2-rank tests
+  $(basename "$0") -v a5 -n 2 -t tput  # Run tput on A5 with 2 NPUs
+  $(basename "$0") -d -t tput        # Run tput with debug output
 EOF
   exit 0
 }
@@ -35,12 +38,16 @@ EOF
 # Parse arguments
 # ============================================================================
 NPU_COUNT=8
+SOC_VERSION="a3"
+DEBUG_FLAG=""
 declare -a SELECTED_TESTS=()
 
-while getopts "n:t:h" opt; do
+while getopts "n:v:t:dh" opt; do
   case "$opt" in
     n) NPU_COUNT="$OPTARG" ;;
+    v) SOC_VERSION="$OPTARG" ;;
     t) SELECTED_TESTS+=("$OPTARG") ;;
+    d) DEBUG_FLAG="-d" ;;
     h) usage ;;
     *) usage ;;
   esac
@@ -51,44 +58,78 @@ if [[ "$NPU_COUNT" != 2 && "$NPU_COUNT" != 4 && "$NPU_COUNT" != 8 ]]; then
   exit 1
 fi
 
+if [[ "$SOC_VERSION" != "a3" && "$SOC_VERSION" != "a5" ]]; then
+  echo "[ERROR] -v must be a3 or a5 (got: ${SOC_VERSION})" >&2
+  exit 1
+fi
+
 # ============================================================================
-# Build gtest filter per testcase based on NPU_COUNT.
+# Build gtest filter for a specific rank count.
 #
-# Tests that don't follow the *_NRanks / *_Nranks naming convention but
-# require >2 ranks are listed explicitly below.
+# Each test expects an exact MPI world size (ForkAndRunWithHcclRootInfo checks
+# mpiSize == nRanks). The script runs the binary once per distinct rank count,
+# using gtest filters to select only the matching tests each time.
+#
+# Tests following the *_NRanks / *_Nranks naming convention are matched by
+# pattern. Tests without a rank suffix in their names are listed explicitly.
 # ============================================================================
-get_gtest_filter() {
+
+# Tests that need 4 ranks but lack "4Ranks"/"4ranks" in their name.
+KNOWN_4RANK_TESTS_tput="TPut.Vec_FloatSmall:TPut.AtomicAdd_Int32"
+KNOWN_4RANK_TESTS_tgather="TGather.FloatSmall"
+KNOWN_4RANK_TESTS_tscatter="TScatter.FloatSmall"
+KNOWN_4RANK_TESTS_treduce="TReduce.FloatSmall_Sum"
+KNOWN_4RANK_TESTS_tbroadcast="TBroadCast.FloatSmallRoot0"
+
+# Tests that need 8 ranks but lack "8Ranks"/"8ranks" in their name.
+KNOWN_8RANK_TESTS_tput="TPut.Vec_Uint8Small"
+
+get_known_tests() {
   local test_name="$1"
-  local filter="*"
+  local nranks="$2"
+  local varname="KNOWN_${nranks}RANK_TESTS_${test_name}"
+  echo "${!varname:-}"
+}
 
-  # Exclude 8-rank tests when NPU_COUNT < 8
-  if (( NPU_COUNT < 8 )); then
-    filter="${filter}:-*8Ranks*:-*8ranks*"
-    case "$test_name" in
-      tput) filter="${filter}:-TPut.Vec_Uint8Small" ;;
-    esac
-  fi
+get_gtest_filter_for_nranks() {
+  local test_name="$1"
+  local nranks="$2"
 
-  # Exclude 4-rank tests when NPU_COUNT < 4
-  if (( NPU_COUNT < 4 )); then
-    filter="${filter}:-*4Ranks*:-*4ranks*"
-    case "$test_name" in
-      tput)       filter="${filter}:-TPut.Vec_FloatSmall:-TPut.AtomicAdd_Int32" ;;
-      treduce)    filter="${filter}:-TReduce.FloatSmall_Sum" ;;
-      tbroadcast) filter="${filter}:-TBroadCast.FloatSmallRoot0" ;;
-      tgather)    filter="${filter}:-TGather.FloatSmall" ;;
-      tscatter)   filter="${filter}:-TScatter.FloatSmall" ;;
-    esac
-  fi
+  local known4; known4="$(get_known_tests "$test_name" 4)"
+  local known8; known8="$(get_known_tests "$test_name" 8)"
 
-  echo "$filter"
+  case "$nranks" in
+    2)
+      # All tests EXCEPT those needing 4 or 8 ranks.
+      local negative="*4Ranks*:*4ranks*:*8Ranks*:*8ranks*"
+      [[ -n "$known4" ]] && negative="${negative}:${known4}"
+      [[ -n "$known8" ]] && negative="${negative}:${known8}"
+      echo "*-${negative}"
+      ;;
+    4)
+      # Only tests needing exactly 4 ranks.
+      local positive="*4Ranks*:*4ranks*"
+      [[ -n "$known4" ]] && positive="${positive}:${known4}"
+      echo "${positive}"
+      ;;
+    8)
+      # Only tests needing exactly 8 ranks.
+      local positive="*8Ranks*:*8ranks*"
+      [[ -n "$known8" ]] && positive="${positive}:${known8}"
+      echo "${positive}"
+      ;;
+  esac
 }
 
 # ============================================================================
 # Discover testcases
 # ============================================================================
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ST_DIR="${ROOT_DIR}/tests/npu/a2a3/comm/st/testcase"
+if [[ "$SOC_VERSION" == "a5" ]]; then
+  ST_DIR="${ROOT_DIR}/tests/npu/a5/comm/st/testcase"
+else
+  ST_DIR="${ROOT_DIR}/tests/npu/a2a3/comm/st/testcase"
+fi
 
 if [[ ! -d "${ST_DIR}" ]]; then
   echo "[ERROR] testcase dir not found: ${ST_DIR}" >&2
@@ -109,31 +150,46 @@ if [[ "${#tests[@]}" -eq 0 ]]; then
   exit 1
 fi
 
-echo "[INFO] NPU_COUNT=${NPU_COUNT}, running ${#tests[@]} testcase(s): ${tests[*]}"
+echo "[INFO] NPU_COUNT=${NPU_COUNT}, SOC=${SOC_VERSION}, DEBUG=${DEBUG_FLAG:-(off)}, running ${#tests[@]} testcase(s): ${tests[*]}"
 
 # ============================================================================
 # Run
 # ============================================================================
 fail_count=0
+total_runs=0
+
 for t in "${tests[@]}"; do
-  gtest_filter="$(get_gtest_filter "$t")"
+  built=false
+  for nranks in 2 4 8; do
+    if (( nranks > NPU_COUNT )); then continue; fi
 
-  echo "============================================================"
-  echo "[INFO] Running testcase: ${t}  (GTEST_FILTER=${gtest_filter})"
-  echo "============================================================"
+    gtest_filter="$(get_gtest_filter_for_nranks "$t" "$nranks")"
+    [[ -z "$gtest_filter" ]] && continue
 
-  if ! GTEST_FILTER="${gtest_filter}" \
-       python3 "${ROOT_DIR}/tests/script/run_st.py" -r npu -v a3 -t "comm/${t}"; then
-    echo "[ERROR] Testcase failed: ${t}" >&2
-    fail_count=$((fail_count + 1))
-  fi
+    echo "============================================================"
+    echo "[INFO] Running testcase: ${t}  (nranks=${nranks}, GTEST_FILTER=${gtest_filter})"
+    echo "============================================================"
+
+    build_flag=""
+    if $built; then
+      build_flag="-w"
+    fi
+    built=true
+
+    total_runs=$((total_runs + 1))
+    if ! GTEST_FILTER="${gtest_filter}" \
+         python3 "${ROOT_DIR}/tests/script/run_st.py" -r npu -v "${SOC_VERSION}" ${DEBUG_FLAG} ${build_flag} -n "${nranks}" -t "comm/${t}"; then
+      echo "[ERROR] Testcase failed: ${t} (nranks=${nranks})" >&2
+      fail_count=$((fail_count + 1))
+    fi
+  done
 done
 
 echo "============================================================"
 if [[ "${fail_count}" -eq 0 ]]; then
-  echo "[INFO] All ${#tests[@]} comm ST testcase(s) passed (NPU_COUNT=${NPU_COUNT})."
+  echo "[INFO] All ${total_runs} comm ST run(s) passed (NPU_COUNT=${NPU_COUNT}, SOC=${SOC_VERSION})."
   exit 0
 else
-  echo "[ERROR] ${fail_count}/${#tests[@]} testcase(s) failed."
+  echo "[ERROR] ${fail_count}/${total_runs} run(s) failed."
   exit 1
 fi

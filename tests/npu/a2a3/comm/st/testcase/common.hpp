@@ -15,59 +15,100 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <dlfcn.h>
 
-#include <sys/mman.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#include "acl/acl.h"
 
 #include "hccl/hccl_comm.h"
 #include "hccl/hccl_types.h"
 #include "hccl_context.h"
+#include "comm_mpi.h"
 
-#if __has_include("hccl/hcom.h")
-#include "hccl/hcom.h"
+// ============================================================================
+// Debug logging helpers.  Enabled by cmake -DDEBUG_MODE=ON  (defines COMM_DEBUG).
+// Uses COMM_DEBUG instead of _DEBUG to avoid activating PTO's PTO_ASSERT which
+// calls cce::printf (unsupported on A5).
+// ============================================================================
+#ifdef COMM_DEBUG
+#include <chrono>
+#include <iomanip>
+static inline double DbgNowMs()
+{
+    using clk = std::chrono::steady_clock;
+    static const auto g_start = clk::now();
+    return std::chrono::duration<double, std::milli>(clk::now() - g_start).count();
+}
+#define COMM_DBG(fmt, ...)                                                                                      \
+    do {                                                                                                        \
+        std::cerr << "[DBG " << std::fixed << std::setprecision(1) << DbgNowMs() << "ms] " << fmt << std::endl; \
+    } while (0)
+#define COMM_LOG(x)                  \
+    do {                             \
+        std::cerr << x << std::endl; \
+    } while (0)
+#else
+#define COMM_DBG(fmt, ...) ((void)0)
+#define COMM_LOG(x) ((void)0)
 #endif
 
-#if __has_include("hccl/hccl_comm.h")
-#include "hccl/hccl_comm.h"
-#endif
+// Runtime APIs — lower-level device/stream management (from libruntime.so).
+// PyPTO uses rtSetDevice on rank 0 and rtStreamCreate for streams.
+using rtError_t = int32_t;
+using rtStream_t = void *;
+static constexpr int32_t RT_STREAM_PRIORITY_DEFAULT = 0;
+extern "C" rtError_t rtSetDevice(int32_t device);
+extern "C" rtError_t rtStreamCreate(rtStream_t *stream, int32_t priority);
+extern "C" rtError_t rtStreamDestroy(rtStream_t stream);
 
-#if !__has_include("hccl/hcom.h")
+// Internal HCCL APIs — declared here instead of including hcom.h because
+// hcom.h uses internal types (s32 etc.) unavailable under bisheng -xcce.
 extern "C" HcclResult HcclAllocComResourceByTiling(HcclComm comm, void *stream, void *mc2Tiling, void **commContext);
 extern "C" HcclResult HcomGetCommHandleByGroup(const char *group, HcclComm *commHandle);
-#endif
 
-// Mc2 tiling structures passed to HcclAllocComResourceByTiling.
-// Binary layout must match the HCCL internal expectation.
-#pragma pack(push, 8)
-struct Mc2ServerCfg {
-    uint32_t version = 0;
-    uint8_t debugMode = 0;
-    uint8_t sendArgIndex = 0;
-    uint8_t recvArgIndex = 0;
-    uint8_t commOutArgIndex = 0;
-    uint8_t reserved[8] = {};
-};
-#pragma pack(pop)
+using CommTopo = uint32_t;
+extern "C" HcclResult HcomGetL0TopoTypeEx(const char *group, CommTopo *topoType, uint32_t isSetDevice);
+static constexpr uint32_t COMM_IS_NOT_SET_DEVICE = 0;
+static constexpr uint32_t COMM_TOPO_MESH = 0b1u;
 
-#pragma pack(push, 8)
-struct Mc2HcommCfg {
-    uint8_t skipLocalRankCopy = 0;
-    uint8_t skipBufferWindowCopy = 0;
-    uint8_t stepSize = 0;
-    char reserved[13] = {};
-    char groupName[128] = {};
-    char algConfig[128] = {};
-    uint32_t opType = 0;
-    uint32_t reduceType = 0;
-};
-#pragma pack(pop)
+// V2 tiling structures matching PyPTO's hccl_context.h definitions.
+// On A5, PyPTO uses Mc2CommConfigV2 (init.version=100) which routes through HCCL's V2 code
+// path. The V2 path properly fills windowsIn/windowsOut arrays in HcclCombinOpParamA5,
+// unlike the V1 path which only sets windowsOut[0].
 
-struct Mc2CommConfig {
+static constexpr uint32_t MAX_CC_TILING_NUM = 8U;
+static constexpr uint32_t GROUP_NAME_SIZE = 128U;
+static constexpr uint32_t ALG_CONFIG_SIZE = 128U;
+
+struct Mc2InitTilingInner {
     uint32_t version;
-    uint32_t hcommCnt;
-    Mc2ServerCfg serverCfg;
-    Mc2HcommCfg hcommCfg;
+    uint32_t mc2HcommCnt;
+    uint32_t offset[MAX_CC_TILING_NUM];
+    uint8_t debugMode;
+    uint8_t preparePosition;
+    uint16_t queueNum;
+    uint16_t commBlockNum;
+    uint8_t devType;
+    char reserved[17];
+};
+
+struct Mc2cCTilingInner {
+    uint8_t skipLocalRankCopy;
+    uint8_t skipBufferWindowCopy;
+    uint8_t stepSize;
+    uint8_t version;
+    char reserved[9];
+    uint8_t commEngine;
+    uint8_t srcDataType;
+    uint8_t dstDataType;
+    char groupName[GROUP_NAME_SIZE];
+    char algConfig[ALG_CONFIG_SIZE];
+    uint32_t opType;
+    uint32_t reduceType;
+};
+
+struct Mc2CommConfigV2 {
+    Mc2InitTilingInner init;
+    Mc2cCTilingInner inner;
 };
 
 // ============================================================================
@@ -87,8 +128,11 @@ AICORE inline __gm__ T *HcclRemotePtr(__gm__ HcclDeviceContext *ctx, __gm__ T *l
 // ============================================================================
 inline void HcclHostBarrier(HcclComm comm, aclrtStream stream)
 {
-    HcclBarrier(comm, stream);
-    aclrtSynchronizeStream(stream);
+    COMM_DBG("  HcclHostBarrier: calling HcclBarrier ...");
+    HcclResult hret = HcclBarrier(comm, stream);
+    COMM_DBG("  HcclHostBarrier: HcclBarrier returned " << (int)hret << ", syncing stream ...");
+    aclError aret = aclrtSynchronizeStream(stream);
+    COMM_DBG("  HcclHostBarrier: stream sync done (acl=" << (int)aret << ")");
 }
 
 inline void *WindowAlloc(uint64_t windowBase, size_t &offset, size_t bytes)
@@ -103,7 +147,7 @@ inline void *WindowAlloc(uint64_t windowBase, size_t &offset, size_t bytes)
 // ============================================================================
 struct TestContext {
     int32_t deviceId{-1};
-    aclrtStream stream{nullptr};
+    rtStream_t stream{nullptr};
     int aclStatus{0};
     HcclComm comm{nullptr};
 
@@ -116,22 +160,20 @@ struct TestContext {
             std::cerr << "[ERROR] n_devices and n_ranks must be > 0\n";
             return false;
         }
+
         deviceId = rankId % nDevices + firstDeviceId;
 
-        aclInit(nullptr);
-        aclStatus = aclrtSetDevice(deviceId);
-        if (aclStatus != 0) {
-            std::cerr << "[ERROR] aclrtSetDevice(" << deviceId << ") failed: " << aclStatus << "\n";
-            return false;
-        }
-        aclStatus = aclrtCreateStream(&stream);
-        if (aclStatus != 0) {
-            std::cerr << "[ERROR] aclrtCreateStream failed: " << aclStatus << "\n";
+        int32_t rtRet = rtStreamCreate(&stream, RT_STREAM_PRIORITY_DEFAULT);
+        COMM_LOG("[INIT] Rank " << rankId << ": rtStreamCreate -> " << rtRet);
+        if (rtRet != 0) {
+            std::cerr << "[ERROR] rtStreamCreate failed: " << rtRet << "\n";
             return false;
         }
 
+        COMM_LOG("[INIT] Rank " << rankId << ": HcclCommInitRootInfo (nRanks=" << nRanks << ") ...");
         HcclResult hret =
             HcclCommInitRootInfo(static_cast<uint32_t>(nRanks), rootInfo, static_cast<uint32_t>(rankId), &comm);
+        COMM_LOG("[INIT] Rank " << rankId << ": HcclCommInitRootInfo -> " << (int)hret);
         if (hret != HCCL_SUCCESS) {
             std::cerr << "[ERROR] HcclCommInitRootInfo failed: " << hret << std::endl;
             return false;
@@ -139,37 +181,79 @@ struct TestContext {
 
         char group[128] = {};
         hret = HcclGetCommName(comm, group);
+        COMM_LOG("[INIT] Rank " << rankId << ": HcclGetCommName -> " << (int)hret << " group=\"" << group << "\"");
         if (hret != HCCL_SUCCESS) {
             std::cerr << "[ERROR] HcclGetCommName failed: " << hret << std::endl;
             return false;
         }
 
+        CommTopo topoRet = 0;
+        hret = HcomGetL0TopoTypeEx(group, &topoRet, COMM_IS_NOT_SET_DEVICE);
+        COMM_LOG("[INIT] Rank " << rankId << ": HcomGetL0TopoTypeEx -> " << (int)hret << " topo=" << topoRet
+                                << (topoRet == COMM_TOPO_MESH ? " (MESH)" : " (RING/other)"));
+        if (hret != HCCL_SUCCESS) {
+            std::cerr << "[ERROR] HcomGetL0TopoTypeEx failed: " << hret << std::endl;
+            return false;
+        }
+
         HcclComm commHandle = nullptr;
         hret = HcomGetCommHandleByGroup(group, &commHandle);
+        COMM_LOG("[INIT] Rank " << rankId << ": HcomGetCommHandleByGroup -> " << (int)hret);
         if (hret != HCCL_SUCCESS) {
             std::cerr << "[ERROR] HcomGetCommHandleByGroup failed: " << hret << std::endl;
             return false;
         }
 
-        Mc2CommConfig tilingCfg{};
-        tilingCfg.version = 2;
-        tilingCfg.hcommCnt = 1;
-        tilingCfg.hcommCfg.opType = 6; // AllToAll
-        std::strncpy(tilingCfg.hcommCfg.groupName, group, sizeof(tilingCfg.hcommCfg.groupName) - 1);
-        std::strncpy(tilingCfg.hcommCfg.algConfig, "AllGather=level0:ring", sizeof(tilingCfg.hcommCfg.algConfig) - 1);
+        CommMpiBarrier();
+        COMM_LOG("[INIT] Rank " << rankId << ": MPI barrier after HCCL comm init done");
+
+        // Use V2 tiling matching PyPTO's TilingStructV2 for A5 (DAV_3510).
+        // init.version=100 routes through HCCL's V2 code path which properly fills
+        // windowsIn/windowsOut arrays in HcclCombinOpParamA5.
+        Mc2CommConfigV2 tiling{};
+        memset(&tiling, 0, sizeof(tiling));
+
+        tiling.init.version = 100U;
+        tiling.init.mc2HcommCnt = 1U;
+        tiling.init.commBlockNum = 48U;
+        tiling.init.devType = 4U;
+        tiling.init.offset[0] =
+            static_cast<uint32_t>(reinterpret_cast<uint64_t>(&tiling.inner) - reinterpret_cast<uint64_t>(&tiling.init));
+
+        tiling.inner.opType = 18U;
+        tiling.inner.commEngine = 3U;
+        tiling.inner.version = 1U;
+        strncpy(tiling.inner.groupName, group, GROUP_NAME_SIZE - 1);
+        strncpy(tiling.inner.algConfig, "BatchWrite=level0:fullmesh", ALG_CONFIG_SIZE - 1);
+
+        COMM_LOG("[INIT] Rank " << rankId << ": tiling V2: init.version=100, inner.opType=18"
+                                << ", inner.commEngine=3, sizeof(Mc2CommConfigV2)=" << sizeof(Mc2CommConfigV2));
 
         void *ctxPtr = nullptr;
-        hret = HcclAllocComResourceByTiling(commHandle, stream, &tilingCfg, &ctxPtr);
+        COMM_LOG("[INIT] Rank " << rankId << ": HcclAllocComResourceByTiling (V2 tiling, topo=" << topoRet << ") ...");
+        hret = HcclAllocComResourceByTiling(commHandle, stream, &tiling, &ctxPtr);
+        COMM_LOG("[INIT] Rank " << rankId << ": HcclAllocComResourceByTiling -> " << static_cast<int>(hret)
+                                << " ctxPtr=" << ctxPtr);
         if (hret != HCCL_SUCCESS || ctxPtr == nullptr) {
             std::cerr << "[ERROR] HcclAllocComResourceByTiling failed: " << hret << std::endl;
             return false;
         }
+
         deviceCtx = reinterpret_cast<HcclDeviceContext *>(ctxPtr);
+        aclError aRet = aclrtMemcpy(&hostCtx, sizeof(hostCtx), deviceCtx, sizeof(hostCtx), ACL_MEMCPY_DEVICE_TO_HOST);
+        COMM_LOG("[INIT] Rank " << rankId << ": aclrtMemcpy(deviceCtx->hostCtx) -> " << static_cast<int>(aRet));
+        if (aRet != ACL_SUCCESS) {
+            std::cerr << "[ERROR] aclrtMemcpy(deviceCtx->hostCtx) failed: " << static_cast<int>(aRet) << std::endl;
+            return false;
+        }
 
-        aclrtMemcpy(&hostCtx, sizeof(hostCtx), deviceCtx, sizeof(hostCtx), ACL_MEMCPY_DEVICE_TO_HOST);
-
-        std::cout << "[INFO] Rank " << rankId << " hccl init OK, winSize=" << hostCtx.winSize
-                  << " windowsIn[self]=" << std::hex << hostCtx.windowsIn[rankId] << std::dec << std::endl;
+        COMM_LOG("[INFO] Rank " << rankId << " hccl init OK"
+                                << " rankId=" << hostCtx.rankId << " rankNum=" << hostCtx.rankNum
+                                << " winSize=" << hostCtx.winSize);
+        for (uint32_t i = 0; i < hostCtx.rankNum && i < HCCL_MAX_RANK_NUM; ++i) {
+            COMM_LOG("[INFO] Rank " << rankId << ": windowsIn[" << i << "]=0x" << std::hex << hostCtx.windowsIn[i]
+                                    << " windowsOut[" << i << "]=0x" << hostCtx.windowsOut[i] << std::dec);
+        }
         return true;
     }
 
@@ -179,7 +263,10 @@ struct TestContext {
             HcclCommDestroy(comm);
             comm = nullptr;
         }
-        aclStatus |= aclrtDestroyStream(stream);
+        if (stream != nullptr) {
+            rtStreamDestroy(stream);
+            stream = nullptr;
+        }
         aclStatus |= aclrtResetDevice(deviceId);
         aclStatus |= aclFinalize();
         return (aclStatus == 0);
@@ -187,96 +274,67 @@ struct TestContext {
 };
 
 // ============================================================================
-// ForkAndRunWithHcclRootInfo: Fork children, rank-0 child generates
-// HcclRootInfo and shares it with siblings via mmap'd shared memory.
+// ForkAndRunWithHcclRootInfo: MPI-based multi-rank test execution.
+//
+// Requires the binary to be launched via: mpirun -n <nRanks> ./test_binary
+// Each MPI process runs the perRankFn for its assigned rank.
+// Rank 0 generates HcclRootInfo and broadcasts it to all ranks via MPI_Bcast.
+// MPI_Barrier ensures all ranks are synchronized before HCCL operations.
 // ============================================================================
 template <typename Func>
 inline bool ForkAndRunWithHcclRootInfo(int nRanks, int firstRankId, int firstDeviceId, Func &&perRankFn)
 {
-    constexpr int kBootstrapPollUs = 1000;
-    constexpr int kBootstrapTimeoutMs = 30000;
+    int mpiRank = CommMpiRank();
+    int mpiSize = CommMpiSize();
 
-    // Query available device count before forking; skip early if insufficient.
-    aclInit(nullptr);
-    uint32_t deviceCount = 0;
-    aclrtGetDeviceCount(&deviceCount);
-    int maxDeviceId = firstDeviceId + (nRanks > 0 ? (nRanks - 1) : 0);
-    if (static_cast<uint32_t>(maxDeviceId) >= deviceCount) {
-        std::cerr << "[SKIP] Need devices [" << firstDeviceId << ".." << maxDeviceId << "] but only " << deviceCount
-                  << " available, skipping.\n";
-        return true;
-    }
-
-    struct SharedBootstrap {
-        HcclRootInfo rootInfo;
-        // 0: initializing, 1: ready, -1: failed
-        volatile int state;
-    };
-
-    SharedBootstrap *shared = static_cast<SharedBootstrap *>(
-        mmap(nullptr, sizeof(SharedBootstrap), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0));
-    if (shared == MAP_FAILED) {
-        std::cerr << "[ERROR] mmap for SharedBootstrap failed" << std::endl;
+    if (mpiSize != nRanks) {
+        if (mpiRank == 0) {
+            std::cerr << "[ERROR] MPI world size (" << mpiSize << ") != expected nRanks (" << nRanks
+                      << "). Launch with: mpirun -n " << nRanks << " ./test_binary" << std::endl;
+        }
         return false;
     }
-    shared->state = 0;
 
-    std::vector<pid_t> pids;
-    for (int r = 0; r < nRanks; ++r) {
-        pid_t pid = fork();
-        if (pid == 0) {
-            int rankId = firstRankId + r;
+    int rankId = firstRankId + mpiRank;
+    if (nRanks <= 0) {
+        return false;
+    }
+    int deviceId = rankId % nRanks + firstDeviceId;
 
-            if (r == 0) {
-                aclInit(nullptr);
-                aclrtSetDevice(firstDeviceId);
+    constexpr int kAclRepeatInit = 100002;
+    aclError aRet = aclInit(nullptr);
+    if (aRet != ACL_SUCCESS && static_cast<int>(aRet) != kAclRepeatInit) {
+        std::cerr << "[ERROR] Rank " << mpiRank << ": aclInit failed: " << static_cast<int>(aRet) << std::endl;
+        return false;
+    }
 
-                HcclResult hret = HcclGetRootInfo(&shared->rootInfo);
-                if (hret != HCCL_SUCCESS) {
-                    __sync_synchronize();
-                    shared->state = -1;
-                    __sync_synchronize();
-                    std::cerr << "[ERROR] HcclGetRootInfo failed: " << hret << std::endl;
-                    _exit(1);
-                }
+    if (mpiRank == 0) {
+        int32_t rtRet = rtSetDevice(deviceId);
+        COMM_LOG("[INIT] Rank 0: rtSetDevice(" << deviceId << ") -> " << rtRet);
+    }
 
-                __sync_synchronize();
-                shared->state = 1;
-                __sync_synchronize();
-            } else {
-                int waitUs = 0;
-                while (shared->state == 0 && waitUs < (kBootstrapTimeoutMs * 1000)) {
-                    usleep(kBootstrapPollUs);
-                    waitUs += kBootstrapPollUs;
-                }
-                __sync_synchronize();
+    aRet = aclrtSetDevice(deviceId);
+    if (aRet != ACL_SUCCESS) {
+        std::cerr << "[ERROR] Rank " << mpiRank << ": aclrtSetDevice(" << deviceId
+                  << ") failed: " << static_cast<int>(aRet) << std::endl;
+        return false;
+    }
 
-                if (shared->state != 1) {
-                    std::cerr << "[ERROR] bootstrap rootInfo wait failed, state=" << shared->state
-                              << ", waited_us=" << waitUs << std::endl;
-                    _exit(1);
-                }
-            }
-
-            const bool ok = perRankFn(rankId, &shared->rootInfo);
-            _exit(ok ? 0 : 1);
-        } else if (pid > 0) {
-            pids.push_back(pid);
-        } else {
-            std::cerr << "[ERROR] fork() failed for rank " << r << std::endl;
-            munmap(shared, sizeof(SharedBootstrap));
+    HcclRootInfo rootInfo{};
+    if (mpiRank == 0) {
+        COMM_LOG("[INIT] Rank 0: calling HcclGetRootInfo ...");
+        HcclResult hret = HcclGetRootInfo(&rootInfo);
+        COMM_LOG("[INIT] Rank 0: HcclGetRootInfo -> " << (int)hret);
+        if (hret != HCCL_SUCCESS) {
+            std::cerr << "[ERROR] HcclGetRootInfo failed: " << hret << std::endl;
             return false;
         }
     }
 
-    bool success = true;
-    for (pid_t p : pids) {
-        int status = 0;
-        waitpid(p, &status, 0);
-        if (!(WIFEXITED(status) && WEXITSTATUS(status) == 0)) {
-            success = false;
-        }
-    }
-    munmap(shared, sizeof(SharedBootstrap));
-    return success;
+    CommMpiBcast(&rootInfo, HCCL_ROOT_INFO_BYTES, COMM_MPI_CHAR, 0);
+    CommMpiBarrier();
+
+    COMM_LOG("[INIT] Rank " << mpiRank << ": rootInfo broadcast complete, proceeding to test");
+
+    return perRankFn(rankId, &rootInfo);
 }
