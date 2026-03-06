@@ -27,6 +27,7 @@ AICORE void runTPARTADD(__gm__ float __out__ *out, __gm__ float __in__ *src0, __
     using DynShapeDim5 = Shape<1, 1, 1, kRows, kCols>;
     using DynStridDim5 = Stride<1, 1, 1, kCols, 1>;
     using GlobalData = GlobalTensor<float, DynShapeDim5, DynStridDim5>;
+    using GlobalData1 = GlobalTensor<float, Shape<1, 1, 1, kValidRows1, kValidCols1>, DynStridDim5>;
 
     using TileT = Tile<TileType::Vec, float, kRows, kCols, BLayout::RowMajor, -1, -1>;
     TileT src0Tile(kRows, kCols);
@@ -34,7 +35,7 @@ AICORE void runTPARTADD(__gm__ float __out__ *out, __gm__ float __in__ *src0, __
     TileT dstTile(kRows, kCols);
 
     GlobalData src0Global(src0);
-    GlobalData src1Global(src1);
+    GlobalData1 src1Global(src1);
     GlobalData dstGlobal(out);
 
     TLOAD(src0Tile, src0Global);

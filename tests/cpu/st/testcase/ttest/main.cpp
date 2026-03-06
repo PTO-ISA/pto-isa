@@ -35,7 +35,7 @@ std::string GetGoldenDir()
 template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_>
 bool LaunchTTest(T *src, int32_t cmpValue, pto::comm::WaitCmp cmp, void *stream);
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_>
+template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, pto::comm::WaitCmp cmp>
 void test_ttest()
 {
     size_t fileSize = kGRows_ * kGCols_ * sizeof(T);
@@ -55,15 +55,18 @@ void test_ttest()
     CHECK_RESULT_GTEST(ReadFile(GetGoldenDir() + "/input.bin", fileSize, srcHost, fileSize));
 
     aclrtMemcpy(srcDevice, fileSize, srcHost, fileSize, ACL_MEMCPY_HOST_TO_DEVICE);
-    int32_t cmpValue;
+    int32_t cmpValue[2];
     std::string cmpFileName = GetGoldenDir() + "/cmp_file.bin";
     std::ifstream cmpFile(cmpFileName, std::ios::binary);
 
-    cmpFile.read(reinterpret_cast<char *>(&cmpValue), 4);
+    cmpFile.read(reinterpret_cast<char *>(&cmpValue), sizeof(cmpValue));
     cmpFile.close();
 
-    bool outputTest =
-        LaunchTTest<T, kGRows_, kGCols_, kTRows_, kTCols_>(srcDevice, cmpValue, pto::comm::WaitCmp::LE, stream);
+    bool outputTestTrue = LaunchTTest<T, kGRows_, kGCols_, kTRows_, kTCols_>(srcDevice, cmpValue[0], cmp, stream);
+
+    aclrtSynchronizeStream(stream);
+
+    bool outputTestFalse = LaunchTTest<T, kGRows_, kGCols_, kTRows_, kTCols_>(srcDevice, cmpValue[1], cmp, stream);
 
     aclrtSynchronizeStream(stream);
 
@@ -74,31 +77,38 @@ void test_ttest()
     aclrtResetDevice(0);
     aclFinalize();
 
-    bool goldenValue;
+    bool goldenValue[2];
     std::string goldenFileName = GetGoldenDir() + "/golden.bin";
     std::ifstream goldenFile(goldenFileName, std::ios::binary);
 
     goldenFile.read(reinterpret_cast<char *>(&goldenValue), 1);
     goldenFile.close();
 
-    bool ret = goldenValue == outputTest;
-
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(goldenValue[0] == outputTestTrue);
+    EXPECT_TRUE(goldenValue[1] == outputTestFalse);
 }
 
 TEST_F(TTESTTest, case1)
 {
-    test_ttest<int32_t, 64, 64, 64, 64>();
+    test_ttest<int32_t, 64, 64, 64, 64, pto::comm::WaitCmp::LE>();
 }
 TEST_F(TTESTTest, case2)
 {
-    test_ttest<int32_t, 64, 64, 64, 64>();
+    test_ttest<int32_t, 64, 64, 64, 64, pto::comm::WaitCmp::GE>();
 }
 TEST_F(TTESTTest, case3)
 {
-    test_ttest<int32_t, 64, 64, 64, 64>();
+    test_ttest<int32_t, 64, 64, 64, 64, pto::comm::WaitCmp::EQ>();
 }
 TEST_F(TTESTTest, case4)
 {
-    test_ttest<int32_t, 16, 256, 16, 256>();
+    test_ttest<int32_t, 16, 256, 16, 256, pto::comm::WaitCmp::LE>();
+}
+TEST_F(TTESTTest, case5)
+{
+    test_ttest<int32_t, 16, 256, 16, 256, pto::comm::WaitCmp::GE>();
+}
+TEST_F(TTESTTest, case6)
+{
+    test_ttest<int32_t, 16, 256, 16, 256, pto::comm::WaitCmp::EQ>();
 }

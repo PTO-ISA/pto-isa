@@ -20,18 +20,28 @@ def gen_golden_data(case_name, param):
     row, col = [param.tile_row, param.tile_col] 
     row_valid, col_valid = [param.valid_row, param.valid_col]
 
-    #Generate random input arrays
-    input_arr = np.random.randint(1, 3, size=[row, col]).astype(dtype)
-    cmp_value = np.random.randint(0, 6, size=(1, 1)).astype(dtype)
+    #Generate input data
+    if param.cmp == "LE":
+        input_arr = np.random.randint(1, 100, size=[row, col]).astype(dtype)
+        threshold_true = input_arr.max()
+        threshold_false = input_arr.min()
+    elif param.cmp == "GE":
+        input_arr = np.random.randint(1, 100, size=[row, col]).astype(dtype)
+        threshold_true = input_arr.min()
+        threshold_false = input_arr.max()
+    elif param.cmp == "EQ":
+        input_arr = np.ones([row, col]).astype(dtype)
+        threshold_true = 1
+        threshold_false = 2
+
     with open("./cmp_file.bin", 'wb') as f:
-        f.write(struct.pack('i', cmp_value[0, 0]))
-    valid = np.all(input_arr <= cmp_value[0, 0])
+        f.write(struct.pack('ii', threshold_true, threshold_false))
 
     #Save the input and golden data to binary files
     input_arr.tofile("input.bin") 
     
     with open("./golden.bin", 'wb') as f:
-        f.write(struct.pack('?', valid))
+        f.write(struct.pack('??', True, False))
 
 
 class TTestParams:
@@ -54,21 +64,17 @@ if __name__ == "__main__":
     if not os.path.exists(testcases_dir):
         os.makedirs(testcases_dir)
 
-    case_name_list = [
-        "TTESTTest.case1",
-        "TTESTTest.case2",
-        "TTESTTest.case3",
-        "TTESTTest.case4",
-    ]
     case_params_list = [
         TTestParams(np.int32, 64, 64, 64, 64, 64, 64, 'LE'), 
-        TTestParams(np.int32, 64, 64, 64, 64, 64, 64, 'LE'), 
-        TTestParams(np.int32, 64, 64, 64, 64, 64, 64, 'LE'), 
-        TTestParams(np.int32, 16, 256, 16, 256, 16, 256, 'LE')
+        TTestParams(np.int32, 64, 64, 64, 64, 64, 64, 'GE'), 
+        TTestParams(np.int32, 64, 64, 64, 64, 64, 64, 'EQ'), 
+        TTestParams(np.int32, 16, 256, 16, 256, 16, 256, 'LE'),
+        TTestParams(np.int32, 16, 256, 16, 256, 16, 256, 'GE'),
+        TTestParams(np.int32, 16, 256, 16, 256, 16, 256, 'EQ'),
     ]
 
     for i, param in enumerate(case_params_list):
-        case_name = case_name_list[i]
+        case_name = f"TTESTTest.case{i+1}"
         if not os.path.exists(case_name):
             os.makedirs(case_name)
         original_dir = os.getcwd()
