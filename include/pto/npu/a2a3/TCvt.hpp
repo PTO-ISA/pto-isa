@@ -76,7 +76,7 @@ constexpr const size_t FP16_INT8_TEMP_BUFFER_SIZE = REPEAT_MAX * 256;
 
 // PyTorch alignment for edge cases (inf, -inf, nan, overflow)
 // 1 = PyTorch-compatible (uses NonSatTorch), 0 = standard (faster)
-#define EDGE_CASE_ALIGN_ENABLE 1
+#define EDGE_CASE_ALIGN_ENABLE 0
 
 // FP32 -> FP16 conversion
 template <typename TileDataD, typename TileDataS>
