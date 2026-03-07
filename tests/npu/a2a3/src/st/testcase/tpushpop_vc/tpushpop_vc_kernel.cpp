@@ -51,9 +51,9 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ OutT *out, __gm__ InT *srcA, _
     using MatTileCons =
         Tile<TileType::Mat, OutT, TILE_K, TILE_N, BLayout::ColMajor, TILE_K, TILE_N, SLayout::RowMajor, 512>;
 
-    using MatFIFO = DataFIFO<OutT, FIFOType::GM_FIFO, FIFO_DEPTH, FIFO_PERIOD>;
     using MatPipe = TPipe<FLAG_ID, FIFOType::GM_FIFO, FIFO_DEPTH, FIFO_PERIOD, VecTileProd, MatTileCons,
                           TSyncOpType::TSTORE_V2GM, TSyncOpType::TLOAD>;
+    MatPipe mPipe(fifoMem);
 
     constexpr uint32_t blockAlign = C0_SIZE_BYTE / sizeof(InT);
     constexpr uint32_t ALIGNED_M = CeilAlign<uint32_t>(TOTAL_M, 16);
@@ -77,8 +77,6 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ OutT *out, __gm__ InT *srcA, _
     using ScaleTile = Tile<TileType::Vec, OutT, HALF_TILE_K, 8, BLayout::RowMajor, -1, -1>;
     using OffsetTile = Tile<TileType::Vec, OutT, HALF_TILE_K, 8, BLayout::RowMajor, -1, -1>;
 
-    MatFIFO fifo(fifoMem);
-
     if constexpr (DAV_VEC) {
         QuantTile quantTile;
         VecTileProd dequantTile;
@@ -88,8 +86,6 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ OutT *out, __gm__ InT *srcA, _
         TASSIGN(dequantTile, 0x10000);
         TASSIGN(scaleTile, 0x20000);
         TASSIGN(offsetTile, 0x28000);
-
-        typename MatPipe::Producer prod;
 
         set_flag(PIPE_V, PIPE_MTE2, EVENT_ID1);
         set_flag(PIPE_MTE3, PIPE_V, EVENT_ID1);
@@ -104,11 +100,6 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ OutT *out, __gm__ InT *srcA, _
         size_t entryOffsetVal = subBlockIdx * HALF_TILE_K * TILE_N * sizeof(OutT);
 
         for (int k_tile = 0; k_tile < NUM_K_TILES; k_tile++) {
-            prod.setTileId(k_tile, 0);
-            prod.setAllocateStatus(k_tile >= FIFO_DEPTH);
-            prod.setRecordStatus(true);
-            prod.setEntryOffset(entryOffsetVal);
-
             GlobalQuantB globalQuantB(quantB + k_tile * TILE_K * TILE_N + subBlockIdx * HALF_TILE_K * TILE_N);
             GlobalScaleOffset globalScale(scale + k_tile * TILE_K + subBlockIdx * HALF_TILE_K);
             GlobalScaleOffset globalOffset(offset + k_tile * TILE_K + subBlockIdx * HALF_TILE_K);
@@ -131,8 +122,11 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ OutT *out, __gm__ InT *srcA, _
             set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
             wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
 
-            TPUSH(prod, dequantTile, fifo);
-
+            mPipe.prod.setTileId(k_tile, 0);
+            mPipe.prod.setAllocateStatus(k_tile >= FIFO_DEPTH);
+            mPipe.prod.setRecordStatus(true);
+            mPipe.prod.setEntryOffset(entryOffsetVal);
+            TPUSH(dequantTile, mPipe);
             set_flag(PIPE_MTE3, PIPE_V, EVENT_ID1);
         }
 
@@ -161,16 +155,16 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ OutT *out, __gm__ InT *srcA, _
         set_flag(PIPE_M, PIPE_MTE1, EVENT_ID1);
 
         for (int k_tile = 0; k_tile < NUM_K_TILES; k_tile++) {
-            cons.setTileId(k_tile, 0);
-            cons.setWaitStatus(true);
-            cons.setFreeStatus(k_tile + FIFO_DEPTH < NUM_K_TILES);
-
             GlobalA globalA(srcA + k_tile * TILE_K);
 
             wait_flag(PIPE_MTE1, PIPE_MTE2, EVENT_ID1);
 
             TLOAD(aMatTile, globalA);
-            TPOP(cons, bMatTile, fifo);
+
+            mPipe.cons.setTileId(k_tile, 0);
+            mPipe.cons.setWaitStatus(true);
+            mPipe.cons.setFreeStatus(k_tile + FIFO_DEPTH < NUM_K_TILES);
+            TPOP(bMatTile, mPipe);
 
             set_flag(PIPE_MTE2, PIPE_MTE1, EVENT_ID0);
             wait_flag(PIPE_MTE2, PIPE_MTE1, EVENT_ID0);

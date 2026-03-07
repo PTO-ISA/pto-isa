@@ -43,25 +43,12 @@ PTO_INTERNAL void TPOP_IMPL(PipeCons &cons, TileDataSrc &tile, DataFiFo &fifo)
     }
 }
 
-template <typename Pipe, typename TileData>
+template <typename TileData, typename Pipe>
 PTO_INTERNAL void TPOP_IMPL(TileData &tile, Pipe &pipe)
 {
-    // 1. Cross-Core: Wait for Data
-    bool isWait = pipe.cons.getWaitStatus();
-    if (isWait) {
-        pipe.cons.wait();
-    }
-
-    // 2. Address Calculation & Pop
-    pipe.cons.pop(pipe.fifo, tile);
-    // 3. Cross-Core: Free Space
-    bool isFree = pipe.cons.getFreeStatus();
-    if (isFree) {
-        pipe.cons.free();
-    }
+    TPOP_IMPL(pipe.cons, tile, pipe.fifo);
 }
 
-// Fallback overload for consumer-like objects
 template <typename Pipe>
 PTO_INTERNAL void TFREE_IMPL(Pipe &pipe)
 {

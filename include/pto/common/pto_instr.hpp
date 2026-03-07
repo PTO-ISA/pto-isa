@@ -1438,11 +1438,27 @@ PTO_INST RecordEvent TPUSH(PipeProd &prod, TileData &tile, DataFifo &fifo, WaitE
     return {};
 }
 
+template <typename TileData, typename Pipe, typename... WaitEvents>
+PTO_INST RecordEvent TPUSH(TileData &tile, Pipe &pipe, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MAP_INSTR_IMPL(TPUSH, tile, pipe);
+    return {};
+}
+
 template <typename PipeCon, typename TileData, typename DataFifo, typename... WaitEvents>
 PTO_INST RecordEvent TPOP(PipeCon &cons, TileData &tile, DataFifo &fifo, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TPOP, cons, tile, fifo);
+    return {};
+}
+
+template <typename TileData, typename Pipe, typename... WaitEvents>
+PTO_INST RecordEvent TPOP(TileData &tile, Pipe &pipe, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MAP_INSTR_IMPL(TPOP, tile, pipe);
     return {};
 }
 

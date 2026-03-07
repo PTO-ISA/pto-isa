@@ -55,9 +55,9 @@ __global__ AICORE void runTPushPopMatmulAdd(__gm__ OutT *out, __gm__ InT *srcA, 
     using BiasTile = Tile<TileType::Vec, OutT, VEC_M, TILE_N, BLayout::RowMajor, VEC_M, TILE_N>;
     using OutTile = Tile<TileType::Vec, OutT, VEC_M, TILE_N, BLayout::RowMajor, VEC_M, TILE_N>;
 
-    using MatFIFO = DataFIFO<OutT, FIFOType::GM_FIFO, FIFO_DEPTH, FIFO_PERIOD>;
     using MatPipe = TPipe<FLAG_ID, FIFOType::GM_FIFO, FIFO_DEPTH, FIFO_PERIOD, AccTile, VecTileFull,
                           TSyncOpType::TSTORE_C2GM_UFOFF, TSyncOpType::TLOAD>;
+    MatPipe mPipe(fifoMem);
 
     constexpr uint32_t blockAlign = C0_SIZE_BYTE / sizeof(InT);
     constexpr uint32_t ALIGNED_M = CeilAlign<uint32_t>(CASE_TILE_M, 16);
@@ -80,8 +80,6 @@ __global__ AICORE void runTPushPopMatmulAdd(__gm__ OutT *out, __gm__ InT *srcA, 
     using LeftTile = TileLeft<InT, ALIGNED_M, ALIGNED_K, CASE_TILE_M, TILE_K>;
     using RightTile = TileRight<InT, ALIGNED_K, ALIGNED_N, TILE_K, TILE_N>;
 
-    MatFIFO fifo(fifoMem);
-
     if constexpr (DAV_CUBE) {
         TileMatA aMatTile;
         TileMatB bMatTile;
@@ -95,17 +93,11 @@ __global__ AICORE void runTPushPopMatmulAdd(__gm__ OutT *out, __gm__ InT *srcA, 
         TASSIGN(bTile, 0x0);
         TASSIGN(accTile, 0x0);
 
-        typename MatPipe::Producer prod;
-
         set_flag(PIPE_FIX, PIPE_M, EVENT_ID1);
         set_flag(PIPE_M, PIPE_MTE1, EVENT_ID1);
         set_flag(PIPE_MTE1, PIPE_MTE2, EVENT_ID1);
 
         for (int m_tile = 0; m_tile < NUM_M_TILES; m_tile++) {
-            prod.setTileId(m_tile, 0);
-            prod.setAllocateStatus(m_tile >= FIFO_DEPTH);
-            prod.setRecordStatus(true);
-
             GlobalA globalA(srcA + m_tile * CASE_TILE_M * TILE_K);
             GlobalB globalB(srcB);
 
@@ -136,7 +128,10 @@ __global__ AICORE void runTPushPopMatmulAdd(__gm__ OutT *out, __gm__ InT *srcA, 
             set_flag(PIPE_M, PIPE_FIX, EVENT_ID0);
             wait_flag(PIPE_M, PIPE_FIX, EVENT_ID0);
 
-            TPUSH(prod, accTile, fifo);
+            mPipe.prod.setTileId(m_tile, 0);
+            mPipe.prod.setAllocateStatus(m_tile >= FIFO_DEPTH);
+            mPipe.prod.setRecordStatus(true);
+            TPUSH(accTile, mPipe);
 
             set_flag(PIPE_FIX, PIPE_M, EVENT_ID1);
         }
@@ -156,21 +151,18 @@ __global__ AICORE void runTPushPopMatmulAdd(__gm__ OutT *out, __gm__ InT *srcA, 
         TASSIGN(biasTile, 0x10000);
         TASSIGN(outTile, 0x20000);
 
-        typename MatPipe::Consumer cons;
-
         uint32_t subBlockIdx = get_subblockid();
 
         set_flag(PIPE_MTE3, PIPE_V, EVENT_ID1);
         set_flag(PIPE_V, PIPE_MTE2, EVENT_ID1);
 
         for (int m_tile = 0; m_tile < NUM_M_TILES; m_tile++) {
-            cons.setTileId(m_tile, 0);
-            cons.setWaitStatus(true);
-            cons.setFreeStatus(m_tile + FIFO_DEPTH < NUM_M_TILES);
-
             wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID1);
 
-            TPOP(cons, vecTileFull, fifo);
+            mPipe.cons.setTileId(m_tile, 0);
+            mPipe.cons.setWaitStatus(true);
+            mPipe.cons.setFreeStatus(m_tile + FIFO_DEPTH < NUM_M_TILES);
+            TPOP(vecTileFull, mPipe);
 
             size_t biasOffset = static_cast<size_t>(m_tile * CASE_TILE_M + subBlockIdx * VEC_M) * TILE_N;
             GlobalBias globalBias(bias + biasOffset);

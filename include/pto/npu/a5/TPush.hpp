@@ -580,9 +580,8 @@ PTO_INTERNAL void TPUSH_IMPL(PipeProd &prod, TileData &tile, DataFiFo &fifo)
     }
 }
 
-// Convenience overload: push with a pipe instance directly
-template <typename Pipe, typename TileData>
-PTO_INTERNAL void TPUSH(TileData &tile, Pipe &pipe)
+template <typename TileData, typename Pipe>
+PTO_INTERNAL void TPUSH_IMPL(TileData &tile, Pipe &pipe)
 {
     TPUSH_IMPL(pipe.prod, tile, pipe.fifo);
 }
