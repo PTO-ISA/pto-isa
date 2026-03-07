@@ -1,4 +1,6 @@
 site_name: PTO Virtual ISA Architectural Manual
+site_url: https://pto-isa.github.io/
+repo_url: https://github.com/PTO-ISA/pto-isa
 
 theme:
   name: readthedocs
