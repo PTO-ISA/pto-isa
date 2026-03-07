@@ -536,6 +536,22 @@ struct TPipe {
             }
         }
     };
+
+    DataFiFo fifo;
+    Producer prod;
+    Consumer cons;
+
+    template <FIFOType T = FiFoType, typename std::enable_if_t<T == FIFOType::GM_FIFO, int> = 0>
+    PTO_INTERNAL explicit TPipe(__gm__ typename TileDataCons::DType *fifoBase) : fifo(fifoBase), prod(), cons()
+    {}
+
+    template <FIFOType T = FiFoType, typename std::enable_if_t<T != FIFOType::GM_FIFO, int> = 0>
+    PTO_INTERNAL explicit TPipe(TileDataCons *tilePtr) : fifo(tilePtr), prod(), cons()
+    {}
+
+    template <FIFOType T = FiFoType, typename std::enable_if_t<T != FIFOType::GM_FIFO, int> = 0>
+    PTO_INTERNAL explicit TPipe(TileDataCons &tile) : fifo(tile), prod(), cons()
+    {}
 };
 
 /**
@@ -564,13 +580,11 @@ PTO_INTERNAL void TPUSH_IMPL(PipeProd &prod, TileData &tile, DataFiFo &fifo)
     }
 }
 
-template <typename PipeProd>
-PTO_INTERNAL void TPUSHSTART_IMPL(PipeProd &prod)
+// Convenience overload: push with a pipe instance directly
+template <typename Pipe, typename TileData>
+PTO_INTERNAL void TPUSH(TileData &tile, Pipe &pipe)
 {
-    bool isAllocate = prod.getAllocateStatus();
-    if (isAllocate) {
-        prod.template allocate<true>();
-    }
+    TPUSH_IMPL(pipe.prod, tile, pipe.fifo);
 }
 
 } // namespace pto

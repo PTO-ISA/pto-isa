@@ -15,7 +15,6 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <pto/npu/kernels/Pto_prefetch.hpp>
 #include <pto/npu/a5/custom/TSyncCVID.hpp>
 #include <pto/npu/a5/custom/TSync_Custom.hpp>
-#include <pto/npu/a5/TMov.hpp>
 #include <pto/npu/a5/custom/TInsertCustom.hpp>
 #define UF_ENABLE 0
 #include "pto_macro_matmul.hpp"
