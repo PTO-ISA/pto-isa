@@ -49,7 +49,6 @@ PTO_INST RecordEvent TREM(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &sr
 
 - 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
 - 除零行为由目标定义；CPU 模拟器在调试构建中会断言。
-- A3 计算需要临时空间，而 A5 不使用。
 
 ## 示例
 

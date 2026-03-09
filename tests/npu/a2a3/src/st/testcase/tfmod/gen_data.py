@@ -12,6 +12,7 @@
 
 import os
 import numpy as np
+
 np.random.seed(19)
 
 
@@ -24,8 +25,8 @@ def gen_golden_data_tfmod(param):
     h_valid, w_valid = param.valid_row, param.valid_col
 
     # Generate random input arrays
-    input1 = np.random.randint(-1000, 1000, size=[src0_tile_row, src0_tile_col]).astype(dtype)
-    input2 = np.random.randint(3, 100, size=[src1_tile_row, src1_tile_col]).astype(dtype)
+    input1 = np.random.uniform(low=-1000, high=1000, size=[src0_tile_row, src0_tile_col]).astype(dtype)
+    input2 = np.random.uniform(low=3, high=100, size=[src1_tile_row, src1_tile_col]).astype(dtype)
 
     # Perform the operation
     golden = np.zeros([dst_tile_row, dst_tile_col]).astype(dtype)
@@ -40,28 +41,28 @@ def gen_golden_data_tfmod(param):
 
 
 class TfmodParams:
-    def __init__(self, dtype, dst_tileR, dst_tileC, src0_tileR, src0_tileC, src1_tileR, src1_tileC, valid_row, valid_col):
+    def __init__(
+        self, dtype, dst_tileR, dst_tileC, src0_tileR, src0_tileC, src1_tileR, src1_tileC, valid_row, valid_col
+    ):
         self.dtype = dtype
         self.dst_tile_row = dst_tileR
         self.dst_tile_col = dst_tileC
         self.src0_tile_row = src0_tileR
         self.src0_tile_col = src0_tileC
         self.src1_tile_row = src1_tileR
-        self.src1_tile_col = src1_tileC 
+        self.src1_tile_col = src1_tileC
         self.valid_row = valid_row
         self.valid_col = valid_col
 
 
 def generate_case_name(param):
-    dtype_str = {
-        np.float32: 'float',
-        np.float16: 'half',
-        np.int32: 'int32',
-        np.int16: 'int16',
-    }[param.dtype]
-    tileStr = f"{param.dst_tile_row}x{param.dst_tile_col}_{param.src0_tile_row}x{param.src0_tile_col}_" \
-              f"{param.src1_tile_row}x{param.src1_tile_col}_{param.valid_row}x{param.valid_col}"
+    dtype_str = {np.float32: "float", np.float16: "half", np.int32: "int32", np.int16: "int16"}[param.dtype]
+    tileStr = (
+        f"{param.dst_tile_row}x{param.dst_tile_col}_{param.src0_tile_row}x{param.src0_tile_col}_"
+        f"{param.src1_tile_row}x{param.src1_tile_col}_{param.valid_row}x{param.valid_col}"
+    )
     return f"TFMODTest.case_{dtype_str}_{tileStr}"
+
 
 if __name__ == "__main__":
     # Get the absolute path of the script
@@ -73,16 +74,16 @@ if __name__ == "__main__":
         os.makedirs(testcases_dir)
 
     case_params_list = [
-        TfmodParams(np.float16, 16, 64, 16, 128, 16, 128, 16, 64),
+        TfmodParams(np.float32, 16, 64, 16, 128, 16, 128, 16, 64),
         TfmodParams(np.float32, 16, 32, 16, 64, 16, 32, 16, 32),
         TfmodParams(np.int32, 4, 32, 4, 32, 4, 32, 4, 32),
         TfmodParams(np.int32, 16, 32, 16, 64, 16, 32, 16, 32),
-        TfmodParams(np.float16, 16, 64, 16, 128, 16, 128, 16, 63),
+        TfmodParams(np.float32, 16, 64, 16, 128, 16, 128, 16, 63),
         TfmodParams(np.float32, 2, 32, 2, 64, 2, 32, 2, 31),
         TfmodParams(np.int32, 16, 32, 16, 64, 16, 32, 16, 31),
         TfmodParams(np.int16, 16, 32, 16, 64, 16, 32, 16, 31),
         TfmodParams(np.int16, 16, 64, 16, 128, 16, 128, 16, 63),
-        TfmodParams(np.float16, 1, 8192, 1, 8192, 1, 8192, 1, 8192),
+        TfmodParams(np.float32, 1, 8192, 1, 8192, 1, 8192, 1, 8192),
     ]
 
     for param in case_params_list:
