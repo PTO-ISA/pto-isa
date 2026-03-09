@@ -1049,8 +1049,8 @@ public:
     }
     PTO_INTERNAL void SetPadListArray(const uint8_t values[4])
     {
-        // PTO_Assert
-        for (int i = 0; i < 4; i++) {
+        constexpr uint8_t padCount = 4;
+        for (int i = 0; i < padCount; i++) {
             padList_[i] = values[i];
         }
     }

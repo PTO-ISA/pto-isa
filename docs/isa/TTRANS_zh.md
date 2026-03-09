@@ -52,21 +52,21 @@ PTO_INST RecordEvent TTRANS(TileDataDst& dst, TileDataSrc& src, TileDataTmp& tmp
 
 - **实现检查 (A2A3)**:
   - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`.
-  - Source layout must be row-major (`TileDataSrc::isRowMajor`).
-  - Element size must be `1`, `2`, or `4` bytes.
+  - Source layout 必须是 行主序 (`TileDataSrc::isRowMajor`）。
+  - Element size 必须是 `1`, `2`,或`4` 字节.
   - Supported element types are restricted per element width:
-    - 4 bytes: `uint32_t`, `int32_t`, `float`
-    - 2 bytes: `uint16_t`, `int16_t`, `half`, `bfloat16_t`
+    - 4 字节: `uint32_t`, `int32_t`, `float`
+    - 2 字节: `uint16_t`, `int16_t`, `half`, `bfloat16_t`
     - 1 byte: `uint8_t`, `int8_t`
   - The transpose size is taken from `src.GetValidRow()` / `src.GetValidCol()`.
 - **实现检查 (A5)**:
   - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`.
-  - 32-byte alignment constraints are enforced on the major dimension of both input and output (row-major checks `Cols * sizeof(T) % 32 == 0`, col-major checks `Rows * sizeof(T) % 32 == 0`).
+  - 32-byte alignment constraints are enforced on the major dimension of 都input且output (行主序 checks `Cols * sizeof(T) % 32 == 0`, col-major checks `Rows * sizeof(T) % 32 == 0`）。
   - Supported element types are restricted per element width:
-    - 4 bytes: `uint32_t`, `int32_t`, `float`
-    - 2 bytes: `uint16_t`, `int16_t`, `half`, `bfloat16_t`
+    - 4 字节: `uint32_t`, `int32_t`, `float`
+    - 2 字节: `uint16_t`, `int16_t`, `half`, `bfloat16_t`
     - 1 byte: `uint8_t`, `int8_t`
-  - The implementation operates over the static tile shape (`TileDataSrc::Rows/Cols`) and does not consult `GetValidRow/GetValidCol`.
+  - The implementation operates over the static tile shape (`TileDataSrc::Rows/Cols`)且does not consult `GetValidRow/GetValidCol`.
 - **Temporary tile**:
   - The C++ API requires `tmp`, but some implementations may not use it.
 

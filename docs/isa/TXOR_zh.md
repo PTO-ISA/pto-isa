@@ -47,10 +47,10 @@ PTO_INST RecordEvent TXOR(TileDataDst& dst, TileDataSrc0& src0, TileDataSrc1& sr
 
 ## 约束
 
-- Intended for integral element types.
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
-- Temporary space is required by A3 for calculation, while not used by A5.
-- For A3, 2 source Tile, destination Tile, temporary space must in different memory range without overlapping.
+- 适用于整数元素类型。
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
+- A3 计算需要临时空间，而 A5 不使用。
+- 对于 A3，2 个源 Tile、目标 Tile、临时空间必须在不同的内存范围内且不重叠。
 
 ## 示例
 

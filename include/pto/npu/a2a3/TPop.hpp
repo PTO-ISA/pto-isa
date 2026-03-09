@@ -51,9 +51,9 @@ PTO_INTERNAL void TPOP_IMPL(TileData &tile, Pipe &pipe)
 template <typename Pipe>
 PTO_INTERNAL void TFREE_IMPL(Pipe &pipe)
 {
-    bool isFree = pipe.getFreeStatus();
+    bool isFree = pipe.cons.getFreeStatus();
     if (isFree) {
-        pipe.template free<true>();
+        pipe.cons.free();
     }
 }
 

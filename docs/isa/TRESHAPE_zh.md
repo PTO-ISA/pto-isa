@@ -45,10 +45,10 @@ PTO_INST RecordEvent TRESHAPE(TileDataOut& dst, TileDataIn& src, WaitEvents&... 
 
 Enforced by `TRESHAPE_IMPL`:
 
-- **Tile type must match**: `TileDataIn::Loc == TileDataOut::Loc`.
-- **Total byte size must match**: `sizeof(InElem) * InNumel == sizeof(OutElem) * OutNumel`.
-- **No boxed/non-boxed conversion**:
-  - cannot reshape between `SLayout::NoneBox` and boxed layouts.
+- **Tile 类型必须匹配**： `TileDataIn::Loc == TileDataOut::Loc`.
+- **总字节大小必须匹配**： `sizeof(InElem) * InNumel == sizeof(OutElem) * OutNumel`.
+- **不允许 boxed/non-boxed 转换**：
+  - cannot reshape between `SLayout::NoneBox`且boxed layouts.
 
 ## 示例
 

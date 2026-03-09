@@ -49,14 +49,14 @@ PTO_INST RecordEvent TSTORE_FP(GlobalData& dst, TileData& src, FpTileData& fp, W
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - The fp store path is implemented via `TSTORE_IMPL(dst, src, fp)` and uses the same accumulator-to-GM legality checks as quantized accumulator stores:
-    - Destination layout must be ND or NZ.
-    - Source dtype must be `int32_t` or `float`.
-    - Static shape constraints: `1 <= TileData::Cols <= 4095`; if ND then `1 <= TileData::Rows <= 8192`; if NZ then `1 <= TileData::Rows <= 65535` and `TileData::Cols % 16 == 0`.
-    - Runtime: `1 <= src.GetValidCol() <= 4095`.
+  - The fp store path is implemented via `TSTORE_IMPL(dst, src, fp)`且uses the same accumulator-to-GM legality checks as quantized accumulator stores:
+    - 目标布局 必须是 ND或NZ.
+    - Source dtype 必须是 `int32_t`或`float`.
+    - Static shape constraints: `1 <= TileData::Cols <= 4095`; if ND then `1 <= TileData::Rows <= 8192`; if NZ then `1 <= TileData::Rows <= 65535`且`TileData::Cols % 16 == 0`.
+    - 运行时： `1 <= src.GetValidCol() <= 4095`.
   - No explicit `static_assert` is enforced on `FpTileData` (the implementation uses `fp` to set FPC state).
 - **实现检查 (A5)**:
-  - Implemented via `TSTORE_IMPL(dst, src, fp)` and validated by `CheckStaticAcc<..., true>()` for the accumulator path (ND/NZ only, `int32_t/float` source dtype, rows/cols ranges).
+  - 已实现 via `TSTORE_IMPL(dst, src, fp)`且validated by `CheckStaticAcc<..., true>()` 对于the accumulator path (ND/NZ 仅, `int32_t/float` source dtype, rows/cols ranges).
   - No explicit `static_assert` is enforced on `FpTileData` (the implementation uses `fp` to set FPC state).
 
 ## 示例

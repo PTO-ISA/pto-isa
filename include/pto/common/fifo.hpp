@@ -47,7 +47,8 @@ struct DataFIFO<DataType, FifoType, Depth, Period, typename std::enable_if<IsGMF
     static constexpr FIFOType fifoType = FifoType;
     using DType = DataType;
 
-    __gm__ DataType *fifoBase;
+    // base address of the GM FIFO buffer in global memory
+    __gm__ DataType *fifoBase = nullptr;
 
     PTO_INTERNAL DataFIFO(__gm__ DataType *ptr) : fifoBase(ptr)
     {}
@@ -70,9 +71,13 @@ struct DataFIFO<DataType, FifoType, Depth, Period, typename std::enable_if<IsTil
     static constexpr int fifoPeriod = Period;
     static constexpr FIFOType fifoType = FifoType;
 
-    DataType *tilePtr;
+    uint32_t fifoBase = 0;       // fifo base address in local memory
+    DataType *tilePtr = nullptr; // Pointer to the tile in local memory
 
-    // Constructor for Pointer
+    PTO_INTERNAL DataFIFO(uint32_t base) : fifoBase(base)
+    {}
+
+    // Constructor for Pointer of the tile in local memory
     PTO_INTERNAL DataFIFO(DataType *ptr) : tilePtr(ptr)
     {}
 

@@ -10,14 +10,14 @@
 
 ## 数学语义
 
-对每个元素 `(i, j)` in the destination valid region:
+对每个元素 `(i, j)` 在目标有效区域中：
 
 $$
 \mathrm{dst}_{i,j} =
-\begin{cases}
-\min(\mathrm{src0}_{i,j}, \mathrm{src1}_{i,j}) & \text{if both inputs are defined at } (i,j) \\
-\mathrm{src0}_{i,j} & \text{if only src0 is defined at } (i,j) \\
-\mathrm{src1}_{i,j} & \text{if only src1 is defined at } (i,j)
+\b\begin{cases}
+\min(\mathrm{src0}_{i,j}, \mathrm{src1}_{i,j}) & \text{如果两个输入在 } (i,j) \text{ 处有定义} \text{ 处都有定义} \\
+\mathrm{src0}_{i,j} & \text{如果只有 src0 在 } (i,j) \text{ 处有定义} \text{ 处都有定义} \\
+\mathrm{src1}_{i,j} & \text{如果只有 src1 在 } (i,j) \text{ 处有定义}
 \end{cases}
 $$
 
@@ -55,14 +55,14 @@ PTO_INST RecordEvent TPARTMIN(TileDataDst& dst, TileDataSrc0& src0, TileDataSrc1
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `dst/src0/src1` element types must be identical, and must be one of: `int32_t`, `int16_t`, `half`, `float`.
-  - All three tiles must be row-major (`isRowMajor`).
-  - Runtime: if `dst.GetValidRow() == 0` or `dst.GetValidCol() == 0`, the op returns early.
-  - Runtime: the implementation requires at least one input's valid region to match `dst`'s valid region, and the onther's valid region not greater than `dst`'s valid region (otherwise it asserts).
+  - `dst/src0/src1` element types 必须是 identical,且必须是以下之一： `int32_t`, `int16_t`, `half`, `float`.
+  - All three tiles 必须是 行主序 (`isRowMajor`）。
+  - 运行时： if `dst.GetValidRow() == 0`或`dst.GetValidCol() == 0`, the op returns early.
+  - 运行时： the implementation requires at least one input's valid region to match `dst`'s valid region,且the onther's valid region not greater than `dst`'s valid region (otherwise it asserts).
 - **实现检查 (A5)**:
-  - `dst/src0/src1` element types must be identical and must be one of: `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `bfloat16_t`, `float`.
-  - Runtime: if any of `src0/src1/dst` has a zero valid region, the op returns early.
-  - Requires `src0` and `src1` valid region to be `<= dst` valid region in both dimensions; other patterns are not supported (target-defined behavior).
+  - `dst/src0/src1` element types 必须是 identical且必须是以下之一： `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `bfloat16_t`, `float`.
+  - 运行时： if any of `src0/src1/dst` has a zero valid region, the op returns early.
+  - Requires `src0`且`src1` valid region to be `<= dst` valid region in 都dimensions; other patterns are not supported (target-defined behavior).
 
 ## 示例
 

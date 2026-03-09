@@ -32,8 +32,6 @@
 |---|---|---|---|---|
 | 同步 | `TSYNC` | `sync` | `producer, consumer` | `docs/isa/TSYNC_zh.md` |
 | 手动 / 资源绑定 | `TASSIGN` | `config` | `config, state` | `docs/isa/TASSIGN_zh.md` |
-| 手动 / 资源绑定 | `TSETHF32MODE` | `config` | `config, state` | `docs/isa/TSETHF32MODE_zh.md` |
-| 手动 / 资源绑定 | `TSETTF32MODE` | `config` | `config, state` | `docs/isa/TSETTF32MODE_zh.md` |
 | 手动 / 资源绑定 | `TSETFMATRIX` | `config` | `config, state` | `docs/isa/TSETFMATRIX_zh.md` |
 | 逐元素（Tile-Tile） | `TADD` | `elementwise` | `dst, src0, src1` | `docs/isa/TADD_zh.md` |
 | 逐元素（Tile-Tile） | `TABS` | `elementwise` | `dst, src0, src1` | `docs/isa/TABS_zh.md` |

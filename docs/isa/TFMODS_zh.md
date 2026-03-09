@@ -48,8 +48,8 @@ PTO_INST RecordEvent TFMODS(TileDataDst &dst, TileDataSrc &src, typename TileDat
 
 ## 约束
 
-- Division-by-zero behavior is target-defined; the CPU simulator asserts in debug builds.
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
+- 除零行为由目标定义；CPU 模拟器在调试构建中会断言。
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
 
 ## 示例
 

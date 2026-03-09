@@ -50,12 +50,11 @@ __global__ AICORE void runTPushPopMatmulAdd(__gm__ OutT *out, __gm__ InT *srcA, 
     constexpr uint8_t FIFO_PERIOD = 1;
 
     using AccTile = TileAcc<OutT, CASE_TILE_M, TILE_N, CASE_TILE_M, TILE_N>;
-    using VecTileFull = Tile<TileType::Vec, OutT, CASE_TILE_M, TILE_N, BLayout::RowMajor, CASE_TILE_M, TILE_N>;
     using VecTileHalf = Tile<TileType::Vec, OutT, VEC_M, TILE_N, BLayout::RowMajor, VEC_M, TILE_N>;
     using BiasTile = Tile<TileType::Vec, OutT, VEC_M, TILE_N, BLayout::RowMajor, VEC_M, TILE_N>;
     using OutTile = Tile<TileType::Vec, OutT, VEC_M, TILE_N, BLayout::RowMajor, VEC_M, TILE_N>;
 
-    using MatPipe = TPipe<FLAG_ID, FIFOType::GM_FIFO, FIFO_DEPTH, FIFO_PERIOD, AccTile, VecTileFull,
+    using MatPipe = TPipe<FLAG_ID, FIFOType::GM_FIFO, FIFO_DEPTH, FIFO_PERIOD, AccTile, VecTileHalf,
                           TSyncOpType::TSTORE_C2GM_UFOFF, TSyncOpType::TLOAD>;
     MatPipe mPipe(fifoMem);
 
@@ -144,10 +143,10 @@ __global__ AICORE void runTPushPopMatmulAdd(__gm__ OutT *out, __gm__ InT *srcA, 
     }
 
     if constexpr (DAV_VEC) {
-        VecTileFull vecTileFull;
+        VecTileHalf vecTileHalf;
         BiasTile biasTile;
         OutTile outTile;
-        TASSIGN(vecTileFull, 0x0);
+        TASSIGN(vecTileHalf, 0x0);
         TASSIGN(biasTile, 0x10000);
         TASSIGN(outTile, 0x20000);
 
@@ -162,15 +161,14 @@ __global__ AICORE void runTPushPopMatmulAdd(__gm__ OutT *out, __gm__ InT *srcA, 
             mPipe.cons.setTileId(m_tile, 0);
             mPipe.cons.setWaitStatus(true);
             mPipe.cons.setFreeStatus(m_tile + FIFO_DEPTH < NUM_M_TILES);
-            TPOP(vecTileFull, mPipe);
+            size_t entryOffset = subBlockIdx * VEC_M * TILE_N * sizeof(OutT);
+            mPipe.cons.setEntryOffset(entryOffset);
+            TPOP(vecTileHalf, mPipe);
 
             size_t biasOffset = static_cast<size_t>(m_tile * CASE_TILE_M + subBlockIdx * VEC_M) * TILE_N;
             GlobalBias globalBias(bias + biasOffset);
 
             TLOAD(biasTile, globalBias);
-
-            VecTileHalf vecTileHalf;
-            TASSIGN(vecTileHalf, (uint64_t)vecTileFull.data() + subBlockIdx * VEC_M * TILE_N * sizeof(OutT));
 
             set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
             wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);

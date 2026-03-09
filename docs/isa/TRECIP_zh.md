@@ -48,16 +48,16 @@ PTO_INST RecordEvent TRECIP(TileData& dst, TileData& src, WaitEvents&... events)
 ## 约束
 
 - **实现检查 (NPU)**:
-  - `TileData::DType` must be one of: `float` or `half`;
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`);
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`;
-  - Runtime: `src.GetValidRow() == dst.GetValidRow()` and `src.GetValidCol() == dst.GetValidCol()`;
-  - Tile 布局 must be row-major (`TileData::isRowMajor`).
-  - A3's TRECIP instruction does not support setting the source Tile and destination Tile to the same memory.
+  - `TileData::DType` 必须是以下之一：`float` 或 `half`。
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`);
+  - 静态有效边界：`TileData::ValidRow <= TileData::Rows` 且 `TileData::ValidCol <= TileData::Cols`。
+  - 运行时：`src.GetValidRow() == dst.GetValidRow()` 且 `src.GetValidCol() == dst.GetValidCol()`。
+  - Tile 布局必须是行主序（`TileData::isRowMajor`）。
+  - A3 的 TRECIP 指令不支持将源 Tile 和目标 Tile 设置为相同的内存。
 - **有效区域**:
-  - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
-- **Domain / NaN**:
-  - Division-by-zero behavior is target-defined; the CPU simulator asserts in debug builds.
+  - 该操作使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域。
+- **域 / NaN**:
+  - 除零行为由目标定义；CPU 模拟器在调试构建中会断言。
 
 ## 示例
 

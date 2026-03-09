@@ -9,7 +9,7 @@
 复制 Tile 并在有效区域外使用编译时填充值进行填充。
 
 Copy a source tile into a destination tile and fill the remaining (padded) elements with a compile-time pad value
-selected by `TileDataDst::PadVal` (e.g., `PadValue::Min`/`PadValue::Max`).
+selected by `TileDataDst::PadVal` (e.g., `PadValue::Min`/`PadValue::Max`）。
 
 This is commonly used to materialize deterministic values outside the runtime valid region so that subsequent ops can
 operate on a full static tile shape.
@@ -27,7 +27,7 @@ $$
 $$
 
 `pad` is determined by `TileDataDst::PadVal` and the element type (e.g., `+inf/-inf` for floating types when available,
-otherwise `std::numeric_limits<T>::max()/min()`).
+otherwise `std::numeric_limits<T>::max()/min()`）。
 
 ## 汇编语法
 
@@ -72,10 +72,10 @@ PTO_INTERNAL void TFILLPAD(TileData &dst, TileData &src);
 ## 约束
 
 - `TileDataDst::PadVal != PadValue::Null`.
-- `sizeof(TileDataDst::DType) == sizeof(TileDataSrc::DType)` and element size must be `1`, `2`, or `4` bytes.
-- `TFILLPAD`: `TileDataDst::Rows/Cols` must match `TileDataSrc::Rows/Cols`.
-- `TFILLPAD_EXPAND`: `TileDataDst::Rows >= TileDataSrc::Rows` and `TileDataDst::Cols >= TileDataSrc::Cols`.
-- `TFILLPAD(TileData &dst, TileData &src)`:`if TileData::TileType is Mat, layout only support (!TileData::isRowMajor && TileData::Slayout::RowMajor), and PadVal only support PadValue::Zero`
+- `sizeof(TileDataDst::DType) == sizeof(TileDataSrc::DType)`且元素大小必须是 `1`, `2`,或`4` 字节.
+- `TFILLPAD`: `TileDataDst::Rows/Cols` 必须匹配 `TileDataSrc::Rows/Cols`.
+- `TFILLPAD_EXPAND`: `TileDataDst::Rows >= TileDataSrc::Rows`且`TileDataDst::Cols >= TileDataSrc::Cols`.
+- `TFILLPAD(TileData &dst, TileData &src)`:`if TileData::TileType is Mat, layout 仅 support (!TileData::isRowMajor && TileData::Slayout::RowMajor),且PadVal 仅 support PadValue::Zero`
 
 ## 示例
 

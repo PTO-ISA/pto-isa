@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-除非另有说明, semantics are defined over the valid region and target-dependent behavior is marked as implementation-defined.
+除非另有说明，语义在有效区域上定义，目标相关的行为标记为实现定义。
 
 ## 汇编语法
 
@@ -39,12 +39,12 @@ PTO_INST RecordEvent TQUANT(TileDataSrc &src, TileDataExp &exp, TileDataOut &dst
 
 ## 约束
 
-- This instruction is currently implemented for specific targets (see `include/pto/npu/*/TQuant.hpp`).
-- Input type requirements and output tile types are mode/target-dependent.
+- 此指令目前针对特定目标实现（参见 `include/pto/npu/*/TQuant.hpp`）。
+- 输入类型要求和输出 tile 类型取决于模式/目标。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

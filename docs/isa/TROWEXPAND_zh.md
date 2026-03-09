@@ -49,12 +49,12 @@ PTO_INST RecordEvent TROWEXPAND(TileDataDst& dst, TileDataSrc& src, WaitEvents&.
 
 实现检查 (NPU):
 
-- Tile Type: `dst` and `src` must be `TileType::Vec`.
-- Tile 布局: ND fractal (`isRowMajor` and `SLayout::NoneBox`) for both `src` and `dst`.
-- Data type: A2A3/A5 element types must be one of: `int8_t` or `uint8_t` or `int16_t` or `uint16_t` or `int32_t` or `uint32_t` or `half` or `bfloat16_t` or `float`.
+- Tile Type: `dst`且`src` 必须是 `TileType::Vec`.
+- Tile 布局: ND fractal (`isRowMajor`且`SLayout::NoneBox`) 对于都`src`且`dst`.
+- Data type: A2A3/A5 element types 必须是以下之一： `int8_t`或`uint8_t`或`int16_t`或`uint16_t`或`int32_t`或`uint32_t`或`half`或`bfloat16_t`或`float`.
 - 运行期有效区域检查:
   - A2A3: returns early if any of `dstValidRow`, `dstValidCol`, `srcValidRow`, `srcValidCol` is zero.
-  - A5: asserts `srcValidRow == dstValidRow` and asserts `srcValidRow != 0 && srcValidCol != 0`.
+  - A5: asserts `srcValidRow == dstValidRow`且asserts `srcValidRow != 0 && srcValidCol != 0`.
 
 ## 示例
 

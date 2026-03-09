@@ -54,9 +54,9 @@ PTO_INST RecordEvent TPARTMUL(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1
 
 ## 约束
 
-- Element type/layout legality follows backend checks and is analogous to `TPARTADD` / `TPARTMAX` / `TPARTMIN`.
-- Destination valid region defines the result domain.
-- Partial-validity handling is implementation-defined for unsupported shape combinations.
+- 元素类型/布局合法性遵循后端检查，类似于 `TPARTADD` / `TPARTMAX` / `TPARTMIN`。
+- 目标有效区域定义结果域。
+- 对于不支持的形状组合，部分有效性处理由实现定义。
 
 ## 示例
 

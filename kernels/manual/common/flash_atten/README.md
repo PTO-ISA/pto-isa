@@ -10,7 +10,7 @@ This example demonstrates how to implement a mixed FA operator using PTO, includ
 ## Directory Layout
 
 ```
-kernels/manual/a2a3/flash_atten/
+kernels/manual/common/flash_atten/
 ├── scripts/
 │   └── gen_data.py              # Generates input and golden output
 ├── CMakeLists.txt               # Build configuration
@@ -30,7 +30,7 @@ source ${ASCEND_INSTALL_PATH}/bin/setenv.bash
 2. Run the example:
 
 ```bash
-cd ${git_clone_path}/kernels/manual/a2a3/flash_atten
+cd ${git_clone_path}/kernels/manual/common/flash_atten
 
 # Run default cases (same set baked into generated_cases.*)
 bash run.sh -r npu -v Ascend910B1

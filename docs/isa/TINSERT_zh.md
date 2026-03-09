@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-Let `R = src.GetValidRow()` and `C = src.GetValidCol()`. Conceptually, for `0 <= i < R` and `0 <= j < C`:
+设 `R = src.GetValidRow()` 和 `C = src.GetValidCol()`。概念上，对于 `0 <= i < R` 和 `0 <= j < C`：
 
 $$
 \mathrm{dst}_{\mathrm{indexRow}+i,\;\mathrm{indexCol}+j} = \mathrm{src}_{i,j}
@@ -50,11 +50,11 @@ PTO_INST RecordEvent TINSERT(DstTileData &dst, SrcTileData &src,
 
 ## 约束
 
-- Runtime bounds must satisfy `indexRow + src.Rows <= dst.Rows` and `indexCol + src.Cols <= dst.Cols` (exact checks are target-dependent).
+- 运行时边界必须满足 `indexRow + src.Rows <= dst.Rows` 且 `indexCol + src.Cols <= dst.Cols`（确切的检查取决于目标）。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-对每个元素 `(i, j)` in the destination valid region:
+对目标有效区域中的每个元素 `(i, j)`：
 
 $$ \mathrm{dst}_{i,j} = \mathrm{mem}[\mathrm{idx}_{i,j}] $$
 
@@ -48,12 +48,12 @@ PTO_INST RecordEvent MGATHER(TileDst& dst, GlobalData& src, TileInd& indexes, Wa
 
 ## 约束
 
-- Index interpretation is target-defined. The CPU simulator treats indices as linear element indices into `src.data()`.
-- No bounds checks are enforced on `indexes` by the CPU simulator.
+- 索引解释由目标定义。CPU 模拟器将索引视为 `src.data()` 中的线性元素索引。
+- CPU 模拟器不对 `indexes` 强制执行边界检查。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

@@ -14,7 +14,7 @@
 
 $$ \mathrm{dst}_{i,j} = \left(\mathrm{src}_{i,j}\ \mathrm{cmpMode}\ \mathrm{scalar}\right) $$
 
-The encoding/type of `dst` is implementation-defined (often a mask-like tile).
+`dst` 的编码/类型由实现定义（通常是类似掩码的 tile）。
 
 ## 汇编语法
 
@@ -40,7 +40,7 @@ pto.tcmps ins(%src, %scalar{cmpMode = #pto<cmp xx>}: !pto.tile_buf<...>, dtype) 
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/type.hpp`:
+声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/type.hpp`：
 
 ```cpp
 template <typename TileDataDst, typename TileDataSrc0, typename T, typename... WaitEvents>
@@ -50,14 +50,14 @@ PTO_INST RecordEvent TCMPS(TileDataDst& dst, TileDataSrc0& src0, T src1, CmpMode
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `src0` and `dst` tile location must be vector (`TileType::Vec`).
-  - Static valid bounds: `TileDataSrc0::ValidRow <= TileDataSrc0::Rows` and `TileDataSrc0::ValidCol <= TileDataSrc0::Cols`.
-  - Runtime: `src0.GetValidRow() == dst.GetValidRow()` and `src0.GetValidCol() == dst.GetValidCol()`.
+  - `src0`且`dst` tile 位置 必须是 vector (`TileType::Vec`）。
+  - 静态有效边界： `TileDataSrc0::ValidRow <= TileDataSrc0::Rows`且`TileDataSrc0::ValidCol <= TileDataSrc0::Cols`.
+  - 运行时： `src0.GetValidRow() == dst.GetValidRow()`且`src0.GetValidCol() == dst.GetValidCol()`.
 - **实现检查 (A5)**:
-  - No explicit `static_assert`/`PTO_ASSERT` shape checks are enforced by `TCMPS_IMPL`.
-  - Effective support depends on `TileDataSrc0::DType` (only specific 1/2/4-byte integer/float types are dispatched in the implementation).
+  - `TCMPS_IMPL` 不强制执行显式的 `static_assert`/`PTO_ASSERT` 形状检查。
+  - 有效支持取决于 `TileDataSrc0::DType`（实现中仅分派特定的 1/2/4 字节整数/浮点类型）。
 - **有效区域**:
-  - The implementation uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
+  - 实现使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域.
 
 ## 示例
 

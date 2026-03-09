@@ -3,8 +3,7 @@
 
 ## Tile Operation Diagram
 
-<!-- ![TROWPROD tile operation](../figures/isa/TROWPROD.svg) -->
-<!-- TODO: Add TROWPROD diagram -->
+![TROWPROD tile operation](../figures/isa/TROWPROD.svg)
 
 ## Introduction
 

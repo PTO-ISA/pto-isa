@@ -47,9 +47,9 @@ PTO_INST RecordEvent TSHRS(TileDataDst& dst, TileDataSrc& src, typename TileData
 
 ## 约束
 
-- Intended for integral element types.
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
-- Scalar only support zero and positive value.
+- 适用于整数元素类型。
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
+- 标量仅支持零和正值。
 
 ## 示例
 

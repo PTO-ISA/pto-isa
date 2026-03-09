@@ -48,7 +48,7 @@ PTO_INST RecordEvent TADDSC(TileData& dst, TileData& src0, typename TileData::DT
 
 ## 约束
 
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
 
 ## 示例
 

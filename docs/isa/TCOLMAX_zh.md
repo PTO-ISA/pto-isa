@@ -49,15 +49,15 @@ PTO_INST RecordEvent TCOLMAX(TileDataOut& dst, TileDataIn& src, WaitEvents&... e
 
 实现检查 (NPU):
 
-- Tile location: `dst` and `src` must be `TileType::Vec`.
-- Tile 布局: both tiles must be ND fractal (`isRowMajor` and `SLayout::NoneBox`).
+- Tile 位置: `dst`且`src` 必须是 `TileType::Vec`.
+- Tile 布局: 都tiles 必须是 ND 分形（`isRowMajor`且`SLayout::NoneBox`）。
 - 数据类型:
   - A2A3: `half`, `float`, `int16_t`, `int32_t`.
   - A5: `half`, `float`, `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `bfloat16_t`.
 - 数据类型一致性: `dst.DType == src.DType`.
 - 运行期有效区域检查:
   - `src.GetValidCol() == dst.GetValidCol()`.
-  - If `src.GetValidRow() == 0` or `src.GetValidCol() == 0`, the implementation returns early.
+  - If `src.GetValidRow() == 0`或`src.GetValidCol() == 0`, the implementation returns early.
 
 ## 示例
 

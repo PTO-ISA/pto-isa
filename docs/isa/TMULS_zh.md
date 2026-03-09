@@ -48,19 +48,19 @@ PTO_INST RecordEvent TMULS(TileData& dst, TileData& src0, typename TileData::DTy
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `TileData::DType` must be one of: `int32_t`, `int`, `int16_t`, `half`, `float16_t`, `float`, `float32_t`.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
-  - Runtime: `src0.GetValidRow() == dst.GetValidRow()` and `src0.GetValidCol() == dst.GetValidCol()`.
-  - Tile 布局 must be row-major (`TileData::isRowMajor`).
+  - `TileData::DType` 必须是以下之一： `int32_t`, `int`, `int16_t`, `half`, `float16_t`, `float`, `float32_t`.
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - 静态有效边界： `TileData::ValidRow <= TileData::Rows`且`TileData::ValidCol <= TileData::Cols`.
+  - 运行时： `src0.GetValidRow() == dst.GetValidRow()`且`src0.GetValidCol() == dst.GetValidCol()`.
+  - Tile 布局必须是行主序（`TileData::isRowMajor`）。
 - **实现检查 (A5)**:
-  - `TileData::DType` must be one of: `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`, `bfloat16_t`.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
-  - Runtime: `src0.GetValidCol() == dst.GetValidCol()`.
-  - Tile 布局 must be row-major (`TileData::isRowMajor`).
+  - `TileData::DType` 必须是以下之一： `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`, `bfloat16_t`.
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - 静态有效边界： `TileData::ValidRow <= TileData::Rows`且`TileData::ValidCol <= TileData::Cols`.
+  - 运行时： `src0.GetValidCol() == dst.GetValidCol()`.
+  - Tile 布局必须是行主序（`TileData::isRowMajor`）。
 - **有效区域**:
-  - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
+  - 该操作使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域.
 
 ## 示例
 

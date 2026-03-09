@@ -2,7 +2,7 @@
 
 This document describes manual resource binding and configuration operations.
 
-**Total Operations:** 6
+**Total Operations:** 4
 
 ---
 
@@ -12,7 +12,6 @@ This document describes manual resource binding and configuration operations.
 
 For detailed instruction documentation, see [isa/TASSIGN](../isa/TASSIGN.md)
 
-
 **AS Level 1 (SSA):**
 ```text
 pto.tassign %tile, %addr : !pto.tile<...>, dtype
@@ -21,38 +20,6 @@ pto.tassign %tile, %addr : !pto.tile<...>, dtype
 **AS Level 2 (DPS):**
 ```text
 pto.tassign ins(%tile, %addr : !pto.tile_buf<...>, dtype)
-```
-
----
-
-### TSETHF32MODE
-
-For detailed instruction documentation, see [isa/TSETHF32MODE](../isa/TSETHF32MODE.md)
-
-**AS Level 1 (SSA):**
-```text
-pto.tsethf32mode {enable = true, mode = ...}
-```
-
-**AS Level 2 (DPS):**
-```text
-pto.tsethf32mode ins({enable = true, mode = ...}) outs()
-```
-
----
-
-### TSETTF32MODE
-
-For detailed instruction documentation, see [isa/TSETTF32MODE](../isa/TSETTF32MODE.md)
-
-**AS Level 1 (SSA):**
-```text
-pto.tsettf32mode {enable = true, mode = ...}
-```
-
-**AS Level 2 (DPS):**
-```text
-pto.tsettf32mode ins({enable = true, mode = ...}) outs()
 ```
 
 ---

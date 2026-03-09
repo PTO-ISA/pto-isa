@@ -47,7 +47,7 @@ PTO_INST RecordEvent TSUBS(TileData& dst, TileData& src0, typename TileData::DTy
 
 ## 约束
 
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
 
 ## 示例
 

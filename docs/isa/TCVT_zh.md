@@ -14,7 +14,7 @@
 
 $$ \mathrm{dst}_{i,j} = \mathrm{cast}_{\mathrm{rmode}}\!\left(\mathrm{src}_{i,j}\right) $$
 
-where `rmode` is a rounding policy (see `pto::RoundMode`).
+其中 `rmode` 是舍入策略（参见 `pto::RoundMode`）。
 
 ## 汇编语法
 
@@ -40,7 +40,7 @@ pto.tcvt ins(%src{rmode = #pto<round_mode xx>}: !pto.tile_buf<...>) outs(%dst : 
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/constants.hpp`:
+声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/constants.hpp`：
 
 ```cpp
 template <typename TileDataD, typename TileDataS, typename... WaitEvents>
@@ -49,10 +49,10 @@ PTO_INST RecordEvent TCVT(TileDataD& dst, TileDataS& src, RoundMode mode, WaitEv
 
 ## 约束
 
-- `dst` and `src` must be compatible in shape/valid region as required by the implementation.
-- The conversion `(src element type) -> (dst element type)` must be supported by the target for the given `RoundMode`.
-- **Implementation notes (A2A3/A5)**:
-  - `TCVT_IMPL` does not enforce additional `static_assert`/`PTO_ASSERT` checks on the type pair; unsupported conversions are target-defined.
+- `dst` 和 `src` 必须在形状/有效区域方面兼容，如实现所要求的。
+- 对于给定的 `RoundMode`，转换 `(src 元素类型) -> (dst 元素类型)` 必须被目标支持。
+- **实现说明 (A2A3/A5)**:
+  - `TCVT_IMPL` 不对类型对强制执行额外的 `static_assert`/`PTO_ASSERT` 检查；不支持的转换由目标定义。
 
 ## 示例
 

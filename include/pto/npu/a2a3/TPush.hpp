@@ -134,7 +134,6 @@ struct TPipe {
 
         /**
          * alloc: Request space in FIFO
-         * Logic:
          * 1. (iter >= Depth): Startup protection. Don't check flags when buffer is empty.
          * 2. (iter % Period == 0): Sparse sync. Only check flag periodically.
          */
@@ -285,7 +284,6 @@ struct TPipe {
 
         /**
          * free: Release space in FIFO
-         * Logic:
          * 1. (iter >= Depth - Period): Silence at start. Don't signal if Producer
          * is still enjoying the initial free buffer space.
          * 2. (is_sync_step): Accumulate free slots and signal in batches.
@@ -351,7 +349,15 @@ struct TPipe {
 
     template <FIFOType T = FiFoType, typename std::enable_if_t<T == FIFOType::GM_FIFO, int> = 0>
     PTO_INTERNAL explicit TPipe(__gm__ typename TileDataCons::DType *fifoBase) : fifo(fifoBase), prod(), cons()
-    {}
+    {
+        cons.free();
+    }
+
+    // Destructor for TPipe
+    PTO_INTERNAL ~TPipe()
+    {
+        prod.allocate();
+    }
 };
 
 /**

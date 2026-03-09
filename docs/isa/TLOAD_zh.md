@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-Notation depends on the `GlobalTensor` shape/stride and the `Tile` layout. Conceptually (2D view, with a base offset):
+符号表示取决于 `GlobalTensor` 的形状/步长和 `Tile` 的布局。概念上（二维视图，带基础偏移量）：
 
 $$ \mathrm{dst}_{i,j} = \mathrm{src}_{r_0 + i,\; c_0 + j} $$
 
@@ -49,31 +49,31 @@ PTO_INST RecordEvent TLOAD(TileData& dst, GlobalData& src, WaitEvents&... events
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `TileData::DType` must be one of: `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `int64_t`, `uint64_t`, `half`, `bfloat16_t`, `float`.
-  - Destination tile location must be `TileType::Vec` or `TileType::Mat`.
-  - `sizeof(TileData::DType) == sizeof(GlobalData::DType)`.
-  - Runtime: all `src.GetShape(dim)` values and `dst.GetValidRow()/GetValidCol()` must be `> 0`.
-  - `TileType::Vec` loads only support matching layouts: ND->ND, DN->DN, NZ->NZ.
-  - `TileType::Mat` loads support: ND->ND, DN->DN, NZ->NZ, plus ND->NZ and DN->ZN.
-    - For ND->NZ or DN->ZN: `GlobalData::staticShape[0..2] == 1` and `TileData::SFractalSize == 512`.
-  - For `int64_t/uint64_t`, only ND->ND or DN->DN are supported.
+  - `TileData::DType` 必须是以下之一：`int8_t`、`uint8_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`int64_t`、`uint64_t`、`half`、`bfloat16_t`、`float`。
+  - 目标 tile 位置必须是 `TileType::Vec` 或 `TileType::Mat`。
+  - `sizeof(TileData::DType) == sizeof(GlobalData::DType)`。
+  - 运行时：所有 `src.GetShape(dim)` 值和 `dst.GetValidRow()/GetValidCol()` 必须 `> 0`。
+  - `TileType::Vec` 加载仅支持匹配的布局：ND->ND、DN->DN、NZ->NZ。
+  - `TileType::Mat` 加载支持：ND->ND、DN->DN、NZ->NZ，以及 ND->NZ 和 DN->ZN。
+    - 对于 ND->NZ 或 DN->ZN：`GlobalData::staticShape[0..2] == 1` 且 `TileData::SFractalSize == 512`。
+  - 对于 `int64_t/uint64_t`，仅支持 ND->ND 或 DN->DN。
 - **实现检查 (A5)**:
-  - `sizeof(TileData::DType)` must be `1`, `2`, `4`, or `8` bytes, and must match `sizeof(GlobalData::DType)`.
-  - For `int64_t/uint64_t`, `TileData::PadVal` must be `PadValue::Null` or `PadValue::Zero`.
-  - `TileType::Vec` loads require one of the following layout pairs:
-    - ND with row-major + `SLayout::NoneBox` (ND->ND),
-    - DN with col-major + `SLayout::NoneBox` (DN->DN),
-    - NZ with `SLayout::RowMajor` (NZ->NZ).
-  - For row-major ND->ND with compile-time-known shapes, `TileData::ValidCol` must equal `GlobalData::staticShape[4]`, and `TileData::ValidRow` must equal the product of `GlobalData::staticShape[0..3]`.
-  - `TileType::Mat` loads are additionally constrained by `TLoadCubeCheck` (e.g., only specific ND/DN/NZ conversions and L1-size limits).
-  - `TileType::Mat` loads also handle loads for mx format, which include `MX_A_ZZ/MX_A_ND/MX_A_DN` to ZZ for scalarA and `MX_B_NN/MX_B_ND/MX_B_DN` to NN for scalarB.
-    - for `MX_A_ZZ/MX_B_NN`: `GlobalData::staticShape[3] == 16` and `GlobalData::staticShape[4] == 2`.
-    - for `MX_A_ND/MX_ADN/MX_B_ND/MX_B_DN`: `GlobalData::staticShape[0] == 1` and `GlobalData::staticShape[1] == 1` and `GlobalData::staticShape[4] == 2`.
-    - for scaleA, `dst.GetValidCol() % 2 == 0`.
-    - for scaleB, `dst.GetValidRow() % 2 == 0`
+  - `sizeof(TileData::DType)` 必须是 `1`、`2`、`4` 或 `8` 字节，且必须匹配 `sizeof(GlobalData::DType)`。
+  - 对于 `int64_t/uint64_t`，`TileData::PadVal` 必须是 `PadValue::Null` 或 `PadValue::Zero`。
+  - `TileType::Vec` 加载需要以下布局对之一：
+    - ND 使用行主序 + `SLayout::NoneBox`（ND->ND），
+    - DN 使用列主序 + `SLayout::NoneBox`（DN->DN），
+    - NZ 使用 `SLayout::RowMajor`（NZ->NZ）。
+  - 对于使用编译时已知形状的行主序 ND->ND，`TileData::ValidCol` 必须等于 `GlobalData::staticShape[4]`，且 `TileData::ValidRow` 必须等于 `GlobalData::staticShape[0..3]` 的乘积。
+  - `TileType::Mat` 加载还受到 `TLoadCubeCheck` 的约束（例如，仅特定的 ND/DN/NZ 转换和 L1 大小限制）。
+  - `TileType::Mat` 加载还处理 mx 格式的加载，包括 `MX_A_ZZ/MX_A_ND/MX_A_DN` 到 ZZ（用于 scalarA）和 `MX_B_NN/MX_B_ND/MX_B_DN` 到 NN（用于 scalarB）。
+    - 对于 `MX_A_ZZ/MX_B_NN`：`GlobalData::staticShape[3] == 16` 且 `GlobalData::staticShape[4] == 2`。
+    - 对于 `MX_A_ND/MX_ADN/MX_B_ND/MX_B_DN`：`GlobalData::staticShape[0] == 1` 且 `GlobalData::staticShape[1] == 1` 且 `GlobalData::staticShape[4] == 2`。
+    - 对于 scaleA，`dst.GetValidCol() % 2 == 0`。
+    - 对于 scaleB，`dst.GetValidRow() % 2 == 0`。
 
 - **有效区域**:
-  - The implementation uses `dst.GetValidRow()` / `dst.GetValidCol()` as the transfer size.
+  - 实现使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为传输大小。
 
 ## 示例
 

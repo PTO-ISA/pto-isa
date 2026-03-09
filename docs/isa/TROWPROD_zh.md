@@ -3,8 +3,7 @@
 
 ## Tile 操作图示
 
-<!-- ![TROWPROD tile operation](../figures/isa/TROWPROD.svg) -->
-<!-- TODO: 添加 TROWPROD 图示 -->
+![TROWPROD tile operation](../figures/isa/TROWPROD.svg)
 
 ## 简介
 
@@ -25,7 +24,7 @@ PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 ```text
 %dst = trowprod %src : !pto.tile<...> -> !pto.tile<...>
 ```
-Lowering 可能引入内部临时 tile；C++ 内建函数需要显式的 `tmp` 操作数。
+降级可能引入内部临时 tile；C++ 内建函数需要显式的 `tmp` 操作数。
 
 ### IR Level 1 (SSA)
 
@@ -69,7 +68,7 @@ NPU 实现检查：
 
 与使用 `vcadd`/`vcgadd` 指令的 TROWSUM 不同，TROWPROD 使用 `vmul` 进行二分归约，因为 A2A3 没有 `vcmul` 指令。实现步骤：
 
-1. 将相邻的 repeat 对相乘，结果存入 `tmp`
+1. 将相邻的重复对相乘，结果存入 `tmp`
 2. 对 `tmp` 迭代执行二分乘法归约
 3. 持续归约直到每行只剩一个元素
 

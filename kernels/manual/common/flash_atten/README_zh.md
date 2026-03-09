@@ -10,7 +10,7 @@
 ## 目录结构
 
 ```
-kernels/manual/a2a3/flash_atten/
+kernels/manual/common/flash_atten/
 ├── scripts/
 │   └── gen_data.py              # 生成输入与 golden 输出
 ├── CMakeLists.txt               # 构建配置
@@ -30,7 +30,7 @@ source ${ASCEND_INSTALL_PATH}/bin/setenv.bash
 2. 运行示例：
 
 ```bash
-cd ${git_clone_path}/kernels/manual/a2a3/flash_atten
+cd ${git_clone_path}/kernels/manual/common/flash_atten
 
 # 运行默认 case（与 generated_cases.* 中内置集合一致）
 bash run.sh -r npu -v Ascend910B1

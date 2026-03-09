@@ -93,9 +93,9 @@ void test_tfmod()
     EXPECT_TRUE(ret);
 }
 
-TEST_F(TFMODTest, case_half_16x64_16x128_16x128_16x64)
+TEST_F(TFMODTest, case_float_16x64_16x128_16x128_16x64)
 {
-    test_tfmod<aclFloat16, 16, 64, 16, 128, 16, 128, 16, 64>();
+    test_tfmod<float, 16, 64, 16, 128, 16, 128, 16, 64>();
 }
 
 TEST_F(TFMODTest, case_float_16x32_16x64_16x32_16x32)
@@ -113,9 +113,9 @@ TEST_F(TFMODTest, case_int32_16x32_16x64_16x32_16x32)
     test_tfmod<int32_t, 16, 32, 16, 64, 16, 32, 16, 32>();
 }
 
-TEST_F(TFMODTest, case_half_16x64_16x128_16x128_16x63)
+TEST_F(TFMODTest, case_float_16x64_16x128_16x128_16x63)
 {
-    test_tfmod<aclFloat16, 16, 64, 16, 128, 16, 128, 16, 63>();
+    test_tfmod<float, 16, 64, 16, 128, 16, 128, 16, 63>();
 }
 
 TEST_F(TFMODTest, case_float_2x32_2x64_2x32_2x31)
@@ -138,7 +138,7 @@ TEST_F(TFMODTest, case_int16_16x64_16x128_16x128_16x63)
     test_tfmod<int16_t, 16, 64, 16, 128, 16, 128, 16, 63>();
 }
 
-TEST_F(TFMODTest, case_half_1x8192_1x8192_1x8192_1x8192)
+TEST_F(TFMODTest, case_float_1x8192_1x8192_1x8192_1x8192)
 {
-    test_tfmod<aclFloat16, 1, 8192, 1, 8192, 1, 8192, 1, 8192>();
+    test_tfmod<float, 1, 8192, 1, 8192, 1, 8192, 1, 8192>();
 }

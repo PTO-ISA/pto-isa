@@ -64,30 +64,30 @@ PTO_INST RecordEvent TGATHER(DstTileData& dst, SrcTileData& src, WaitEvents&... 
 
 ## 约束
 
-- **Index-based gather: implementation checks (A2A3)**:
-  - `sizeof(DstTileData::DType)` must be must be `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `float`.
-  - `sizeof(Src1TileData::DType)` must be must be `int32_t`, `uint32_t`.
-  - `DstTileData::DType` must be the same type as `Src0TileData::DType`.
-  - `src1.GetValidCol() == Src1TileData::Cols` and `dst.GetValidCol() == DstTileData::Cols`.
-- **Index-based gather: implementation checks (A5)**:
-  - `sizeof(DstTileData::DType)` must be must be `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `float`.
-  - `sizeof(Src1TileData::DType)` must be must be `int16_t`, `uint16_t`, `int32_t`, `uint32_t`.
-  - `DstTileData::DType` must be the same type as `Src0TileData::DType`.
-  - `src1.GetValidCol() == Src1TileData::Cols` and `dst.GetValidCol() == DstTileData::Cols`.
-- **基于掩码模式的 gather： implementation checks (A2A3)**:
-  - Source element size must be `2` or `4` bytes.
-  - `SrcTileData::DType`/`DstTileData::DType` must be `int16_t` or `uint16_t` or `int32_t` or `uint32_t`
-    or `half` or `bfloat16_t` or `float`.
-  - `dst` and `src` must both be `TileType::Vec` and row-major.
-  - `sizeof(dst element) == sizeof(src element)` and `dst.GetValidCol() == DstTileData::Cols` (continuous dst storage).
-- **基于掩码模式的 gather： implementation checks (A5)**:
-  - Source element size must be `1` or `2` or `4` bytes.
-  - `dst` and `src` must both be `TileType::Vec` and row-major.
-  - `SrcTileData::DType`/`DstTileData::DType` must be `int8_t` or `uint8_t` or `int16_t` or `uint16_t` or `int32_t` or `uint32_t`
-    or `half` or `bfloat16_t` or `float` or `float8_e4m3_t`or `float8_e5m2_t` or `hifloat8_t`.
-  - Supported dtypes are restricted to a target-defined set (checked via `static_assert` in the implementation), and `sizeof(dst element) == sizeof(src element)`, `dst.GetValidCol() == DstTileData::Cols` (continuous dst storage).
+- **基于索引的 gather： 实现检查 (A2A3)**:
+  - `sizeof(DstTileData::DType)` 必须是 必须是 `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `float`.
+  - `sizeof(Src1TileData::DType)` 必须是 必须是 `int32_t`, `uint32_t`.
+  - `DstTileData::DType` 必须是 相同的类型 `Src0TileData::DType`.
+  - `src1.GetValidCol() == Src1TileData::Cols`且`dst.GetValidCol() == DstTileData::Cols`.
+- **基于索引的 gather： 实现检查 (A5)**:
+  - `sizeof(DstTileData::DType)` 必须是 必须是 `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `float`.
+  - `sizeof(Src1TileData::DType)` 必须是 必须是 `int16_t`, `uint16_t`, `int32_t`, `uint32_t`.
+  - `DstTileData::DType` 必须是 相同的类型 `Src0TileData::DType`.
+  - `src1.GetValidCol() == Src1TileData::Cols`且`dst.GetValidCol() == DstTileData::Cols`.
+- **基于掩码模式的 gather： 实现检查 (A2A3)**:
+  - 源元素大小 必须是 `2`或`4` 字节.
+  - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int16_t`或`uint16_t`或`int32_t`或`uint32_t`
+   或`half`或`bfloat16_t`或`float`.
+  - `dst`且`src` 必须都是 `TileType::Vec`且行主序.
+  - `sizeof(dst element) == sizeof(src element)`且`dst.GetValidCol() == DstTileData::Cols` (连续的目标存储).
+- **基于掩码模式的 gather： 实现检查 (A5)**:
+  - 源元素大小 必须是 `1`或`2`或`4` 字节.
+  - `dst`且`src` 必须都是 `TileType::Vec`且行主序.
+  - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int8_t`或`uint8_t`或`int16_t`或`uint16_t`或`int32_t`或`uint32_t`
+   或`half`或`bfloat16_t`或`float`或`float8_e4m3_t`or `float8_e5m2_t`或`hifloat8_t`.
+  - 支持的数据类型限制为目标定义的集合 (通过 `static_assert` 在实现中),且`sizeof(dst element) == sizeof(src element)`, `dst.GetValidCol() == DstTileData::Cols` (连续的目标存储).
 - **边界 / 有效性**:
-  - Index bounds are not validated by explicit runtime assertions; out-of-range indices are target-defined.
+  - Index bounds 不通过显式运行时断言进行验证; 超出范围的索引由目标定义.
 
 ## 示例
 

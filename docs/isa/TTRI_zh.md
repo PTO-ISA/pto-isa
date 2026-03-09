@@ -51,12 +51,12 @@ PTO_INST RecordEvent TTRI(TileData &dst, int diagonal, WaitEvents&... events);
 
 ## 约束
 
-- `isUpperOrLower` must be `0` (lower) or `1` (upper).
-- Destination tile must be row-major on some targets (see `include/pto/npu/*/TTri.hpp`).
+- `isUpperOrLower` 必须是 `0` (lower)或`1` (upper).
+- Destination tile 必须是 行主序 on some targets (参见 `include/pto/npu/*/TTri.hpp`）。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

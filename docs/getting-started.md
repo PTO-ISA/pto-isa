@@ -4,58 +4,67 @@
 
 # Getting Started
 
-This guide covers prerequisites and setup on **macOS / Linux / Windows**, and shows how to build and run the **CPU simulator** first (recommended). Running on Ascend (NPU / simulator) requires Ascend CANN and is typically **Linux-only**.
+This guide helps you set up and run the PTO ISA project. It covers two main scenarios:
 
-## Prerequisites
+1. **CPU Simulator** (Recommended for beginners) - Cross-platform support for macOS, Linux, and Windows
+2. **NPU Environment** (Advanced) - Ascend 910B/910C on Linux with CANN toolkit
 
-### Required (CPU simulator)
+Choose the section that matches your needs. Most users should start with the CPU simulator.
 
+---
+
+## Part 1: CPU Simulator (Cross-Platform)
+
+The CPU simulator is the easiest way to get started. It works on macOS, Linux, and Windows without requiring specialized hardware.
+
+### Prerequisites
+
+**Required:**
 - Git
 - Python `>= 3.8` (3.10+ recommended)
 - CMake `>= 3.16`
 - A C++ compiler with C++20 support:
-  - Linux: GCC 13+ or Clang 15+ (bfloat16 support will be enabled only for GCC>=14)
+  - Linux: GCC 13+ or Clang 15+ (bfloat16 support enabled for GCC >= 14)
   - macOS: Xcode/AppleClang (or Homebrew LLVM)
   - Windows: Visual Studio 2022 Build Tools (MSVC)
-- Python packages: `numpy` (the CPU test data generators use it)
+- Python package: `numpy`
 
 `run_cpu.py` can install `numpy` automatically (unless you pass `--no-install`).
 
-### Optional (faster builds)
-
+**Optional (for faster builds):**
 - Ninja (CMake generator)
-- A working internet connection (CMake may fetch GoogleTest for CPU ST tests if not installed system-wide)
+- Internet connection (CMake may fetch GoogleTest if not installed system-wide)
 
-## OS Setup
+### OS-Specific Setup
 
-### macOS
+#### macOS
 
-- Install Xcode Command Line Tools:
+Install Xcode Command Line Tools:
 
   ```bash
   xcode-select --install
   ```
 
-- Install dependencies (recommended via Homebrew):
+Install dependencies (recommended via Homebrew):
 
   ```bash
   brew install cmake ninja python
   ```
 
-If you do not use Homebrew, make sure `python3`, `cmake`, and a modern `clang++` are on `PATH`.
+If you don't use Homebrew, ensure `python3`, `cmake`, and a modern `clang++` are on `PATH`.
 
-### Linux (Ubuntu 20.04)
+#### Linux (Ubuntu 20.04+)
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y build-essential cmake ninja-build python3 python3-pip python3-venv git
 ```
-### Windows
+
+#### Windows
 
 Install the following:
-
 - Git for Windows
-- Python 3 (and ensure it’s on `PATH`)
+- Python 3 (ensure it's on `PATH`)
 - CMake
 - Visual Studio 2022 Build Tools (Desktop development with C++)
 
@@ -70,26 +79,26 @@ winget install --id Microsoft.VisualStudio.2022.BuildTools -e
 
 After installation, open a **Developer Command Prompt for VS 2022** (or ensure `cl.exe` is on `PATH`).
 
-Manually download the compiler (optional):
+**Alternative: Manual compiler installation**
 
-Possible options:
-- [WinLibs](https://winlibs.com),
+If you prefer not to use Visual Studio:
+- [WinLibs](https://winlibs.com)
 - [MSYS2](https://www.msys2.org)
 
-After installation, add `path_to_compiler/bin` directory to `PATH` (ensure that `gcc -v` is executable in the powershell).
+After installation, add `path_to_compiler/bin` to `PATH` (verify with `gcc -v` in PowerShell).
 
-## Get The Code
+### Get The Code
 
 ```bash
 git clone <YOUR_REPO_URL>
 cd pto-isa
 ```
 
-## Python Environment
+### Python Environment Setup
 
 Create and activate a virtual environment:
 
-- macOS / Linux:
+**macOS / Linux:**
 
   ```bash
   python3 -m venv .venv
@@ -98,7 +107,7 @@ Create and activate a virtual environment:
   python -m pip install numpy
   ```
 
-- Windows (PowerShell):
+**Windows (PowerShell):**
 
   ```powershell
   py -3 -m venv .venv
@@ -107,215 +116,239 @@ Create and activate a virtual environment:
   python -m pip install numpy
   ```
 
-## Run CPU Simulator
+### Run CPU Simulator
 
-This builds and runs the CPU ST test binaries under `tests/cpu/st` and executes all testcases:
+Build and run all CPU ST test binaries under `tests/cpu/st`:
 
 ```bash
 python3 tests/run_cpu.py --clean --verbose
 ```
 
-Common options:
+**Common Options:**
 
-- Run a single testcase:
+Run a single testcase:
 
   ```bash
   python3 tests/run_cpu.py --testcase tadd
   ```
 
-- Run a single gtest case:
+Run a specific gtest case:
 
   ```bash
   python3 tests/run_cpu.py --testcase tadd --gtest_filter 'TADDTest.*'
   ```
 
-- Build & run the GEMM demo:
+Build & run the GEMM demo:
 
   ```bash
   python3 tests/run_cpu.py --demo gemm --verbose
   ```
 
-- Build & run the Flash Attention demo:
+Build & run the Flash Attention demo:
 
   ```bash
   python3 tests/run_cpu.py --demo flash_attn --verbose
   ```
 
-- Optional:
+**Additional Options:**
+
+Specify compiler path:
 
   ```bash
-  # specify the cxx path
   python3 tests/run_cpu.py --cxx=/path/to/compiler
   ```
 
+Print detailed logs:
+
   ```bash
-  # print detail logs
   python3 tests/run_cpu.py --verbose
   ```
 
+Delete build directory and rebuild:
+
   ```bash
-  # Delete build dir and rebuild
   python3 tests/run_cpu.py --clean
   ```
 
+Windows-specific (if needed):
+
   ```bash
-  # on Windows, maybe need specify generator and cmake_perfix_path
   python3 tests/run_cpu.py --clean --generator "MinGW Makefiles" --cmake_prefix_path D:\gtest\
   ```
 
-- set environment:
+Set library path (Linux):
+
   ```bash
   export LD_LIBRARY_PATH=/path_to_compiler/lib64:$LD_LIBRARY_PATH
   ```
 
-## Run NPU Tests
+---
 
-Set environment variables according to [Environment_Variables](./getting-started.md#environment-variables) first;
+## Part 2: NPU Environment (Ascend 910B/910C, Linux Only)
 
-- Running a Single ST Test Case
+This section is for users who need to run on Ascend NPU hardware or simulator. It requires a Linux environment and the Ascend CANN toolkit.
 
-  Running ST requires a working Ascend CANN environment and is typically Linux-only.
+### Prerequisites
+
+**System Requirements:**
+- Linux (Ubuntu 20.04+ recommended)
+- Python >= 3.8.0
+- GCC >= 7.3.0
+- CMake >= 3.16.0
+- Ascend NPU driver and firmware (for hardware execution)
+- CANN toolkit >= 8.5.0
+
+**GoogleTest (required for unit tests):**
+
+Download [GoogleTest 1.14.0](https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz) and install:
+
+```bash
+tar -xf googletest-1.14.0.tar.gz
+cd googletest-1.14.0
+mkdir temp && cd temp
+cmake .. -DCMAKE_CXX_FLAGS="-fPIC"
+make
+sudo make install
+```
+
+> **Note:** Python requires packages: os, numpy, ctypes, struct, copy, math, enum, ml_dtypes, en_dtypes, etc.
+>
+> If you installed GoogleTest with different flags (e.g., `-D_GLIBCXX_USE_CXX11_ABI=0`), you must update `tests/npu/[a2a3|a5]/src/st/CMakeLists.txt` accordingly by adding `add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)`.
+
+### Installation Options
+
+#### Option 1: Quick Installation (Recommended)
+
+For complete installation guidance including driver, firmware, and toolkit:
+
+https://www.hiascend.com/cann/download
+
+This method handles all dependencies automatically.
+
+#### Option 2: Manual Installation
+
+**Step 1: Install Driver and Firmware**
+
+Required for running on actual NPU hardware (skip if only building or using simulator).
+
+Installation guide: [NPU Driver and Firmware Installation Guide](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850alpha002/softwareinst/instg/instg_0001.html?Mode=VmIns&OS=Ubuntu&Software=cannToolKit)
+
+**Step 2: Install CANN Toolkit**
+
+Download the appropriate `Ascend-cann-toolkit_${cann_version}_linux-${arch}.run` installer from [CANN Downloads](https://www.hiascend.com/developer/download/community/result?module=cann).
+
+Required version: CANN >= 8.5.0
+
+```bash
+# Make installer executable
+chmod +x Ascend-cann-toolkit_${cann_version}_linux-${arch}.run
+
+# Install
+./Ascend-cann-toolkit_${cann_version}_linux-${arch}.run --install --force --install-path=${install_path}
+```
+
+Parameters:
+- `${cann_version}`: CANN toolkit version
+- `${arch}`: CPU architecture (`aarch64` or `x86_64`)
+- `${install_path}`: Installation path (optional)
+
+Default paths:
+- Root installation: `/usr/local/Ascend/cann`
+- Non-root installation: `$HOME/Ascend/cann`
+
+### Environment Variables
+
+Set up the CANN environment before running NPU tests:
+
+**Root installation (default path):**
+
+```bash
+source /usr/local/Ascend/cann/bin/setenv.bash
+```
+
+**Non-root installation (default path):**
+
+```bash
+source $HOME/Ascend/cann/bin/setenv.bash
+```
+
+**Custom installation path:**
+
+```bash
+source ${install_path}/cann/bin/setenv.bash
+```
+
+### Download Source Code
+
+```bash
+git clone https://gitcode.com/cann/pto-isa.git
+cd pto-isa
+```
+
+### Run NPU Tests
+
+**Run a Single ST Test Case:**
 
   ```bash
   python3 tests/script/run_st.py -r [sim|npu] -v [a3|a5] -t [TEST_CASE] -g [GTEST_FILTER_CASE]
   ```
 
-  Note: the `a3` backend covers the A2/A3 family (`include/pto/npu/a2a3`).
+Note: The `a3` backend covers the A2/A3 family (`include/pto/npu/a2a3`).
 
-  Example:
+Examples:
 
   ```bash
   python3 tests/script/run_st.py -r npu -v a3 -t tmatmul -g TMATMULTest.case1
   python3 tests/script/run_st.py -r sim -v a5 -t tmatmul -g TMATMULTest.case1
   ```
 
-- Running Recommended Test Suites
+**Run Recommended Test Suites:**
 
   ```bash
-  # Execute the following commands from the project root directory:
+# Execute from project root directory
   chmod +x ./tests/run_st.sh
   ./tests/run_st.sh a5 npu simple
-  ulimit -n 65536;./tests/run_st.sh a3 sim all # use ulimit -n first if run on simulator
+
+# For simulator (increase file descriptor limit first)
+ulimit -n 65536
+./tests/run_st.sh a3 sim all
   ```
 
-- Run Full ST Tests:
+**Run Full ST Tests:**
 
   ```bash
   chmod +x build.sh
   ./build.sh --run_all --a3 --sim
   ```
-- Run Simplified ST Tests:
+
+**Run Simplified ST Tests:**
 
   ```bash
   chmod +x build.sh
   ./build.sh --run_simple --a5 --npu
   ```
-- Packaging:
+
+**Packaging:**
 
   ```bash
   chmod +x build.sh
   ./build.sh --pkg
   ```
-- Set environment
 
-  Note: if you have not installed toolkit,you should download toolkit package first.
+**Environment Setup Script:**
+
+If you haven't installed the toolkit yet, download the toolkit package first, then:
+
   ```bash
   chmod +x ./scripts/install_pto.sh
   ./scripts/install_pto.sh <toolkit_install_path> [toolkit_package_path]
   ```
 
-# Environment Setup (Ascend 910B/910C, Linux)
+---
 
-## Prerequisites
+## Next Steps
 
-Before using this project, make sure the following basic dependencies and the NPU driver/firmware are installed.
-
-1. **Install build dependencies**
-
-   The project requires the following dependencies for building from source (please pay attention to the version requirements):
-
-   - Python >= 3.8.0
-   - GCC >= 7.3.0
-   - CMake >= 3.16.0
-   - GoogleTest (only required when running unit tests; recommended version:
-     [release-1.14.0](https://github.com/google/googletest/releases/tag/v1.14.0))
-
-        After downloading the
-        [GoogleTest source](https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz),
-        install it with:
-
-        ```bash
-        tar -xf googletest-1.14.0.tar.gz
-        cd googletest-1.14.0
-        mkdir temp && cd temp                # create a temp build dir under the googletest source tree
-        cmake .. -DCMAKE_CXX_FLAGS="-fPIC"
-        make
-        make install                         # install as root
-        # sudo make install                  # install as a non-root user
-        ```
-      > **Note**
-      > 
-      > Python needs to download packages such as os, numpy, ctypes, struct, copy, math, enum, ml_dtypes, en_dtypes, etc.
-      > 
-      > If you have already installed googletest by other means, you need to make the corresponding changes to the CMakeLists.txt. For examle, you used `cmake .. -DCMAKE_CXX_FLAGS="-fPIC -D_GLIBCXX_USE_CXX11_ABI=0"` when installing googletest, you need to add `add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)` in tests/npu/[a2a3 | a5]/src/st/CMakeLists.txt
-2. **Quick installation**
-    
-    For installation guidance, see:
-    https://www.hiascend.com/cann/download
-    
-    In this way,you can skip the steps of Install driver and firmware (runtime dependency) and Install Software Packages.
-
-3. **Install driver and firmware (runtime dependency)**
-
-   The driver and firmware are required to run operators. If you only need to build, you can skip this step.
-   For installation guidance, see:
-   [NPU Driver and Firmware Installation Guide](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850alpha002/softwareinst/instg/instg_0001.html?Mode=VmIns&OS=Ubuntu&Software=cannToolKit).
-
-## Install Software Packages
-
-This project supports building from source. Before building, prepare the environment as follows.
-
-1. **Install the community edition CANN toolkit**
-
-    Download the appropriate `Ascend-cann-toolkit_${cann_version}_linux-${arch}.run` installer for your environment.[download](https://www.hiascend.com/developer/download/community/result?module=cann).
-   
-    The version of CANN we required is 8.5.0 or later.
-    
-    ```bash
-    # Ensure the installer is executable
-    chmod +x Ascend-cann-toolkit_${cann_version}_linux-${arch}.run
-    # Install
-    ./Ascend-cann-toolkit_${cann_version}_linux-${arch}.run --install --force --install-path=${install_path}
-    ```
-    - `${cann_version}`: the CANN toolkit version.
-    - `${arch}`: the CPU architecture, such as `aarch64` or `x86_64`.
-    - `${install_path}`: the installation path.
-    - If `--install-path` is omitted, the default path is used. If installed as root, the software is placed under
-      `/usr/local/Ascend/cann`. If installed as a non-root user, it is placed under `$HOME/Ascend/cann`.
-
-
-## Environment Variables
-
-- Default path (installed as root)
-
-    ```bash
-    source /usr/local/Ascend/cann/bin/setenv.bash
-    ```
-
-- Default path (installed as a non-root user)
-    ```bash
-    source $HOME/Ascend/cann/bin/setenv.bash
-    ```
-
-- Custom installation path
-    ```bash
-    source ${install_path}/cann/bin/setenv.bash
-    ```
-
-## Source Code Download
-
-Download the source with:
-```bash
-# Clone the repository (master branch as an example)
-git clone https://gitcode.com/cann/pto-isa.git
-```
+- For CPU development: Explore the demos under `tests/cpu/demos/`
+- For NPU development: Review the test cases under `tests/npu/`
+- Check the API documentation for detailed instruction usage
+- Join the community for support and discussions

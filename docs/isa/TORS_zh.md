@@ -47,9 +47,9 @@ PTO_INST RecordEvent TORS(TileDataDst& dst, TileDataSrc& src, typename TileDataS
 
 ## 约束
 
-- Intended for integral element types.
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
-- Setting the source Tile and destination Tile to the same memory is **Unsupported**.
+- 适用于整数元素类型。
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
+- **不支持**将源 Tile 和目标 Tile 设置为相同的内存。
 
 ## 示例
 

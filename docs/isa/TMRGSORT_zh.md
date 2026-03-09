@@ -71,15 +71,15 @@ PTO_INST RecordEvent TMRGSORT(DstTileData& dst, SrcTileData& src, uint32_t block
 ## 约束
 
 - **实现检查 (A2A3/A5)**:
-  - Element type must be `half` or `float` and must match across `dst/tmp/src*` tiles.
-  - All tiles must be `TileType::Vec`, row-major, and have `Rows == 1` (list stored in a single row).
-  - UB memory usage is checked (compile-time and runtime) against target limits (single `Cols` across inputs plus `tmp`/`dst`).
-- **Single-list variant (`TMRGSORT(dst, src, blockLen)`)**:
-  - `blockLen` must be a multiple of 64 (as checked by the implementation).
-  - `src.GetValidCol()` must be an integer multiple of `blockLen * 4`.
-  - `repeatTimes = src.GetValidCol() / (blockLen * 4)` must be in `[1, 255]`.
-- **Multi-list variants**:
-  - `tmp` is required and `executedNumList` is written by the implementation; supported list counts and exact semantics are target-defined.
+  - Element type 必须是 `half`或`float`且必须匹配 across `dst/tmp/src*` tiles.
+  - All tiles 必须是 `TileType::Vec`, 行主序,且have `Rows == 1` (list stored in a single row).
+  - UB memory usage is checked (compile-time且runtime) against target 限制 (single `Cols` across inputs 以及`tmp`/`dst`）。
+- **单列表变体（`TMRGSORT(dst, src, blockLen)`）**：
+  - `blockLen` 必须是 a multiple of 64 (as checked 由实现).
+  - `src.GetValidCol()` 必须是 an integer multiple of `blockLen * 4`.
+  - `repeatTimes = src.GetValidCol() / (blockLen * 4)` 必须是 in `[1, 255]`.
+- **多列表变体**：
+  - `tmp` is required且`executedNumList` is written 由实现; supported list counts且exact semantics are target-defined.
 
 ## 示例
 

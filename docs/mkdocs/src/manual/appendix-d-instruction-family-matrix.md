@@ -32,8 +32,6 @@ This appendix is generated from `docs/isa/manifest.yaml` and provides a source-s
 |---|---|---|---|---|
 | Synchronization | `TSYNC` | `sync` | `producer, consumer` | `docs/isa/TSYNC.md` |
 | Manual / Resource Binding | `TASSIGN` | `config` | `config, state` | `docs/isa/TASSIGN.md` |
-| Manual / Resource Binding | `TSETHF32MODE` | `config` | `config, state` | `docs/isa/TSETHF32MODE.md` |
-| Manual / Resource Binding | `TSETTF32MODE` | `config` | `config, state` | `docs/isa/TSETTF32MODE.md` |
 | Manual / Resource Binding | `TSETFMATRIX` | `config` | `config, state` | `docs/isa/TSETFMATRIX.md` |
 | Elementwise (Tile-Tile) | `TADD` | `elementwise` | `dst, src0, src1` | `docs/isa/TADD.md` |
 | Elementwise (Tile-Tile) | `TABS` | `elementwise` | `dst, src0, src1` | `docs/isa/TABS.md` |

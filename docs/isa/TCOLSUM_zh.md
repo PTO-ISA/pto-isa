@@ -55,14 +55,14 @@ PTO_INST RecordEvent TCOLSUM(TileDataOut& dst, TileDataIn& src, TileDataTmp& tmp
 
 实现检查 (NPU):
 
-- Tile location: `dst`, `src`, `tmp` must be `TileType::Vec`.
-- Tile 布局: all tiles must be ND fractal (`isRowMajor` and `SLayout::NoneBox`).
+- Tile 位置: `dst`, `src`, `tmp` 必须是 `TileType::Vec`.
+- Tile 布局: 所有tiles 必须是 ND 分形（`isRowMajor`且`SLayout::NoneBox`）。
 - 数据类型一致性:
-  - A2A3: `src.DType` must be one of `half`, `float`, `int16_t`, `int32_t`, and `dst.DType == tmp.DType == src.DType`.
-  - A5: `dst.DType == src.DType` is required by `TColReduceCheck`; the exact supported `src.DType` set is target-defined (see `include/pto/npu/a5/TColReduceOps.hpp`).
+  - A2A3: `src.DType` 必须是 one of `half`, `float`, `int16_t`, `int32_t`,且`dst.DType == tmp.DType == src.DType`.
+  - A5：`TColReduceCheck` 要求 `dst.DType == src.DType`；确切支持的 `src.DType` 集合由目标定义（参见 `include/pto/npu/a5/TColReduceOps.hpp`）。
 - 运行期有效区域检查:
-  - A2A3: `src.GetValidCol() == dst.GetValidCol()`; returns early if `src.GetValidRow() == 0` or `src.GetValidCol() == 0`.
-  - A5: `srcValidRow` and `srcValidCol` must be non-zero; `srcValidCol == dstValidCol` is asserted by `TColReduceCheck`.
+  - A2A3: `src.GetValidCol() == dst.GetValidCol()`; returns early if `src.GetValidRow() == 0`或`src.GetValidCol() == 0`.
+  - A5: `srcValidRow`且`srcValidCol` 必须是 non-zero; `srcValidCol == dstValidCol` is asserted by `TColReduceCheck`.
 
 ## 示例
 

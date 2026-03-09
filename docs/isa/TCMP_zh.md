@@ -10,11 +10,11 @@
 
 ## 数学语义
 
-Conceptually, for each element `(i, j)` in the valid region, define a predicate:
+概念上，对于有效区域中的每个元素 `(i, j)`，定义一个谓词：
 
 $$ p_{i,j} = \left(\mathrm{src0}_{i,j}\ \mathrm{cmpMode}\ \mathrm{src1}_{i,j}\right) $$
 
-The predicate mask is stored in `dst` using an implementation-defined packed layout.
+谓词掩码使用实现定义的打包布局存储在 `dst` 中。
 
 ## 汇编语法
 
@@ -40,7 +40,7 @@ pto.tcmp ins(%src0, %src1{cmpMode = #pto<cmp xx>}: !pto.tile_buf<...>, !pto.tile
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/type.hpp`:
+声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/type.hpp`：
 
 ```cpp
 template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
@@ -51,20 +51,20 @@ PTO_INST RecordEvent TCMP(TileDataDst& dst, TileDataSrc& src0, TileDataSrc& src1
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - Input type must be one of: `int32_t`, `half`, `float`.
-  - Output type must be `uint8_t`.
-  - `src0/src1/dst` tile location must be `TileType::Vec`.
-  - Static valid bounds: `TileDataSrc::ValidRow <= TileDataSrc::Rows` and `TileDataSrc::ValidCol <= TileDataSrc::Cols`.
-  - Runtime: `src0.GetValidRow() == dst.GetValidRow()` and `src0.GetValidCol() == dst.GetValidCol()`.
-  - Note: `src1` shape/valid is not validated by explicit runtime assertions in this implementation.
-  - For `TileDataSrc::DType == int32_t`, the implementation uses the `EQ` compare path regardless of `cmpMode`.
+  - 输入类型必须是以下之一：`int32_t`、`half`、`float`。
+  - 输出类型必须是 `uint8_t`。
+  - `src0/src1/dst` tile 位置必须是 `TileType::Vec`。
+  - 静态有效边界：`TileDataSrc::ValidRow <= TileDataSrc::Rows` 且 `TileDataSrc::ValidCol <= TileDataSrc::Cols`。
+  - 运行时：`src0.GetValidRow() == dst.GetValidRow()` 且 `src0.GetValidCol() == dst.GetValidCol()`。
+  - 注意：`src1` 的形状/有效性在此实现中不通过显式运行时断言进行验证。
+  - 对于 `TileDataSrc::DType == int32_t`，实现使用 `EQ` 比较路径，无论 `cmpMode` 如何。
 - **实现检查 (A5)**:
-  - Input type must be one of: `uint32_t`, `int32_t`, `uint16_t`, `int16_t`, `uint8_t`,  `int8_t`, `float`, `half`.
-  - Output type must be `uint32_t`.
-  - Implemented (see `include/pto/npu/a5/TCmp.hpp`).
-  - The A5 implementation uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain and writes a packed predicate mask into `dst` (target-defined packing).
-- **Mask encoding**:
-  - The mask tile is interpreted as packed predicate bits in a target-defined layout.
+  - 输入类型必须是以下之一：`uint32_t`、`int32_t`、`uint16_t`、`int16_t`、`uint8_t`、`int8_t`、`float`、`half`。
+  - 输出类型必须是 `uint32_t`。
+  - 已实现（参见 `include/pto/npu/a5/TCmp.hpp`）。
+  - A5 实现使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域，并将打包的谓词掩码写入 `dst`（目标定义的打包方式）。
+- **掩码编码**:
+  - 掩码 tile 被解释为目标定义布局中的打包谓词位。
 
 ## 示例
 

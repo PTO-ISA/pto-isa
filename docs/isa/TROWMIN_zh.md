@@ -51,20 +51,20 @@ PTO_INST RecordEvent TROWMIN(TileDataOut& dst, TileDataIn& src, TileDataTmp& tmp
 实现检查 (NPU):
 
 - A2A3:
-  - Tile location: `dst` and `src` must be `TileType::Vec`.
-  - Tile 布局 of `src`: ND fractal (`isRowMajor` and `SLayout::NoneBox`).
+  - Tile 位置: `dst`且`src` 必须是 `TileType::Vec`.
+  - Tile 布局 of `src`: ND fractal (`isRowMajor`且`SLayout::NoneBox`）。
   - Tile 布局 of `dst`:
-    - **推荐**: DN layout Tile of 1D, e.g., `Tile<TileType::Vec, T, ROWS, 1, BLayout::ColMajor, ValidRows, 1>`
-    - **将移除**: ND layout Tile of 2D, e.g., `Tile<TileType::Vec, T, ROWS, COLS, BLayout::RowMajor, ValidRows, 1>`
-  - 数据类型: `half` or `float`.
+    - **推荐**: DN layout Tile of 1D, 例如， `Tile<TileType::Vec, T, ROWS, 1, BLayout::ColMajor, ValidRows, 1>`
+    - **将移除**: ND layout Tile of 2D, 例如， `Tile<TileType::Vec, T, ROWS, COLS, BLayout::RowMajor, ValidRows, 1>`
+  - 数据类型: `half`或`float`.
   - 数据类型一致性: `dst.DType == src.DType`.
   - 运行期有效区域检查:
-    - `srcValidCol != 0` and `srcValidRow != 0`.
-    - `srcValidRow == dstValidRow` (the output valid row must match the input valid row).
+    - `srcValidCol != 0`且`srcValidRow != 0`.
+    - `srcValidRow == dstValidRow` (the output valid row 必须匹配 the input valid row).
 - A5:
-  - 数据类型: `half` or `float`.
+  - 数据类型: `half`或`float`.
   - 数据类型一致性: `dst.DType == src.DType`.
-  - No explicit runtime assertions on `validRow/validCol` in the implementation; the loops use `src.GetValidRow()` and `src.GetValidCol()`.
+  - No explicit runtime assertions on `validRow/validCol` 在实现中; the loops use `src.GetValidRow()`且`src.GetValidCol()`.
 
 ## 示例
 

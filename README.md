@@ -111,33 +111,78 @@ For detailed, OS-specific setup (Windows / Linux / macOS), see: [docs/getting-st
 
 ### Build Documentation (MkDocs)
 
-If you wish to directly access the PTO ISA documentation, you can refer to the following links for complete content:
+This repository includes comprehensive API documentation and ISA instruction references built with MkDocs (Material theme) under `docs/mkdocs/`. The documentation covers:
 
-- [Documentation Center](https://pto-isa.gitcode.com)
+- Complete PTO ISA instruction reference
+- API usage guidelines and examples
+- Performance tuning guides
+- Architecture and design documentation
 
-If you prefer to build the documentation locally, you may follow the steps below.
+**Option 1: Access Online Documentation (Recommended)**
 
-This repository includes an MkDocs (Read the Docs theme) site under `docs/mkdocs/`.
+For the latest documentation, visit the [Documentation Center](https://pto-isa.gitcode.com).
 
-Install mkdocs first:
+**Option 2: Build Documentation Locally**
+
+Build locally if you need offline access, are working on documentation changes, or want to view unreleased features.
+
+**Prerequisites:**
+- Python >= 3.8
+- pip (Python package manager)
+
+**Method 1: Quick Start with MkDocs CLI**
+
+1. Install MkDocs and dependencies:
 
 ```bash
 python -m pip install -r docs/mkdocs/requirements.txt
+```
+
+2. Choose one of the following options:
+
+**Option A: Serve documentation locally (for development/preview)**
+
+```bash
 python -m mkdocs serve -f docs/mkdocs/mkdocs.yml
 ```
 
-Build a static site:
+The documentation will be available at `http://127.0.0.1:8000`. The server watches for file changes and automatically reloads. Press `Ctrl+C` to stop the server.
+
+**Option B: Build static HTML site (for offline use/deployment)**
 
 ```bash
 python -m mkdocs build -f docs/mkdocs/mkdocs.yml
 ```
 
-Build via CMake:
+Output will be in `docs/mkdocs/site/`. Open `docs/mkdocs/site/index.html` in your browser.
+
+**Method 2: Build via CMake (Advanced)**
+
+This method is useful for CI/CD pipelines or when integrating documentation builds into your development workflow.
+
+1. Create a Python virtual environment (recommended):
+
+```bash
+python3 -m venv .venv-mkdocs
+source .venv-mkdocs/bin/activate  # On Windows: .venv-mkdocs\Scripts\Activate.ps1
+python -m pip install -r docs/mkdocs/requirements.txt
+```
+
+2. Configure and build with CMake:
 
 ```bash
 cmake -S docs -B build/docs -DPython3_EXECUTABLE=$PWD/.venv-mkdocs/bin/python
 cmake --build build/docs --target pto_docs
 ```
+
+On Windows (PowerShell):
+
+```powershell
+cmake -S docs -B build/docs -DPython3_EXECUTABLE="$PWD\.venv-mkdocs\Scripts\python.exe"
+cmake --build build/docs --target pto_docs
+```
+
+The built documentation will be in `build/docs/site/`.
 
 ### Run CPU Simulator (recommended first step)
 

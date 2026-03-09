@@ -10,19 +10,19 @@
 
 ## 数学语义
 
-Conceptually (base GEMV path):
+概念上（基础 GEMV 路径）：
 
 $$
 \mathrm{C}_{0,j} = \sum_{k=0}^{K-1} \mathrm{A}_{0,k} \cdot \mathrm{B}_{k,j}
 $$
 
-For `TGEMV_MX`, scale tiles participate in implementation-defined mixed-precision reconstruction / scaling. The architectural contract is that output corresponds to the target-defined mx GEMV semantics.
+对于 `TGEMV_MX`，缩放 tile 参与实现定义的混合精度重建/缩放。架构约定是输出对应于目标定义的 mx GEMV 语义。
 
 ## 汇编语法
 
 PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 
-Schematic form:
+示意形式：
 
 ```text
 %acc = tgemv.mx %a, %a_scale, %b, %b_scale : (!pto.tile<...>, !pto.tile<...>, !pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
@@ -51,17 +51,17 @@ PTO_INST RecordEvent TGEMV_MX(TileRes &cMatrix, TileLeft &aMatrix, TileLeftScale
                               TileRight &bMatrix, TileRightScale &bScaleMatrix, WaitEvents &... events);
 ```
 
-Additional overloads support accumulation/bias variants and `AccPhase` selection.
+附加重载支持累加/偏置变体和 `AccPhase` 选择。
 
 ## 约束
 
-- Uses backend-specific mx legality checks for data types, tile locations, fractal/layout combinations, and scaling formats.
-- Scale tile compatibility and accumulator promotion are implementation-defined by target backend.
-- For portability, validate the exact `(A, B, scaleA, scaleB, C)` type tuple and tile layout against target implementation constraints.
+- 使用后端特定的 mx 合法性检查，用于数据类型、tile 位置、分形/布局组合以及缩放格式。
+- 缩放 tile 兼容性和累加器提升由目标后端的实现定义。
+- 为了可移植性，请根据目标实现约束验证确切的 `(A, B, scaleA, scaleB, C)` 类型元组和 tile 布局。
 
 ## 示例
 
-For practical usage patterns, see:
+实际使用模式请参见：
 
 - `docs/isa/TMATMUL_MX.md`
 - `docs/isa/TGEMV.md`

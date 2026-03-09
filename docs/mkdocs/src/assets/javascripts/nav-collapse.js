@@ -19,66 +19,67 @@
     'use strict';
 
     function collapseSecondLevelNav() {
+        // 等待 jQuery 和主题 JavaScript 加载完成
+        if (typeof $ === 'undefined' || typeof window.SphinxRtdTheme === 'undefined') {
+            setTimeout(collapseSecondLevelNav, 100);
+            return;
+        }
+
         // 查找所有一级导航项
-        const firstLevelItems = document.querySelectorAll('.toctree-l1');
+        var firstLevelItems = $('.wy-menu-vertical li.toctree-l1');
         
-        firstLevelItems.forEach(item => {
-            // 检查是否有子项（ul 元素）
-            const subMenu = item.querySelector('ul');
-            if (!subMenu) return;
+        firstLevelItems.each(function() {
+            var $item = $(this);
+            var $subMenu = $item.find('> ul');
+            
+            if ($subMenu.length === 0) return;
             
             // 如果当前项不是激活状态，则收起子菜单
-            if (!item.classList.contains('current')) {
-                // 使用 jQuery 的方式（ReadTheDocs 主题使用 jQuery）
-                if (typeof $ !== 'undefined') {
-                    $(subMenu).hide();
-                } else {
-                    // 如果没有 jQuery，直接设置样式
-                    subMenu.style.display = 'none';
-                }
+            if (!$item.hasClass('current')) {
+                $subMenu.hide();
+                $item.removeClass('current').attr('aria-expanded', 'false');
             }
         });
         
         // 更新所有 +/- 按钮的显示
         updateExpandButtons();
         
-        // 监听按钮点击事件，点击后更新按钮显示
-        const expandButtons = document.querySelectorAll('.toctree-expand');
-        expandButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // 延迟更新，等待子菜单展开/收起动画完成
-                setTimeout(updateExpandButtons, 50);
-            });
+        // 使用事件委托监听按钮点击事件
+        $('.wy-menu-vertical').off('click.navCollapse').on('click.navCollapse', 'button.toctree-expand', function() {
+            // 延迟更新，等待子菜单展开/收起动画完成
+            setTimeout(updateExpandButtons, 50);
         });
     }
     
     // 更新所有 +/- 按钮的显示
     function updateExpandButtons() {
-        const firstLevelItems = document.querySelectorAll('.toctree-l1');
+        if (typeof $ === 'undefined') return;
         
-        firstLevelItems.forEach(item => {
-            const subMenu = item.querySelector('ul');
-            const button = item.querySelector('button.toctree-expand');
+        $('.wy-menu-vertical li.toctree-l1').each(function() {
+            var $item = $(this);
+            var $subMenu = $item.find('> ul');
+            var $button = $item.find('> a > button.toctree-expand');
             
-            if (!subMenu || !button) return;
+            if ($subMenu.length === 0 || $button.length === 0) return;
             
             // 检查子菜单是否可见
-            const isVisible = subMenu.style.display !== 'none' && 
-                             window.getComputedStyle(subMenu).display !== 'none';
+            var isVisible = $subMenu.is(':visible');
             
             // 根据可见性设置按钮的 data 属性，CSS 可以使用这个属性
             if (isVisible) {
-                button.setAttribute('data-expanded', 'true');
+                $button.attr('data-expanded', 'true');
+                $item.addClass('current').attr('aria-expanded', 'true');
             } else {
-                button.setAttribute('data-expanded', 'false');
+                $button.attr('data-expanded', 'false');
+                $item.removeClass('current').attr('aria-expanded', 'false');
             }
         });
     }
 
     // 初始化
     function init() {
-        // 延迟执行，确保主题的 JavaScript 已经加载
-        setTimeout(collapseSecondLevelNav, 200);
+        // 延迟执行，确保主题的 JavaScript 已经加载并初始化完成
+        setTimeout(collapseSecondLevelNav, 500);
     }
 
     // 页面加载完成后初始化

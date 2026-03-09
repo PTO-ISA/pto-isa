@@ -10,13 +10,13 @@
 
 ## 数学语义
 
-Let:
+设：
 
 - `M = aMatrix.GetValidRow()`
 - `K = aMatrix.GetValidCol()`
 - `N = bMatrix.GetValidCol()`
 
-For `0 <= i < M` and `0 <= j < N`:
+对于 `0 <= i < M` 和 `0 <= j < N`：
 
 $$ \mathrm{C1}_{i,j} = \mathrm{C0}_{i,j} + \sum_{k=0}^{K-1} \mathrm{A}_{i,k} \cdot \mathrm{B}_{k,j} $$
 
@@ -54,10 +54,10 @@ PTO_INST RecordEvent TMATMUL_ACC(TileRes& cOutMatrix, TileRes& cInMatrix, TileLe
 
 ## 约束
 
-- All constraints from `TMATMUL` apply to the `(cOutMatrix, aMatrix, bMatrix)` triple.
-- **Implementation notes (A2A3/A5)**:
-  - `TMATMUL_ACC_IMPL` uses `aMatrix.GetValidRow()`, `aMatrix.GetValidCol()`, and `bMatrix.GetValidCol()` for `m/k/n`.
-  - `cInMatrix` is not validated by explicit assertions in the current implementations (target-defined behavior).
+- 所有来自 `TMATMUL` 的约束都适用于 `(cOutMatrix, aMatrix, bMatrix)` 三元组。
+- **实现说明 (A2A3/A5)**:
+  - `TMATMUL_ACC_IMPL` 使用 `aMatrix.GetValidRow()`、`aMatrix.GetValidCol()` 和 `bMatrix.GetValidCol()` 作为 `m/k/n`。
+  - `cInMatrix` 在当前实现中不通过显式断言进行验证（目标定义的行为）。
 
 ## 示例
 

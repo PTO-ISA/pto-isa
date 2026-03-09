@@ -10,9 +10,9 @@
 
 ## 数学语义
 
-Let `R = dst.GetValidRow()` and `C = dst.GetValidCol()`. Let `s_j` be the per-column scalar taken from `src1` (one value per column).
+设 `R = dst.GetValidRow()` 和 `C = dst.GetValidCol()`。设 `s_j` 为从 `src1` 中获取的每列标量（每列一个值）。
 
-For `0 <= i < R` and `0 <= j < C`:
+对于 `0 <= i < R` 和 `0 <= j < C`：
 
 $$
 \mathrm{dst}_{i,j} = \exp(\mathrm{src0}_{i,j} - s_j)
@@ -51,14 +51,14 @@ PTO_INST RecordEvent TCOLEXPANDEXPDIF(TileDataDst &dst, TileDataDst &src0, TileD
 
 ## 约束
 
-- `TileDataDst::DType`, `TileDataSrc1::DType` must be one of: `half`, `float`.
-- Tile 形状/布局约束 (compile-time): `TileDataDst::isRowMajor`.
-- `src1` is expected to provide **one scalar per column** (i.e., its valid shape must cover `C` values).
-- Exact layout/fractal constraints are target-specific; see backend headers under `include/pto/npu/*/TColExpand*.hpp`.
+- `TileDataDst::DType`、`TileDataSrc1::DType` 必须是以下之一：`half`、`float`。
+- Tile 形状/布局约束（编译时）：`TileDataDst::isRowMajor`。
+- `src1` 预期提供**每列一个标量**（即，其有效形状必须覆盖 `C` 个值）。
+- 确切的布局/分形约束是目标特定的；参见 `include/pto/npu/*/TColExpand*.hpp` 下的后端头文件。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

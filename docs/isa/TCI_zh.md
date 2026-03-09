@@ -56,11 +56,11 @@ PTO_INST RecordEvent TCI(TileData& dst, T S, WaitEvents&... events);
 ## 约束
 
 - **实现检查 (A2A3/A5)**:
-  - `TileData::DType` must be exactly the same type as the scalar template parameter `T`.
-  - `dst/scalar` element types must be identical, and must be one of: `int32_t`, `uint32_t`, `int16_t`, `uint16_t`.
-  - `TileData::Cols != 1` (this is the condition enforced by the implementation).
+  - `TileData::DType` 必须是 exactly the same type 作为 scalar template parameter `T`.
+  - `dst/scalar` element types 必须是 identical,且必须是以下之一： `int32_t`, `uint32_t`, `int16_t`, `uint16_t`.
+  - `TileData::Cols != 1` (this is the condition enforced 由实现).
 - **有效区域**:
-  - The implementation uses `dst.GetValidCol()` as the sequence length and does not consult `dst.GetValidRow()`.
+  - 实现使用 `dst.GetValidCol()` 作为 sequence length且does not consult `dst.GetValidRow()`.
 
 ## 示例
 

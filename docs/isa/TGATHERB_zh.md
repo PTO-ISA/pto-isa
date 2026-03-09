@@ -50,15 +50,15 @@ PTO_INST RecordEvent TGATHERB(TileDataDst& dst, TileDataSrc& src, TileDataOffset
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - Destination layout must be row-major (`TileDataDst::isRowMajor`).
-  - Destination element size must be `1`, `2`, or `4` bytes (enforced via `static_assert` in the helper).
-  - `SrcTileData::DType`/`DstTileData::DType` must be `int8_t` or `uint8_t` or `int16_t` or `uint16_t` or `int32_t` or `uint32_t` or `half` or `bfloat16_t` or `float`.
+  - 目标布局必须是行主序（`TileDataDst::isRowMajor`）。
+  - 目标元素大小必须是 `1`、`2` 或 `4` 字节（通过辅助函数中的 `static_assert` 强制执行）。
+  - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int8_t` 或 `uint8_t` 或 `int16_t` 或 `uint16_t` 或 `int32_t` 或 `uint32_t` 或 `half` 或 `bfloat16_t` 或 `float`。
 - **实现检查 (A5)**:
-  - Destination element size must be `1`, `2`, or `4` bytes.
-  - `SrcTileData::DType`/`DstTileData::DType` must be `int8_t` or `uint8_t` or `int16_t` or `uint16_t` or `int32_t` or `uint32_t` or `half` or `bfloat16_t` or `float`.
-- **Offset interpretation**:
-  - Offsets are interpreted as `uint32_t` values (byte offsets) by the implementation.
-  - Offset bounds are not validated by explicit runtime assertions; out-of-range offsets are target-defined.
+  - 目标元素大小必须是 `1`、`2` 或 `4` 字节。
+  - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int8_t` 或 `uint8_t` 或 `int16_t` 或 `uint16_t` 或 `int32_t` 或 `uint32_t` 或 `half` 或 `bfloat16_t` 或 `float`。
+- **偏移量解释**:
+  - 偏移量被实现解释为 `uint32_t` 值（字节偏移量）。
+  - 偏移量边界不通过显式运行时断言进行验证；超出范围的偏移量由目标定义。
 
 ## 示例
 

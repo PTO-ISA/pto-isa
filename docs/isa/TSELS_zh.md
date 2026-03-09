@@ -54,18 +54,18 @@ PTO_INST RecordEvent TSELS(TileData& dst, TileData& src0, TileData& src1, uint8_
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `TileData::DType` must be one of: `half`, `float16_t`, `float`, `float32_t`.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
-  - Runtime: the implementation expects `src0/src1/dst` to have matching valid rows/cols.
+  - `TileData::DType` 必须是以下之一： `half`, `float16_t`, `float`, `float32_t`.
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - 静态有效边界： `TileData::ValidRow <= TileData::Rows`且`TileData::ValidCol <= TileData::Cols`.
+  - 运行时：实现期望 `src0/src1/dst` 具有匹配的有效行/列。
 - **实现检查 (A5)**:
-  - `sizeof(TileData::DType)` must be `1`, `2`, or `4` bytes.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
-  - Runtime: the implementation expects `src0/src1/dst` to have matching valid rows/cols.
-  - Padding behavior depends on `TileData::PadVal` (`Null`/`Zero` vs `-INF/+INF` modes).
+  - `sizeof(TileData::DType)` 必须是 `1`、`2` 或 `4` 字节。
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - 静态有效边界：`TileData::ValidRow <= TileData::Rows` 且 `TileData::ValidCol <= TileData::Cols`。
+  - 运行时：实现期望 `src0/src1/dst` 具有匹配的有效行/列。
+  - 填充行为取决于 `TileData::PadVal`（`Null`/`Zero` 与 `-INF/+INF` 模式）。
 - **有效区域**:
-  - The implementation uses `dst.GetValidRow()` / `dst.GetValidCol()` as the selection domain.
+  - 实现使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为选择域。
 
 ## 示例
 

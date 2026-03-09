@@ -10,9 +10,9 @@
 
 ## 数学语义
 
-Let `R = dst.GetValidRow()` and `C = dst.GetValidCol()`. Let `s_i` be the per-row scalar taken from `src1` (one value per row).
+设 `R = dst.GetValidRow()` 和 `C = dst.GetValidCol()`。设 `s_i` 为从 `src1` 中获取的每行标量（每行一个值）。
 
-For `0 <= i < R` and `0 <= j < C`:
+对于 `0 <= i < R` 和 `0 <= j < C`：
 
 $$
 \mathrm{dst}_{i,j} = \mathrm{src0}_{i,j} + s_i
@@ -52,15 +52,15 @@ PTO_INST RecordEvent TROWEXPANDADD(TileDataDst &dst, TileDataSrc0 &src0, TileDat
 ## 约束
 
 - `TileDataDst::DType == TileDataSrc0::DType == TileDataSrc1::DType`
-- `TileDataDst::DType`, `TileDataSrc0::DType`, `TileDataSrc1::DType` must be one of: `half`, `float`.
-- Tile 形状/布局约束 (compile-time): `TileDataDst::isRowMajor`.
-- Mode 1: `src1` is expected to provide **one scalar per row** (i.e., its valid shape must cover `R` values).
-- Mode 2: `src1` is expected to provide **32 bytes data per row**.
-- Exact layout/fractal constraints are target-specific; see backend headers under `include/pto/npu/*/TRowExpand*.hpp`.
+- `TileDataDst::DType`、`TileDataSrc0::DType`、`TileDataSrc1::DType` 必须是以下之一：`half`、`float`。
+- Tile 形状/布局约束（编译时）：`TileDataDst::isRowMajor`。
+- 模式 1：`src1` 预期提供**每行一个标量**（即，其有效形状必须覆盖 `R` 个值）。
+- 模式 2：`src1` 预期提供**每行 32 字节数据**。
+- 确切的布局/分形约束是目标特定的；参见 `include/pto/npu/*/TRowExpand*.hpp` 下的后端头文件。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

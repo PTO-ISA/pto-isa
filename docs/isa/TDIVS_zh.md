@@ -24,13 +24,13 @@
 
 PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 
-Tile/scalar form:
+Tile/标量形式：
 
 ```text
 %dst = tdivs %src, %scalar : !pto.tile<...>, f32
 ```
 
-Scalar/tile form:
+标量/Tile 形式：
 
 ```text
 %dst = tdivs %scalar, %src : f32, !pto.tile<...>
@@ -64,22 +64,22 @@ PTO_INST RecordEvent TDIVS(TileData& dst, typename TileData::DType scalar, TileD
 
 ## 约束
 
-- **实现检查 (A2A3)** (both overloads):
-  - `TileData::DType` must be one of: `int32_t`, `int`, `int16_t`, `half`, `float16_t`, `float`, `float32_t`.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
-  - Runtime: `src0.GetValidRow() == dst.GetValidRow()` and `src0.GetValidCol() == dst.GetValidCol()`.
-  - Tile 布局 must be row-major (`TileData::isRowMajor`).
-- **实现检查 (A5)** (both overloads):
-  - `TileData::DType` must be one of: `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
-  - Runtime: `src0.GetValidRow() == dst.GetValidRow()` and `src0.GetValidCol() == dst.GetValidCol()`.
-  - Tile 布局 must be row-major (`TileData::isRowMajor`).
+- **实现检查 (A2A3)** (两个重载):
+  - `TileData::DType` 必须是以下之一： `int32_t`, `int`, `int16_t`, `half`, `float16_t`, `float`, `float32_t`.
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - 静态有效边界： `TileData::ValidRow <= TileData::Rows`且`TileData::ValidCol <= TileData::Cols`.
+  - 运行时： `src0.GetValidRow() == dst.GetValidRow()`且`src0.GetValidCol() == dst.GetValidCol()`.
+  - Tile 布局必须是行主序（`TileData::isRowMajor`）。
+- **实现检查 (A5)** (两个重载):
+  - `TileData::DType` 必须是以下之一： `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`.
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - 静态有效边界： `TileData::ValidRow <= TileData::Rows`且`TileData::ValidCol <= TileData::Cols`.
+  - 运行时： `src0.GetValidRow() == dst.GetValidRow()`且`src0.GetValidCol() == dst.GetValidCol()`.
+  - Tile 布局必须是行主序（`TileData::isRowMajor`）。
 - **有效区域**:
-  - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
-- **Division-by-zero**:
-  - Behavior is target-defined; on A5 the tile/scalar form maps to multiply-by-reciprocal and uses `1/0 -> +inf` for `scalar == 0`.
+  - 该操作使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域.
+- **除零**:
+  - 行为由目标定义；在 A5 上，tile/标量形式映射到乘以倒数，并对 `scalar == 0` 使用 `1/0 -> +inf`。
 
 ## 示例
 

@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-Let `R = dst.GetValidRow()` and `C = dst.GetValidCol()`. For `0 <= i < R` and `0 <= j < C`:
+设 `R = dst.GetValidRow()` 和 `C = dst.GetValidCol()`。对于 `0 <= i < R` 和 `0 <= j < C`：
 
 $$ \mathrm{dst}_{i,j} = \mathrm{src}_{0,j} $$
 
@@ -47,7 +47,7 @@ PTO_INST RecordEvent TCOLEXPAND(TileDataDst& dst, TileDataSrc& src, WaitEvents&.
 
 ## 约束
 
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
 
 ## 示例
 

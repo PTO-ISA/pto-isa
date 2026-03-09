@@ -14,8 +14,6 @@ This directory contains the per-instruction reference for the PTO Tile Lib ISA.
 
 ## Manual / Resource Binding
 - [TASSIGN](TASSIGN.md) - Bind a Tile object to an implementation-defined on-chip address (manual placement).
-- [TSETHF32MODE](TSETHF32MODE.md) - Configure HF32 transform mode (implementation-defined).
-- [TSETTF32MODE](TSETTF32MODE.md) - Configure TF32 transform mode (implementation-defined).
 - [TSETFMATRIX](TSETFMATRIX.md) - Set FMATRIX register(s) for IMG2COL-like ops.
 - [TSET_IMG2COL_RPT](TSET_IMG2COL_RPT.md) - Set IMG2COL repeat metadata from an IMG2COL configuration tile.
 - [TSET_IMG2COL_PADDING](TSET_IMG2COL_PADDING.md) - Set IMG2COL padding metadata from an IMG2COL configuration tile.

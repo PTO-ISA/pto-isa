@@ -34,10 +34,10 @@ PTO_INTERNAL void TPOP_IMPL(PipeCons &cons, TileDataSrc &tile, DataFiFo &fifo)
     }
 
     // 2. Address Calculation & Pop
-    cons.pop(fifo, tile);
+    bool reqFree = cons.pop(fifo, tile);
 
     // 3. Cross-Core: Free Space
-    bool isFree = cons.getFreeStatus();
+    bool isFree = reqFree && cons.getFreeStatus();
     if (isFree) {
         cons.free();
     }
@@ -52,9 +52,9 @@ PTO_INTERNAL void TPOP_IMPL(TileData &tile, Pipe &pipe)
 template <typename Pipe>
 PTO_INTERNAL void TFREE_IMPL(Pipe &pipe)
 {
-    bool isFree = pipe.getFreeStatus();
+    bool isFree = pipe.cons.getFreeStatus();
     if (isFree) {
-        pipe.template free<true>();
+        pipe.cons.free();
     }
 }
 

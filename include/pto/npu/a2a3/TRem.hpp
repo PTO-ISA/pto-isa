@@ -123,10 +123,9 @@ __tf__ PTO_INTERNAL void TRem(typename TileData::TileDType __out__ dst, typename
 template <typename T, typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1>
 PTO_INTERNAL void TRemCheck(const TileDataDst &dst, const TileDataSrc0 &src0, const TileDataSrc1 &src1)
 {
-    static_assert(std::is_same<T, half>::value || std::is_same<T, float16_t>::value || std::is_same<T, float>::value ||
-                      std::is_same<T, float32_t>::value || std::is_same<T, int32_t>::value ||
-                      std::is_same<T, int16_t>::value,
-                  "Fix: TREM currently supports half/float and 16/32-bit integer data types.");
+    static_assert(std::is_same<T, float>::value || std::is_same<T, float32_t>::value ||
+                      std::is_same<T, int32_t>::value || std::is_same<T, int16_t>::value,
+                  "Fix: TREM currently supports float and signed 16/32-bit integer data types.");
     static_assert(TileDataDst::isRowMajor && TileDataSrc0::isRowMajor && TileDataSrc1::isRowMajor,
                   "Fix: TREM only support row major layout.");
     unsigned validRows = dst.GetValidRow();

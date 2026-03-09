@@ -127,6 +127,8 @@ These kernel folders contain the most complete “how to tune” notes, tied to 
 - Flash Attention (staged softmax, tiled QK/PV, per-stage tuning):
   - [`kernels/manual/common/flash_atten/README.md`](../../kernels/manual/common/flash_atten/README.md)
   - Kernel code: `kernels/manual/common/flash_atten/fa_performance_kernel.cpp`
+  - [`kernels/manual/common/flash_atten/README.md`](../../kernels/manual/common/flash_atten/README.md)
+  - Kernel code: `kernels/manual/common/flash_atten/fa_performance_kernel.cpp`
 
 ## 8. Common failure modes (and what to do)
 

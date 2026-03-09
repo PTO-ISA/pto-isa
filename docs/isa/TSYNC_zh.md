@@ -67,7 +67,7 @@ PTO_INST void TSYNC(WaitEvents&... events);
 ## 约束
 
 - **实现检查 (`TSYNC<Op>()`)**:
-  - `TSYNC_IMPL<Op>()` only supports vector-pipeline ops (`static_assert(pipe == PIPE_V)` in `include/pto/common/event.hpp`).
+  - `TSYNC_IMPL<Op>()` 仅supports vector-pipeline ops (`static_assert(pipe == PIPE_V)` in `include/pto/common/event.hpp`).
 - **`TSYNC(events...)` semantics**:
   - `TSYNC(events...)` calls `WaitAllEvents(events...)`, which invokes `events.Wait()` on each event token.
 

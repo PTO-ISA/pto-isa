@@ -10,11 +10,11 @@
 
 ## 数学语义
 
-对每个元素 `(i, j)` in the source valid region:
+对源有效区域中的每个元素 `(i, j)`：
 
 $$ \mathrm{mem}[\mathrm{idx}_{i,j}] = \mathrm{src}_{i,j} $$
 
-If multiple elements map to the same destination location, the final value is implementation-defined (CPU simulator: last writer wins in row-major iteration order).
+如果多个元素映射到同一目标位置，最终值由实现定义（CPU 模拟器：按行主序迭代顺序，最后写入者获胜）。
 
 ## 汇编语法
 
@@ -49,12 +49,12 @@ PTO_INST RecordEvent MSCATTER(GlobalData& dst, TileSrc& src, TileInd& indexes, W
 
 ## 约束
 
-- Index interpretation is target-defined. The CPU simulator treats indices as linear element indices into `dst.data()`.
-- No bounds checks are enforced on `indexes` by the CPU simulator.
+- 索引解释由目标定义。CPU 模拟器将索引视为 `dst.data()` 中的线性元素索引。
+- CPU 模拟器不对 `indexes` 强制执行边界检查。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

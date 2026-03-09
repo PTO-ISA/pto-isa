@@ -48,14 +48,14 @@ PTO_INST RecordEvent TMINS(TileData& dst, TileData& src, T scalar, WaitEvents&..
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - No additional `static_assert`/`PTO_ASSERT` checks are enforced by `TMINS_IMPL` beyond the generic Tile type invariants.
+  - `TMINS_IMPL` 除了通用的 Tile 类型不变量外，不强制执行额外的 `static_assert`/`PTO_ASSERT` 检查。
 - **实现检查 (A5)**:
-  - `TileData::DType` must be one of: `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`, `bfloat16_t`.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
-  - Runtime: `src.GetValidCol() == dst.GetValidCol()`.
+  - `TileData::DType` 必须是以下之一： `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`, `bfloat16_t`.
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - 静态有效边界： `TileData::ValidRow <= TileData::Rows`且`TileData::ValidCol <= TileData::Cols`.
+  - 运行时： `src.GetValidCol() == dst.GetValidCol()`.
 - **有效区域**:
-  - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
+  - 该操作使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域.
 
 ## 示例
 

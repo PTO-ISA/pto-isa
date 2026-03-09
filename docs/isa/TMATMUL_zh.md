@@ -10,17 +10,17 @@
 
 ## 数学语义
 
-Let:
+设：
 
 - `M = aMatrix.GetValidRow()`
 - `K = aMatrix.GetValidCol()`
 - `N = bMatrix.GetValidCol()`
 
-For `0 <= i < M` and `0 <= j < N` (output elements in the effective matmul domain):
+对于 `0 <= i < M` 和 `0 <= j < N`（有效矩阵乘法域中的输出元素）：
 
 $$ \mathrm{C}_{i,j} = \sum_{k=0}^{K-1} \mathrm{A}_{i,k} \cdot \mathrm{B}_{k,j} $$
 
-Exact accumulator behavior and datatype promotion are target/implementation-defined.
+精确的累加器行为和数据类型提升由目标/实现定义。
 
 ## 汇编语法
 
@@ -56,24 +56,24 @@ PTO_INST RecordEvent TMATMUL(TileRes& cMatrix, TileLeft& aMatrix, TileRight& bMa
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - Supported `(CType, AType, BType)` triples:
+  - 支持的 `(CType, AType, BType)` 三元组：
     - `(int32_t, int8_t, int8_t)`
     - `(float, half, half)`
     - `(float, float, float)`
     - `(float, bfloat16_t, bfloat16_t)`
-  - Static shape constraints: `TileLeft::Rows == TileRes::Rows`, `TileLeft::Cols == TileRight::Rows`, `TileRight::Cols == TileRes::Cols`.
-  - Tile locations: `TileLeft::Loc == Left`, `TileRight::Loc == Right`, `TileRes::Loc == Acc`.
-  - Runtime: `m/k/n` (taken from `aMatrix.GetValidRow()`, `aMatrix.GetValidCol()`, `bMatrix.GetValidCol()`) must be in `[1, 4095]`.
+  - 静态形状约束：`TileLeft::Rows == TileRes::Rows`、`TileLeft::Cols == TileRight::Rows`、`TileRight::Cols == TileRes::Cols`。
+  - Tile 位置：`TileLeft::Loc == Left`、`TileRight::Loc == Right`、`TileRes::Loc == Acc`。
+  - 运行时：`m/k/n`（取自 `aMatrix.GetValidRow()`、`aMatrix.GetValidCol()`、`bMatrix.GetValidCol()`）必须在 `[1, 4095]` 范围内。
 - **实现检查 (A5)**:
-  - Accumulator type must be `int32_t` or `float`.
-    - If `int32_t`: `AType == int8_t` and `BType == int8_t`.
-    - If `float`: supports `half/bfloat16_t/float` and selected fp8 pairs (target-defined).
-  - Static shape constraints: `TileLeft::Rows == TileRes::Rows`, `TileLeft::Cols == TileRight::Rows`, `TileRight::Cols == TileRes::Cols`.
-  - Fractal/layout constraints are enforced:
-    - Left: `Loc == Left`, `!isRowMajor`, `SFractal == RowMajor`
-    - Right: `Loc == Right`, `isRowMajor`, `SFractal == ColMajor`
-    - Acc: `Loc == Acc`, `!isRowMajor`, `SFractal == RowMajor`
-    - Runtime: `m/k/n` (taken from `aMatrix.GetValidRow()`, `aMatrix.GetValidCol()`, `bMatrix.GetValidCol()`) must be in `[1, 4095]`.
+  - 累加器类型必须是 `int32_t` 或 `float`。
+    - 如果是 `int32_t`：`AType == int8_t` 且 `BType == int8_t`。
+    - 如果是 `float`：支持 `half/bfloat16_t/float` 和选定的 fp8 对（目标定义）。
+  - 静态形状约束：`TileLeft::Rows == TileRes::Rows`、`TileLeft::Cols == TileRight::Rows`、`TileRight::Cols == TileRes::Cols`。
+  - 强制执行分形/布局约束：
+    - Left：`Loc == Left`、`!isRowMajor`、`SFractal == RowMajor`
+    - Right：`Loc == Right`、`isRowMajor`、`SFractal == ColMajor`
+    - Acc：`Loc == Acc`、`!isRowMajor`、`SFractal == RowMajor`
+    - 运行时：`m/k/n`（取自 `aMatrix.GetValidRow()`、`aMatrix.GetValidCol()`、`bMatrix.GetValidCol()`）必须在 `[1, 4095]` 范围内。
 
 ## 示例
 

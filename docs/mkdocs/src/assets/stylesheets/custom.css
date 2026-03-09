@@ -42,6 +42,11 @@ article .toctree-expand,
     font-size: 0;
     width: auto;
     min-width: 20px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-right: 4px;
 }
 
 /* 默认状态（收起）：显示 + */
@@ -49,6 +54,7 @@ article .toctree-expand,
     content: "+";
     font-size: 14px;
     font-weight: bold;
+    display: inline-block;
 }
 
 /* 展开状态（data-expanded="true"）：显示 - */
@@ -56,8 +62,13 @@ article .toctree-expand,
     content: "-";
 }
 
-/* 备用方案：使用 :has() 伪类（现代浏览器） */
-.wy-menu-vertical li.toctree-l1:has(> ul[style*="display: block"]) > a > button.toctree-expand::before {
+/* 备用方案：根据父元素的 current 类来判断 */
+.wy-menu-vertical li.toctree-l1.current > a > button.toctree-expand::before {
     content: "-";
+}
+
+/* 确保按钮可点击 */
+.wy-menu-vertical button.toctree-expand:hover {
+    opacity: 0.7;
 }
 

@@ -50,25 +50,25 @@ PTO_INST RecordEvent TSCATTER(TileDataD& dst, TileDataS& src, TileDataI& indexes
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `TileDataD::Loc`, `TileDataS::Loc`, `TileDataI::Loc` must be `TileType::Vec`.
-  - `TileDataD::DType`, `TileDataS::DType` must be one of: `int32_t`, `int16_t`, `int8_t`, `half`, `float32_t`, `uint32_t`, `uint16_t`, `uint8_t`, `bfloat16_t`.
-  - `TileDataI::DType` must be one of: `int16_t`, `int32_t`, `uint16_t` or `uint32_t`.
-  - No bounds checks are enforced on `indexes` values.
-  - Static valid bounds: `TileDataD::ValidRow <= TileDataD::Rows`, `TileDataD::ValidCol <= TileDataD::Cols`, `TileDataS::ValidRow <= TileDataS::Rows`, `TileDataS::ValidCol <= TileDataS::Cols`, `TileDataI::ValidRow <= TileDataI::Rows`, `TileDataI::ValidCol <= TileDataI::Cols`.
-  - `TileDataD::DType` and `TileDataS::DType` must be the same.
-  - When size of `TileDataD::DType` is 4 bytes, the size of `TileDataI::DType` must be 4 bytes.
-  - When size of `TileDataD::DType` is 2 bytes, the size of `TileDataI::DType` must be 2 bytes.
-  - When size of `TileDataD::DType` is 1 bytes, the size of `TileDataI::DType` must be 2 bytes.
+  - `TileDataD::Loc`, `TileDataS::Loc`, `TileDataI::Loc` 必须是 `TileType::Vec`.
+  - `TileDataD::DType`, `TileDataS::DType` 必须是以下之一： `int32_t`, `int16_t`, `int8_t`, `half`, `float32_t`, `uint32_t`, `uint16_t`, `uint8_t`, `bfloat16_t`.
+  - `TileDataI::DType` 必须是以下之一： `int16_t`, `int32_t`, `uint16_t`或`uint32_t`.
+  - No bounds checks are enforced on `indexes` 值.
+  - 静态有效边界： `TileDataD::ValidRow <= TileDataD::Rows`, `TileDataD::ValidCol <= TileDataD::Cols`, `TileDataS::ValidRow <= TileDataS::Rows`, `TileDataS::ValidCol <= TileDataS::Cols`, `TileDataI::ValidRow <= TileDataI::Rows`, `TileDataI::ValidCol <= TileDataI::Cols`.
+  - `TileDataD::DType`且`TileDataS::DType` 必须是 the same.
+  - When size of `TileDataD::DType` is 4 字节, the size of `TileDataI::DType` 必须是 4 字节.
+  - When size of `TileDataD::DType` is 2 字节, the size of `TileDataI::DType` 必须是 2 字节.
+  - When size of `TileDataD::DType` is 1 字节, the size of `TileDataI::DType` 必须是 2 字节.
 - **实现检查 (A5)**:
-  - `TileDataD::Loc`, `TileDataS::Loc`, `TileDataI::Loc` must be `TileType::Vec`.
-  - `TileDataD::DType`, `TileDataS::DType` must be one of: `int32_t`, `int16_t`, `int8_t`, `half`, `float32_t`, `uint32_t`, `uint16_t`, `uint8_t`, `bfloat16_t`.
-  - `TileDataI::DType` must be one of: `int16_t`, `int32_t`, `uint16_t` or `uint32_t`.
-  - No bounds checks are enforced on `indexes` values.
-  - Static valid bounds: `TileDataD::ValidRow <= TileDataD::Rows`, `TileDataD::ValidCol <= TileDataD::Cols`, `TileDataS::ValidRow <= TileDataS::Rows`, `TileDataS::ValidCol <= TileDataS::Cols`, `TileDataI::ValidRow <= TileDataI::Rows`, `TileDataI::ValidCol <= TileDataI::Cols`.
-  - `TileDataD::DType` and `TileDataS::DType` must be the same.
-  - When size of `TileDataD::DType` is 4 bytes, the size of `TileDataI::DType` must be 4 bytes.
-  - When size of `TileDataD::DType` is 2 bytes, the size of `TileDataI::DType` must be 2 bytes.
-  - When size of `TileDataD::DType` is 1 bytes, the size of `TileDataI::DType` must be 2 bytes.
+  - `TileDataD::Loc`, `TileDataS::Loc`, `TileDataI::Loc` 必须是 `TileType::Vec`.
+  - `TileDataD::DType`, `TileDataS::DType` 必须是以下之一： `int32_t`, `int16_t`, `int8_t`, `half`, `float32_t`, `uint32_t`, `uint16_t`, `uint8_t`, `bfloat16_t`.
+  - `TileDataI::DType` 必须是以下之一： `int16_t`, `int32_t`, `uint16_t`或`uint32_t`.
+  - No bounds checks are enforced on `indexes` 值.
+  - 静态有效边界： `TileDataD::ValidRow <= TileDataD::Rows`, `TileDataD::ValidCol <= TileDataD::Cols`, `TileDataS::ValidRow <= TileDataS::Rows`, `TileDataS::ValidCol <= TileDataS::Cols`, `TileDataI::ValidRow <= TileDataI::Rows`, `TileDataI::ValidCol <= TileDataI::Cols`.
+  - `TileDataD::DType`且`TileDataS::DType` 必须是 the same.
+  - When size of `TileDataD::DType` is 4 字节, the size of `TileDataI::DType` 必须是 4 字节.
+  - When size of `TileDataD::DType` is 2 字节, the size of `TileDataI::DType` 必须是 2 字节.
+  - When size of `TileDataD::DType` is 1 字节, the size of `TileDataI::DType` 必须是 2 字节.
 
 ## 示例
 

@@ -6,16 +6,23 @@ Most kernel subdirectories are **self-contained mini-projects** (kernel + host +
 
 ## Where to start
 
-- Manual (hand-tuned) NPU kernels: [manual/README.md](manual/README.md)
-- Custom operator scaffolding: [custom/README.md](custom/README.md)
-- End-to-end demos (including CPU): [demos/](../demos/README.md)
+- Manual (hand-tuned) NPU kernels: [manual](manual/README.md)
+- Custom operator scaffolding: [custom](custom/README.md)
+- End-to-end demos (including CPU): [demos](../demos/README.md)
 
 ## Directory layout
 
 - `manual/`: Hand-tuned kernels with explicit buffering/synchronization (NPU-focused)
   - `manual/a2a3/`: Kernels for A2/A3 platforms
     - `manual/a2a3/gemm_performance/`: High-performance GEMM example
-    - `manual/a2a3/flash_atten/`: Manual Flash-Attention example
+    - `manual/a2a3/conv2d_forward/`: Conv2D forward kernel example
+    - `manual/a2a3/topk/`: TopK kernel example
+  - `manual/a5/`: Kernels for A5 platforms
+    - `manual/a5/flash_atten/`: Flash-Attention kernel for A5
+    - `manual/a5/matmul_mxfp4_performance/`: MXFP4 matrix multiplication example
+    - `manual/a5/matmul_mxfp8_performance/`: MXFP8 matrix multiplication example
+  - `manual/common/`: Cross-platform kernels
+    - `manual/common/flash_atten/`: Flash-Attention kernel (A2/A3/A5)
 - `custom/`: Examples/scaffolding for custom kernel/operator extensions
 
 ## Notes

@@ -8,19 +8,19 @@
 
 调试/打印 Tile 中的元素（实现定义）。
 
-Print the contents of a Tile or GlobalTensor for debugging purposes directly from device code.
+从设备代码直接打印 Tile 或 GlobalTensor 的内容以用于调试目的。
 
-The `TPRINT` instruction outputs the logical view of data stored in a Tile or GlobalTensor. It supports common data types (e.g., `float`, `half`, `int8`, `uint32`) and multiple memory layouts (`ND`, `DN`, `NZ` for GlobalTensor; vector tiles for on-chip buffers).
+`TPRINT` 指令输出存储在 Tile 或 GlobalTensor 中的数据的逻辑视图。它支持常见的数据类型（例如 `float`、`half`、`int8`、`uint32`）和多种内存布局（GlobalTensor 的 `ND`、`DN`、`NZ`；片上缓冲区的向量 tiles）。
 
-> **Important**:
-> - This instruction is **for development and debugging ONLY**.
-> - It incurs **significant runtime overhead** and **must not be used in production kernels**.
-> - Output may be **truncated** if it exceeds the internal print buffer.
-> - **Requires CCE compilation option `-D_DEBUG --cce-enable-print`** (see [Behavior](#behavior)).
+> **重要**:
+> - 此指令**仅用于开发和调试**。
+> - 它会产生**显著的运行时开销**，**不得在生产 kernel 中使用**。
+> - 如果输出超过内部打印缓冲区，可能会被**截断**。
+> - **需要 CCE 编译选项 `-D_DEBUG --cce-enable-print`**（参见 [行为](#behavior)）。
 
 ## 数学语义
 
-除非另有说明, semantics are defined over the valid region and target-dependent behavior is marked as implementation-defined.
+除非另有说明，语义在有效区域上定义，目标相关的行为标记为实现定义。
 
 ## 汇编语法
 
@@ -54,18 +54,18 @@ PTO_INST RecordEvent TPRINT(T &src, WaitEvents&... events) {
 }
 ```
 
-### Supported Types for T
-- **Tile**: Must be a vector tile (`TileType::Vec`) with supported element type.
-- **GlobalTensor**: Must use layout `ND`, `DN`, or `NZ`, and have a supported element type.
+### 支持的 T 类型
+- **Tile**：必须是向量 tile（`TileType::Vec`），具有支持的元素类型。
+- **GlobalTensor**：必须使用布局 `ND`、`DN` 或 `NZ`，并具有支持的元素类型。
 
 ## 约束
 
-- **Supported element type**:
-  - Floating-point: `float`, `half`
-  - Signed integers: `int8_t`, `int16_t`, `int32_t`
-  - Unsigned integers: `uint8_t`, `uint16_t`, `uint32_t`
-- **For Tiles**: `TileData::Loc == TileType::Vec` (only vector tiles are printable).
-- **For GlobalTensor**: Layout must be one of `Layout::ND`, `Layout::DN`, or `Layout::NZ`.
+- **支持的元素类型**:
+  - 浮点数：`float`、`half`
+  - 有符号整数：`int8_t`、`int16_t`、`int32_t`
+  - 无符号整数：`uint8_t`、`uint16_t`、`uint32_t`
+- **对于 Tiles**：`TileData::Loc == TileType::Vec`（仅向量 tiles 可打印）。
+- **对于 GlobalTensor**：布局必须是 `Layout::ND`、`Layout::DN` 或 `Layout::NZ` 之一。
 
 ## 示例
 

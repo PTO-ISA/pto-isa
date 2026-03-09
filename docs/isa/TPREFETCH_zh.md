@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-除非另有说明, semantics are defined over the valid region and target-dependent behavior is marked as implementation-defined.
+除非另有说明，语义在有效区域上定义，目标相关的行为标记为实现定义。
 
 ## 汇编语法
 
@@ -45,12 +45,12 @@ PTO_INST RecordEvent TPREFETCH(TileData &dst, GlobalData &src);
 
 ## 约束
 
-- Semantics and caching behavior are target/implementation-defined.
-- Some targets may ignore prefetches or treat them as hints.
+- 语义和缓存行为由目标/实现定义。
+- 某些目标可能会忽略预取，将其视为提示。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

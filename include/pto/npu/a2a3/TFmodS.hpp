@@ -125,9 +125,8 @@ PTO_INTERNAL void TFMODS_IMPL(TileDataDst &dst, TileDataSrc &src, typename TileD
     static_assert(std::is_same_v<T, typename TileDataSrc::DType>,
                   "TFMODS: The data types of dst and src must be the same.");
     static_assert(std::is_same<T, int32_t>::value || std::is_same<T, int>::value || std::is_same<T, int16_t>::value ||
-                      std::is_same<T, half>::value || std::is_same<T, float16_t>::value ||
                       std::is_same<T, float>::value || std::is_same<T, float32_t>::value,
-                  "TFMODS: Invalid data type.");
+                  "Fix: TFMODS currently supports float and signed 16/32-bit integer data types.");
     static_assert(TileDataDst::Loc == TileType::Vec && TileDataSrc::Loc == TileType::Vec,
                   "TFMODS: TileType of dst and src tiles must be TileType::Vec.");
     static_assert(TileDataDst::isRowMajor && TileDataSrc::isRowMajor, "TFMODS: Only support row major layout.");

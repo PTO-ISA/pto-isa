@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-除非另有说明, semantics are defined over the valid region and target-dependent behavior is marked as implementation-defined.
+除非另有说明，语义在有效区域上定义，目标相关的行为标记为实现定义。
 
 ## 汇编语法
 
@@ -39,11 +39,11 @@ PTO_INST RecordEvent TEXTRACT_FP(DstTileData &dst, SrcTileData &src, FpTileData 
 
 ## 约束
 
-Type/layout/location/shape legality is backend-dependent; treat implementation-specific notes as normative for that backend.
+类型/布局/位置/形状的合法性取决于后端；将实现特定的说明视为该后端的规范。
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

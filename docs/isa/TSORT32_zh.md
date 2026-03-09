@@ -52,14 +52,14 @@ PTO_INST RecordEvent TSORT32(DstTileData& dst, SrcTileData& src, IdxTileData& id
 
 ## 约束
 
-- `TSORT32` does not take `WaitEvents&...` and does not call `TSYNC(...)` internally; synchronize explicitly if needed.
+- `TSORT32` does not take `WaitEvents&...`且does not c所有`TSYNC(...)` internally; synchronize explicitly if needed.
 - **实现检查 (A2A3/A5)**:
-  - `DstTileData::DType` must be `half` or `float`.
-  - `SrcTileData::DType` must match `DstTileData::DType`.
-  - `IdxTileData::DType` must be `uint32_t`.
-  - `dst/src/idx` tile location must be `TileType::Vec`, and all must be row-major (`isRowMajor`).
+  - `DstTileData::DType` 必须是 `half`或`float`.
+  - `SrcTileData::DType` 必须匹配 `DstTileData::DType`.
+  - `IdxTileData::DType` 必须是 `uint32_t`.
+  - `dst/src/idx` tile 位置 必须是 `TileType::Vec`,且所有必须是 行主序 (`isRowMajor`）。
 - **有效区域**:
-  - The implementation uses `dst.GetValidRow()` as the number of rows and uses `src.GetValidCol()` to determine how many 32-element blocks to sort per row.
+  - 实现使用 `dst.GetValidRow()` 作为 number of rows且uses `src.GetValidCol()` to determine how many 32-element blocks to sort per row.
 
 ## 示例
 

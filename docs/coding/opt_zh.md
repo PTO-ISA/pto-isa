@@ -127,6 +127,8 @@ Tiling 是一阶调优旋钮：
 - Flash Attention（分阶段 softmax、tiled QK/PV、逐阶段调优）：
   - [`kernels/manual/common/flash_atten/README_zh.md`](../../kernels/manual/common/flash_atten/README_zh.md)
   - Kernel code：`kernels/manual/common/flash_atten/fa_performance_kernel.cpp`
+  - [`kernels/manual/common/flash_atten/README_zh.md`](../../kernels/manual/common/flash_atten/README_zh.md)
+  - Kernel code：`kernels/manual/common/flash_atten/fa_performance_kernel.cpp`
 
 ## 8. 常见故障模式（以及处理方式）
 

@@ -40,11 +40,11 @@ PTO_INST RecordEvent TFILLPAD_INPLACE(DstTileData &dst, SrcTileData &src,
 
 ## 约束
 
-Type/layout/location/shape legality is backend-dependent; treat implementation-specific notes as normative for that backend.
+Type/layout/location/shape legality is backend-dependent; treat implementation-specific notes as normative 对于that backend.
 
 ## 示例
 
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
+参见 `docs/isa/` 和 `docs/coding/tutorials/` 中的相关示例。
 
 ## 汇编示例（ASM）
 

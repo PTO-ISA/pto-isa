@@ -47,9 +47,8 @@ PTO_INST RecordEvent TREM(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &sr
 
 ## 约束
 
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
-- Division-by-zero behavior is target-defined; the CPU simulator asserts in debug builds.
-- Temporary space is required by A3 for calculation, while not used by A5.
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
+- 除零行为由目标定义；CPU 模拟器在调试构建中会断言。
 
 ## 示例
 

@@ -47,8 +47,8 @@ PTO_INST RecordEvent TSHL(TileData& dst, TileData& src0, TileData& src1, WaitEve
 
 ## 约束
 
-- Intended for integral element types.
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
+- 适用于整数元素类型。
+- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
 
 ## 示例
 

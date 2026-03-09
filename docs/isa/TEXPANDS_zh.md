@@ -48,17 +48,17 @@ PTO_INST RecordEvent TEXPANDS(TileData& dst, typename TileData::DType scalar, Wa
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `TileData::DType` must be one of: `int32_t`, `int16_t`, `half`, `float`.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Tile 布局 must be row-major (`TileData::isRowMajor`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
+  - `TileData::DType` 必须是以下之一： `int32_t`, `int16_t`, `half`, `float`.
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - Tile 布局必须是行主序（`TileData::isRowMajor`）。
+  - 静态有效边界： `TileData::ValidRow <= TileData::Rows`且`TileData::ValidCol <= TileData::Cols`.
 - **实现检查 (A5)**:
-  - `TileData::DType` must be one of: `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`.
-  - Tile location must be vector (`TileData::Loc == TileType::Vec`).
-  - Tile 布局 must be row-major (`TileData::isRowMajor`).
-  - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`.
+  - `TileData::DType` 必须是以下之一： `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`.
+  - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`）。
+  - Tile 布局必须是行主序（`TileData::isRowMajor`）。
+  - 静态有效边界： `TileData::ValidRow <= TileData::Rows`且`TileData::ValidCol <= TileData::Cols`.
 - **有效区域**:
-  - The op fills `dst` over `dst.GetValidRow()` / `dst.GetValidCol()`.
+  - 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上填充 `dst`。
 
 ## 示例
 

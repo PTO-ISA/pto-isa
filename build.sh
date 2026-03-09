@@ -65,13 +65,14 @@ checkopts() {
   ENABLE_PACKAGE=FALSE
   ENABLE_A3=FALSE
   ENABLE_A5=FALSE
+  ENABLE_CPU=FALSE
   RUN_TYPE=""
   EXAMPLE_NAME=""
   EXAMPLE_MODE=""
   PLATFORM_MODE=""
   INST_NAME=""
 
-  parsed_args=$(getopt -a -o j:hvuO: -l help,verbose,cov,make_clean,noexec,pkg,run_all,a3,a5,sim,npu,run_simple,build,cann_3rd_lib_path: -- "$@") || {
+  parsed_args=$(getopt -a -o j:hvuO: -l help,verbose,cov,make_clean,noexec,pkg,run_all,a3,a5,sim,npu,cpu,run_simple,build,cann_3rd_lib_path: -- "$@") || {
   usage
   exit 1
   }
@@ -110,6 +111,10 @@ checkopts() {
         ;;
       --npu)
         RUN_TYPE=npu
+        shift
+        ;;
+      --cpu)
+        ENABLE_CPU=TRUE
         shift
         ;;
       --cann_3rd_lib_path)
@@ -164,6 +169,15 @@ run_simple_st() {
     ./tests/run_st.sh a3 npu simple
   fi
   echo "execute samples success"
+}
+
+run_cpu_st() {
+  echo $dotted_line
+  echo "Start to run cpu st"
+  python3 tests/run_cpu.py --cxx=clang++ --clean --verbose
+  python3 tests/run_cpu.py --cxx=clang++ --demo gemm --verbose
+  python3 tests/run_cpu.py --cxx=clang++ --demo flash_attn --verbose
+  python3 tests/run_cpu.py --cxx=clang++ --demo mla --verbose
 }
 
 run_all_st() {
@@ -233,6 +247,9 @@ main() {
   fi
   if [ "$ENABLE_BUILD_ONLY" == "TRUE" ]; then
       build_only
+  fi
+  if [ "$ENABLE_CPU" == "TRUE" ]; then
+    run_cpu_st
   fi
 }
 

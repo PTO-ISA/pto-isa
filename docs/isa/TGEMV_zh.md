@@ -10,31 +10,31 @@
 
 ## 数学语义
 
-Let:
+设：
 
 - `M = 1`
 - `K = bMatrix.GetValidRow()`
 - `N = bMatrix.GetValidCol()`
 
-### 1. TGEMV (Tile-based GEMV)
+### 1. TGEMV（基于 Tile 的 GEMV）
 
-For `0 <= j < N` (output elements in the effective matmul domain):
+对于 `0 <= j < N`（有效矩阵乘法域中的输出元素）：
 
 $$ \mathrm{C}_{0,j} = \sum_{k=0}^{K-1} \mathrm{A}_{0,k} \cdot \mathrm{B}_{k,j} $$
 
-### 2. TGEMV_ACC (Tile-based GEMV with Accumulation)
+### 2. TGEMV_ACC（带累加的基于 Tile 的 GEMV）
 
-For `0 <= j < N` (accumulates into existing tile):
+对于 `0 <= j < N`（累加到现有 tile）：
 
 $$ \mathrm{C}_{0,j} \gets \mathrm{C}_{0,j} + \sum_{k=0}^{K-1} \mathrm{A}_{0,k} \cdot \mathrm{B}_{k,j} $$
 
-### 3. TGEMV_BIAS (Tile-based GEMV with Bias)
+### 3. TGEMV_BIAS（带偏置的基于 Tile 的 GEMV）
 
-For `0 <= j < N` (adds bias term to matrix product):
+对于 `0 <= j < N`（将偏置项添加到矩阵乘积）：
 
 $$ \mathrm{C}_{0,j} = \mathrm{Bias}_{0,j} + \sum_{k=0}^{K-1} \mathrm{A}_{0,k} \cdot \mathrm{B}_{k,j} $$
 
-**Note:** Exact accumulator behavior and datatype promotion are target/implementation-defined.
+**注意：** 精确的累加器行为和数据类型提升由目标/实现定义。
 
 ## 汇编语法
 
@@ -84,33 +84,33 @@ PTO_INST RecordEvent TGEMV_BIAS(TileRes &cMatrix, TileLeft &aMatrix, TileRight &
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - Supported `(CType, AType, BType)` triples:
+  - 支持的 `(CType, AType, BType)` 三元组：
     - `(int32_t, int8_t, int8_t)`
     - `(float, half, half)`
     - `(float, float, float)`
     - `(float, bfloat16_t, bfloat16_t)`
-  - Static shape constraints: `TileLeft::Rows == TileRes::Rows`, `TileLeft::Cols == TileRight::Rows`, `TileRight::Cols == TileRes::Cols`.
-  - Tile locations: `TileLeft::Loc == Left`, `TileRight::Loc == Right`, `TileRes::Loc == Acc`.
-  - Runtime: `m` must be 1 ; `k/n` (taken from `bMatrix.GetValidRow()`, `bMatrix.GetValidCol()`) must be in `[1, 4095]`.
-  - Bias checks:
-    - The data type of the bias tile `TileBias::DType` must exactly match the data type of the result tile `(TileRes::DType)`.
-    - The bias tile must be configured as a single row.
-    - The bias tile's location must be `TileBias::Loc == TileType::Bias`.
+  - 静态形状约束：`TileLeft::Rows == TileRes::Rows`、`TileLeft::Cols == TileRight::Rows`、`TileRight::Cols == TileRes::Cols`。
+  - Tile 位置：`TileLeft::Loc == Left`、`TileRight::Loc == Right`、`TileRes::Loc == Acc`。
+  - 运行时：`m` 必须为 1；`k/n`（取自 `bMatrix.GetValidRow()`、`bMatrix.GetValidCol()`）必须在 `[1, 4095]` 范围内。
+  - 偏置检查：
+    - 偏置 tile 的数据类型 `TileBias::DType` 必须与结果 tile 的数据类型 `(TileRes::DType)` 完全匹配。
+    - 偏置 tile 必须配置为单行。
+    - 偏置 tile 的位置必须是 `TileBias::Loc == TileType::Bias`。
 - **实现检查 (A5)**:
-  - Accumulator type must be `int32_t` or `float`.
-    - If `int32_t`: `AType == int8_t` and `BType == int8_t`.
-    - If `float`: supports `half/bfloat16_t/float` and selected fp8 pairs (target-defined).
-  - Static shape constraints: `TileLeft::Rows == TileRes::Rows`, `TileLeft::Cols == TileRight::Rows`, `TileRight::Cols == TileRes::Cols`.
-  - Fractal/layout constraints are enforced:
-    - Left: `Loc == Left`, `!isRowMajor`, `SFractal == RowMajor`
-    - Right: `Loc == Right`, `isRowMajor`, `SFractal == ColMajor`
-    - Acc: `Loc == Acc`, `!isRowMajor`, `SFractal == RowMajor`
-  - No explicit runtime range checks on `m/k/n` are enforced in `TMATMUL_IMPL` on this target.
-  - Runtime: `m` must be 1 ; `k/n` (taken from `bMatrix.GetValidRow()`, `bMatrix.GetValidCol()`) must be in `[1, 4095]`.
-  - Bias checks:
-    - The data type of the bias tile `TileBias::DType` must exactly match the data type of the result tile `(TileRes::DType)`.
-    - The bias tile must be configured as a single row.
-    - The bias tile's location must be `TileBias::Loc == TileType::Bias`.
+  - 累加器类型必须是 `int32_t` 或 `float`。
+    - 如果是 `int32_t`：`AType == int8_t` 且 `BType == int8_t`。
+    - 如果是 `float`：支持 `half/bfloat16_t/float` 和选定的 fp8 对（目标定义）。
+  - 静态形状约束：`TileLeft::Rows == TileRes::Rows`、`TileLeft::Cols == TileRight::Rows`、`TileRight::Cols == TileRes::Cols`。
+  - 强制执行分形/布局约束：
+    - Left：`Loc == Left`、`!isRowMajor`、`SFractal == RowMajor`
+    - Right：`Loc == Right`、`isRowMajor`、`SFractal == ColMajor`
+    - Acc：`Loc == Acc`、`!isRowMajor`、`SFractal == RowMajor`
+  - 此目标的 `TMATMUL_IMPL` 中不强制执行对 `m/k/n` 的显式运行时范围检查。
+  - 运行时：`m` 必须为 1；`k/n`（取自 `bMatrix.GetValidRow()`、`bMatrix.GetValidCol()`）必须在 `[1, 4095]` 范围内。
+  - 偏置检查：
+    - 偏置 tile 的数据类型 `TileBias::DType` 必须与结果 tile 的数据类型 `(TileRes::DType)` 完全匹配。
+    - 偏置 tile 必须配置为单行。
+    - 偏置 tile 的位置必须是 `TileBias::Loc == TileType::Bias`。
 
 ## 示例
 

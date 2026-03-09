@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-Conceptually converts each element using an implementation-defined quantization/dequantization configuration derived from `fp`:
+概念上使用从 `fp` 派生的实现定义的量化/反量化配置转换每个元素：
 
 $$ \mathrm{dst}_{i,j} = \mathrm{Convert}\!\left(\mathrm{src}_{i,j};\ \mathrm{fp}\right) $$
 
@@ -38,7 +38,7 @@ pto.tmov.fp ins(%src, %fp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : 
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/constants.hpp`:
+声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/constants.hpp`：
 
 ```cpp
 template <typename DstTileData, typename SrcTileData, typename FpTileData,
@@ -49,12 +49,12 @@ PTO_INST RecordEvent TMOV_FP(DstTileData& dst, SrcTileData& src, FpTileData& fp,
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - The fp path is only supported for accumulator conversion and is validated by internal compile-time checks in `TMOV_IMPL(dst, src, fp)`.
-  - `FpTileData::Loc` must be `TileType::Scaling` (`static_assert`).
+  - fp 路径仅支持累加器转换，并通过 `TMOV_IMPL(dst, src, fp)` 中的内部编译时检查进行验证。
+  - `FpTileData::Loc` 必须是 `TileType::Scaling`（`static_assert`）。
 - **实现检查 (A5)**:
-  - Validated by `CheckTMovAccValid(...)` and related compile-time checks in `TMOV_IMPL(dst, src, fp)`.
-  - `FpTileData::Loc` must be `TileType::Scaling` (`static_assert`).
-  - Destination location is target-dependent (`Vec` or `Mat` are supported in the fp path).
+  - 通过 `CheckTMovAccValid(...)` 和 `TMOV_IMPL(dst, src, fp)` 中的相关编译时检查进行验证。
+  - `FpTileData::Loc` 必须是 `TileType::Scaling`（`static_assert`）。
+  - 目标位置取决于目标（fp 路径支持 `Vec` 或 `Mat`）。
 
 ## 示例
 
