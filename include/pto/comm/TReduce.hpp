@@ -22,6 +22,177 @@ See LICENSE in the root of the software repository for the full text of the Lice
 namespace pto {
 namespace comm {
 
+namespace detail {
+
+template <typename TileData>
+PTO_INTERNAL void ReduceTiles(TileData &acc, TileData &recv, ReduceOp op)
+{
+    switch (op) {
+        case ReduceOp::Sum:
+            TADD(acc, acc, recv);
+            break;
+        case ReduceOp::Max:
+            TMAX(acc, acc, recv);
+            break;
+        case ReduceOp::Min:
+            TMIN(acc, acc, recv);
+            break;
+        default:
+            PTO_ASSERT(false, "TREDUCE: unknown ReduceOp");
+            break;
+    }
+}
+
+PTO_INTERNAL int GetRemoteRank(int rootIdx, int remoteOrdinal)
+{
+    return (remoteOrdinal < rootIdx) ? remoteOrdinal : (remoteOrdinal + 1);
+}
+
+} // namespace detail
+
+// Simple reduce path: entire data fits in one tile
+template <typename ParallelGroupType, typename GlobalDstData, typename TileData>
+PTO_INTERNAL void TreduceSimple(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData, TileData &accTileData,
+                                TileData &recvTileData, ReduceOp op, int rootIdx, int nranks)
+{
+    if (nranks == 1) {
+        TLOAD(accTileData, parallelGroup[rootIdx]);
+        set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
+        wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
+        TSTORE(dstGlobalData, accTileData);
+        set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+        wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+        return;
+    }
+
+    TLOAD(accTileData, parallelGroup[rootIdx]);
+    set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+    wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+
+    for (int r = 0; r < nranks; ++r) {
+        if (r == rootIdx)
+            continue;
+        TLOAD(recvTileData, parallelGroup[r]);
+        set_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
+        wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
+        detail::ReduceTiles(accTileData, recvTileData, op);
+        set_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
+        wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
+    }
+
+    set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+    wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+    TSTORE(dstGlobalData, accTileData);
+    set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+    wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+}
+
+// Process one chunk's full reduce pipeline (single buffer):
+// TLOAD root → reduce all remote ranks → TSTORE result
+template <typename ParallelGroupType, typename GlobalDstData, typename TileData, typename DynStrideT>
+PTO_INTERNAL void TreduceProcessChunkSingle(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData,
+                                            TileData &accTileData, TileData &recvTileData, ReduceOp op,
+                                            int64_t srcOffset, int64_t dstOffset, int currentRows, int currentCols,
+                                            const DynStrideT &srcChunkStride, const DynStrideT &dstChunkStride,
+                                            int rootIdx, int nranks)
+{
+    using GlobalSrcData = typename ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
+    using T = typename GlobalSrcData::RawDType;
+    using DynShape = Shape<1, 1, 1, DYNAMIC, DYNAMIC>;
+    using SrcViewT = GlobalTensor<T, DynShape, DynStrideT, GlobalSrcData::layout>;
+    using DstViewT = GlobalTensor<T, DynShape, DynStrideT, GlobalDstData::layout>;
+    constexpr bool isDynamicRow = (TileData::ValidRow == DYNAMIC);
+    constexpr bool isDynamicCol = (TileData::ValidCol == DYNAMIC);
+
+    if constexpr (isDynamicRow) {
+        accTileData.RowMaskInternal = currentRows;
+        recvTileData.RowMaskInternal = currentRows;
+    }
+    if constexpr (isDynamicCol) {
+        accTileData.ColMaskInternal = currentCols;
+        recvTileData.ColMaskInternal = currentCols;
+    }
+
+    DynShape chunkShape(1, 1, 1, currentRows, currentCols);
+    SrcViewT rootView(parallelGroup[rootIdx].data() + srcOffset, chunkShape, srcChunkStride);
+    TLOAD(accTileData, rootView);
+
+    if (nranks == 1) {
+        set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
+        wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
+    } else {
+        set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+        wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+        for (int r = 0; r < nranks; ++r) {
+            if (r == rootIdx)
+                continue;
+            SrcViewT remoteView(parallelGroup[r].data() + srcOffset, chunkShape, srcChunkStride);
+            TLOAD(recvTileData, remoteView);
+            set_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
+            wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
+            detail::ReduceTiles(accTileData, recvTileData, op);
+            set_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
+            wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
+        }
+        set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+        wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+    }
+
+    DstViewT dstView(dstGlobalData.data() + dstOffset, chunkShape, dstChunkStride);
+    TSTORE(dstView, accTileData);
+    set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+    wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+}
+
+// 2D sliding chunked reduce with single buffer
+template <typename ParallelGroupType, typename GlobalDstData, typename TileData>
+PTO_INTERNAL void TreduceChunkedSingle(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData,
+                                       TileData &accTileData, TileData &recvTileData, ReduceOp op, int gShape0,
+                                       int gShape1, int gShape2, int gShape3, int gShape4, int tileValidRow,
+                                       int tileValidCol, int rootIdx, int nranks)
+{
+    using GlobalSrcData = typename ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
+    GlobalSrcData &refTensor = parallelGroup[rootIdx];
+    const int srcStride0 = refTensor.GetStride(GlobalTensorDim::DIM_0);
+    const int srcStride1 = refTensor.GetStride(GlobalTensorDim::DIM_1);
+    const int srcStride2 = refTensor.GetStride(GlobalTensorDim::DIM_2);
+    const int srcStride3 = refTensor.GetStride(GlobalTensorDim::DIM_3);
+    const int srcStride4 = refTensor.GetStride(GlobalTensorDim::DIM_4);
+    const int dstStride0 = dstGlobalData.GetStride(GlobalTensorDim::DIM_0);
+    const int dstStride1 = dstGlobalData.GetStride(GlobalTensorDim::DIM_1);
+    const int dstStride2 = dstGlobalData.GetStride(GlobalTensorDim::DIM_2);
+    const int dstStride3 = dstGlobalData.GetStride(GlobalTensorDim::DIM_3);
+    const int dstStride4 = dstGlobalData.GetStride(GlobalTensorDim::DIM_4);
+
+    using DynStride = Stride<DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC>;
+    DynStride srcChunkStride(srcStride0, srcStride1, srcStride2, srcStride3, srcStride4);
+    DynStride dstChunkStride(dstStride0, dstStride1, dstStride2, dstStride3, dstStride4);
+
+    for (int i0 = 0; i0 < gShape0; ++i0) {
+        for (int i1 = 0; i1 < gShape1; ++i1) {
+            for (int i2 = 0; i2 < gShape2; ++i2) {
+                int64_t srcBase = static_cast<int64_t>(i0) * srcStride0 + static_cast<int64_t>(i1) * srcStride1 +
+                                  static_cast<int64_t>(i2) * srcStride2;
+                int64_t dstBase = static_cast<int64_t>(i0) * dstStride0 + static_cast<int64_t>(i1) * dstStride1 +
+                                  static_cast<int64_t>(i2) * dstStride2;
+                for (int rowOff = 0; rowOff < gShape3; rowOff += tileValidRow) {
+                    int curRows = (rowOff + tileValidRow <= gShape3) ? tileValidRow : (gShape3 - rowOff);
+                    for (int colOff = 0; colOff < gShape4; colOff += tileValidCol) {
+                        int curCols = (colOff + tileValidCol <= gShape4) ? tileValidCol : (gShape4 - colOff);
+                        int64_t srcOff = srcBase + static_cast<int64_t>(rowOff) * srcStride3 +
+                                         static_cast<int64_t>(colOff) * srcStride4;
+                        int64_t dstOff = dstBase + static_cast<int64_t>(rowOff) * dstStride3 +
+                                         static_cast<int64_t>(colOff) * dstStride4;
+                        TreduceProcessChunkSingle<ParallelGroupType, GlobalDstData, TileData>(
+                            parallelGroup, dstGlobalData, accTileData, recvTileData, op, srcOff, dstOff, curRows,
+                            curCols, srcChunkStride, dstChunkStride, rootIdx, nranks);
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ============================================================================
 // TREDUCE_IMPL: Reduce operation - root gathers and reduces data from all ranks
 //
@@ -47,36 +218,6 @@ namespace comm {
 //   - All ranks in the ParallelGroup are assumed to have the same shape/strides.
 // ============================================================================
 
-namespace detail {
-
-// Element-wise reduction helper
-template <typename TileData>
-PTO_INTERNAL void ReduceTiles(TileData &acc, TileData &recv, ReduceOp op)
-{
-    // Perform element-wise reduction based on op
-    switch (op) {
-        case ReduceOp::Sum:
-            TADD(acc, acc, recv);
-            break;
-        case ReduceOp::Max:
-            TMAX(acc, acc, recv);
-            break;
-        case ReduceOp::Min:
-            TMIN(acc, acc, recv);
-            break;
-        default:
-            PTO_ASSERT(false, "TREDUCE: unknown ReduceOp");
-            break;
-    }
-}
-
-PTO_INTERNAL int GetRemoteRank(int rootIdx, int remoteOrdinal)
-{
-    return (remoteOrdinal < rootIdx) ? remoteOrdinal : (remoteOrdinal + 1);
-}
-
-} // namespace detail
-
 template <typename ParallelGroupType, typename GlobalDstData, typename TileData>
 PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData, TileData &accTileData,
                                TileData &recvTileData, ReduceOp op)
@@ -84,7 +225,6 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
     using GlobalSrcData = typename ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
     using T = typename GlobalSrcData::RawDType;
 
-    // Type checks
     static_assert(std::is_same_v<T, typename GlobalDstData::RawDType>, "TREDUCE: GlobalData type mismatch!");
     static_assert(std::is_same_v<T, typename TileData::DType>,
                   "TREDUCE: TileData element type must match GlobalData element type");
@@ -92,11 +232,9 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
     const int rootIdx = parallelGroup.GetRootIdx();
     const int nranks = parallelGroup.GetSize();
 
-    // Check PG size
     PTO_ASSERT(nranks > 0, "ParallelGroup size must be greater than 0!");
     PTO_ASSERT(rootIdx >= 0 && rootIdx < nranks, "rootIdx must be in range [0, nranks)!");
 
-    // Get GlobalTensor dimensions from root's source tensor
     GlobalSrcData &refTensor = parallelGroup[rootIdx];
     const int gShape0 = refTensor.GetShape(GlobalTensorDim::DIM_0);
     const int gShape1 = refTensor.GetShape(GlobalTensorDim::DIM_1);
@@ -115,99 +253,196 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
         return;
     }
 
-    // ---- Simple path: data fits in UB tile in both dimensions ----
     if (totalRows <= tileValidRow && gShape4 <= tileValidCol) {
-        // Single rank case: just copy local data to output
-        if (nranks == 1) {
-            TLOAD(accTileData, parallelGroup[rootIdx]);
-            set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-            wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-            TSTORE(dstGlobalData, accTileData);
-            set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0); // Wait for TSTORE completion
-            wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
-            return;
-        }
-
-        // Step 1: Load root data into accumulator
-        TLOAD(accTileData, parallelGroup[rootIdx]);
-        set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-        wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-
-        // Step 2: Reduce data from all other ranks
-        for (int r = 0; r < nranks; ++r) {
-            if (r == rootIdx) {
-                continue; // Skip self, already loaded
-            }
-
-            // Load remote data into receive buffer
-            TLOAD(recvTileData, parallelGroup[r]);
-            set_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
-            wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
-
-            // Perform reduction
-            detail::ReduceTiles(accTileData, recvTileData, op);
-
-            set_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
-            wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
-        }
-
-        // Step 3: Store final result
-        set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
-        wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
-        TSTORE(dstGlobalData, accTileData);
-        set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
-        wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+        TreduceSimple<ParallelGroupType, GlobalDstData, TileData>(parallelGroup, dstGlobalData, accTileData,
+                                                                  recvTileData, op, rootIdx, nranks);
         return;
     }
-
-    // ---- 2D sliding chunked path ----
-    //
-    // Strategy (ND layout):
-    //   - Iterate over outer dimensions (dim0, dim1, dim2) explicitly.
-    //   - Within each (i0, i1, i2) block, slide a (tileValidRow x tileValidCol)
-    //     window over the (dim3 x dim4) plane.
-    //   - For each chunk, execute the full reduce pipeline:
-    //     TLOAD root chunk → reduce all remote chunks → TSTORE result.
 
     constexpr bool isDynamicRow = (TileData::ValidRow == DYNAMIC);
     constexpr bool isDynamicCol = (TileData::ValidCol == DYNAMIC);
 
-    // Row validation: static ValidRow requires shape3 to be exactly divisible
     if constexpr (!isDynamicRow) {
         PTO_ASSERT(gShape3 % tileValidRow == 0,
                    "TREDUCE chunked: shape3 must be divisible by tile ValidRow when ValidRow is static. "
                    "Use a Tile with DYNAMIC ValidRow for partial row chunk support.");
     }
-    // Column validation: static ValidCol requires shape4 to be exactly divisible
     if constexpr (!isDynamicCol) {
         PTO_ASSERT(gShape4 % tileValidCol == 0,
                    "TREDUCE chunked: shape4 must be divisible by tile ValidCol when ValidCol is static. "
                    "Use a Tile with DYNAMIC ValidCol for partial column chunk support.");
     }
 
-    // Source strides (from root's tensor, assumed same for all ranks)
+    TreduceChunkedSingle<ParallelGroupType, GlobalDstData, TileData>(
+        parallelGroup, dstGlobalData, accTileData, recvTileData, op, gShape0, gShape1, gShape2, gShape3, gShape4,
+        tileValidRow, tileValidCol, rootIdx, nranks);
+}
+
+// ============================================================================
+// Ping-pong helpers for TREDUCE
+// ============================================================================
+
+// Simple reduce path with ping-pong: entire data fits in one tile
+template <typename ParallelGroupType, typename GlobalDstData, typename TileData>
+PTO_INTERNAL void TreduceSimplePingPong(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData,
+                                        TileData &accTileData, TileData &pingTile, TileData &pongTile, ReduceOp op,
+                                        int rootIdx, int nranks, int numRemote)
+{
+    if (nranks == 1) {
+        TLOAD(accTileData, parallelGroup[rootIdx]);
+        set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
+        wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
+        TSTORE(dstGlobalData, accTileData);
+        set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+        wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+        return;
+    }
+
+    TLOAD(accTileData, parallelGroup[rootIdx]);
+    set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+    TLOAD(pingTile, parallelGroup[detail::GetRemoteRank(rootIdx, 0)]);
+    set_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
+    wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+
+    for (int i = 0; i < numRemote; ++i) {
+        const bool hasNext = (i + 1 < numRemote);
+        const bool usePing = (i % 2 == 0);
+        TileData &currentTile = usePing ? pingTile : pongTile;
+        TileData &nextTile = usePing ? pongTile : pingTile;
+        const auto currentEvent = usePing ? EVENT_ID1 : EVENT_ID2;
+        const auto nextEvent = usePing ? EVENT_ID2 : EVENT_ID1;
+        if (hasNext) {
+            TLOAD(nextTile, parallelGroup[detail::GetRemoteRank(rootIdx, i + 1)]);
+            set_flag(PIPE_MTE2, PIPE_V, nextEvent);
+        }
+        wait_flag(PIPE_MTE2, PIPE_V, currentEvent);
+        detail::ReduceTiles(accTileData, currentTile, op);
+        if (hasNext) {
+            set_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
+            wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
+        } else {
+            set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+            wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+        }
+    }
+
+    TSTORE(dstGlobalData, accTileData);
+    set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+    wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+}
+
+// Ping-pong reduce loop over remote ranks for one chunk (used in chunked path)
+template <typename ParallelGroupType, typename TileData, typename DynStrideT>
+PTO_INTERNAL void TreducePingPongLoop(ParallelGroupType &parallelGroup, TileData &accTileData, TileData &pingTile,
+                                      TileData &pongTile, ReduceOp op, int64_t srcOffset, int currentRows,
+                                      int currentCols, const DynStrideT &srcChunkStride, int rootIdx, int numRemote)
+{
+    using GlobalSrcData = typename ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
+    using T = typename GlobalSrcData::RawDType;
+    using DynShape = Shape<1, 1, 1, DYNAMIC, DYNAMIC>;
+    using SrcViewT = GlobalTensor<T, DynShape, DynStrideT, GlobalSrcData::layout>;
+    DynShape chunkShape(1, 1, 1, currentRows, currentCols);
+
+    set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+    SrcViewT firstView(parallelGroup[detail::GetRemoteRank(rootIdx, 0)].data() + srcOffset, chunkShape, srcChunkStride);
+    TLOAD(pingTile, firstView);
+    set_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
+    wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+
+    for (int i = 0; i < numRemote; ++i) {
+        const bool hasNext = (i + 1 < numRemote);
+        const bool usePing = (i % 2 == 0);
+        TileData &currentTile = usePing ? pingTile : pongTile;
+        TileData &nextTile = usePing ? pongTile : pingTile;
+        const auto currentEvent = usePing ? EVENT_ID1 : EVENT_ID2;
+        const auto nextEvent = usePing ? EVENT_ID2 : EVENT_ID1;
+        if (hasNext) {
+            SrcViewT nextView(parallelGroup[detail::GetRemoteRank(rootIdx, i + 1)].data() + srcOffset, chunkShape,
+                              srcChunkStride);
+            TLOAD(nextTile, nextView);
+            set_flag(PIPE_MTE2, PIPE_V, nextEvent);
+        }
+        wait_flag(PIPE_MTE2, PIPE_V, currentEvent);
+        detail::ReduceTiles(accTileData, currentTile, op);
+        if (hasNext) {
+            set_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
+            wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
+        } else {
+            set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+            wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+        }
+    }
+}
+
+// Process one chunk's full reduce pipeline with ping-pong double buffering
+template <typename ParallelGroupType, typename GlobalDstData, typename TileData, typename DynStrideT>
+PTO_INTERNAL void TreduceProcessChunkPingPong(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData,
+                                              TileData &accTileData, TileData &pingTile, TileData &pongTile,
+                                              ReduceOp op, int64_t srcOffset, int64_t dstOffset, int currentRows,
+                                              int currentCols, const DynStrideT &srcChunkStride,
+                                              const DynStrideT &dstChunkStride, int rootIdx, int nranks, int numRemote)
+{
+    using GlobalSrcData = typename ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
+    using T = typename GlobalSrcData::RawDType;
+    using DynShape = Shape<1, 1, 1, DYNAMIC, DYNAMIC>;
+    using SrcViewT = GlobalTensor<T, DynShape, DynStrideT, GlobalSrcData::layout>;
+    using DstViewT = GlobalTensor<T, DynShape, DynStrideT, GlobalDstData::layout>;
+    constexpr bool isDynamicRow = (TileData::ValidRow == DYNAMIC);
+    constexpr bool isDynamicCol = (TileData::ValidCol == DYNAMIC);
+
+    if constexpr (isDynamicRow) {
+        accTileData.RowMaskInternal = currentRows;
+        pingTile.RowMaskInternal = currentRows;
+        pongTile.RowMaskInternal = currentRows;
+    }
+    if constexpr (isDynamicCol) {
+        accTileData.ColMaskInternal = currentCols;
+        pingTile.ColMaskInternal = currentCols;
+        pongTile.ColMaskInternal = currentCols;
+    }
+
+    DynShape chunkShape(1, 1, 1, currentRows, currentCols);
+    SrcViewT rootView(parallelGroup[rootIdx].data() + srcOffset, chunkShape, srcChunkStride);
+    TLOAD(accTileData, rootView);
+
+    if (nranks == 1) {
+        set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
+        wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
+    } else {
+        TreducePingPongLoop<ParallelGroupType, TileData>(parallelGroup, accTileData, pingTile, pongTile, op, srcOffset,
+                                                         currentRows, currentCols, srcChunkStride, rootIdx, numRemote);
+    }
+
+    DstViewT dstView(dstGlobalData.data() + dstOffset, chunkShape, dstChunkStride);
+    TSTORE(dstView, accTileData);
+    set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+    wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+}
+
+// 2D sliding chunked reduce with ping-pong double buffering
+template <typename ParallelGroupType, typename GlobalDstData, typename TileData>
+PTO_INTERNAL void TreduceChunkedPingPong(ParallelGroupType &parallelGroup, GlobalDstData &dstGlobalData,
+                                         TileData &accTileData, TileData &pingTile, TileData &pongTile, ReduceOp op,
+                                         int gShape0, int gShape1, int gShape2, int gShape3, int gShape4,
+                                         int tileValidRow, int tileValidCol, int rootIdx, int nranks, int numRemote)
+{
+    using GlobalSrcData = typename ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
+    GlobalSrcData &refTensor = parallelGroup[rootIdx];
     const int srcStride0 = refTensor.GetStride(GlobalTensorDim::DIM_0);
     const int srcStride1 = refTensor.GetStride(GlobalTensorDim::DIM_1);
     const int srcStride2 = refTensor.GetStride(GlobalTensorDim::DIM_2);
     const int srcStride3 = refTensor.GetStride(GlobalTensorDim::DIM_3);
     const int srcStride4 = refTensor.GetStride(GlobalTensorDim::DIM_4);
-
-    // Destination strides
     const int dstStride0 = dstGlobalData.GetStride(GlobalTensorDim::DIM_0);
     const int dstStride1 = dstGlobalData.GetStride(GlobalTensorDim::DIM_1);
     const int dstStride2 = dstGlobalData.GetStride(GlobalTensorDim::DIM_2);
     const int dstStride3 = dstGlobalData.GetStride(GlobalTensorDim::DIM_3);
     const int dstStride4 = dstGlobalData.GetStride(GlobalTensorDim::DIM_4);
 
-    // View types with fully dynamic shape/stride for chunk GlobalTensors
-    using DynShape = Shape<1, 1, 1, DYNAMIC, DYNAMIC>;
     using DynStride = Stride<DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC>;
-    using SrcViewT = GlobalTensor<T, DynShape, DynStride, GlobalSrcData::layout>;
-    using DstViewT = GlobalTensor<T, DynShape, DynStride, GlobalDstData::layout>;
     DynStride srcChunkStride(srcStride0, srcStride1, srcStride2, srcStride3, srcStride4);
     DynStride dstChunkStride(dstStride0, dstStride1, dstStride2, dstStride3, dstStride4);
 
-    // 2D sliding: iterate outer dims, then chunk rows (dim3) and columns (dim4)
     for (int i0 = 0; i0 < gShape0; ++i0) {
         for (int i1 = 0; i1 < gShape1; ++i1) {
             for (int i2 = 0; i2 < gShape2; ++i2) {
@@ -215,69 +450,17 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
                                   static_cast<int64_t>(i2) * srcStride2;
                 int64_t dstBase = static_cast<int64_t>(i0) * dstStride0 + static_cast<int64_t>(i1) * dstStride1 +
                                   static_cast<int64_t>(i2) * dstStride2;
-
                 for (int rowOff = 0; rowOff < gShape3; rowOff += tileValidRow) {
-                    int currentRows = (rowOff + tileValidRow <= gShape3) ? tileValidRow : (gShape3 - rowOff);
-
-                    if constexpr (isDynamicRow) {
-                        accTileData.RowMaskInternal = currentRows;
-                        recvTileData.RowMaskInternal = currentRows;
-                    }
-
+                    int curRows = (rowOff + tileValidRow <= gShape3) ? tileValidRow : (gShape3 - rowOff);
                     for (int colOff = 0; colOff < gShape4; colOff += tileValidCol) {
-                        int currentCols = (colOff + tileValidCol <= gShape4) ? tileValidCol : (gShape4 - colOff);
-
-                        if constexpr (isDynamicCol) {
-                            accTileData.ColMaskInternal = currentCols;
-                            recvTileData.ColMaskInternal = currentCols;
-                        }
-
-                        // Compute element offsets for this chunk
-                        int64_t srcOffset = srcBase + static_cast<int64_t>(rowOff) * srcStride3 +
-                                            static_cast<int64_t>(colOff) * srcStride4;
-                        int64_t dstOffset = dstBase + static_cast<int64_t>(rowOff) * dstStride3 +
-                                            static_cast<int64_t>(colOff) * dstStride4;
-
-                        DynShape chunkShape(1, 1, 1, currentRows, currentCols);
-
-                        // Load root's chunk into accumulator
-                        SrcViewT rootView(parallelGroup[rootIdx].data() + srcOffset, chunkShape, srcChunkStride);
-                        TLOAD(accTileData, rootView);
-
-                        if (nranks == 1) {
-                            // Single rank: just copy chunk
-                            set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-                            wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-                        } else {
-                            // Multi-rank: reduce chunk from all remote ranks
-                            set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-                            wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-
-                            for (int r = 0; r < nranks; ++r) {
-                                if (r == rootIdx)
-                                    continue;
-
-                                SrcViewT remoteView(parallelGroup[r].data() + srcOffset, chunkShape, srcChunkStride);
-                                TLOAD(recvTileData, remoteView);
-                                set_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
-                                wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
-
-                                detail::ReduceTiles(accTileData, recvTileData, op);
-
-                                set_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
-                                wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
-                            }
-
-                            // Prepare for TSTORE
-                            set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
-                            wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
-                        }
-
-                        // Store reduced chunk to destination
-                        DstViewT dstView(dstGlobalData.data() + dstOffset, chunkShape, dstChunkStride);
-                        TSTORE(dstView, accTileData);
-                        set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
-                        wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+                        int curCols = (colOff + tileValidCol <= gShape4) ? tileValidCol : (gShape4 - colOff);
+                        int64_t srcOff = srcBase + static_cast<int64_t>(rowOff) * srcStride3 +
+                                         static_cast<int64_t>(colOff) * srcStride4;
+                        int64_t dstOff = dstBase + static_cast<int64_t>(rowOff) * dstStride3 +
+                                         static_cast<int64_t>(colOff) * dstStride4;
+                        TreduceProcessChunkPingPong<ParallelGroupType, GlobalDstData, TileData>(
+                            parallelGroup, dstGlobalData, accTileData, pingTile, pongTile, op, srcOff, dstOff, curRows,
+                            curCols, srcChunkStride, dstChunkStride, rootIdx, nranks, numRemote);
                     }
                 }
             }
@@ -311,7 +494,6 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
     using GlobalSrcData = typename ParallelGroupTraits<ParallelGroupType>::GlobalDataType;
     using T = typename GlobalSrcData::RawDType;
 
-    // Type checks
     static_assert(std::is_same_v<T, typename GlobalDstData::RawDType>, "TREDUCE: GlobalData type mismatch!");
     static_assert(std::is_same_v<T, typename TileData::DType>,
                   "TREDUCE: TileData element type must match GlobalData element type");
@@ -319,11 +501,9 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
     const int rootIdx = parallelGroup.GetRootIdx();
     const int nranks = parallelGroup.GetSize();
 
-    // Check PG size
     PTO_ASSERT(nranks > 0, "ParallelGroup size must be greater than 0!");
     PTO_ASSERT(rootIdx >= 0 && rootIdx < nranks, "rootIdx must be in range [0, nranks)!");
 
-    // Get GlobalTensor dimensions from root's source tensor
     GlobalSrcData &refTensor = parallelGroup[rootIdx];
     const int gShape0 = refTensor.GetShape(GlobalTensorDim::DIM_0);
     const int gShape1 = refTensor.GetShape(GlobalTensorDim::DIM_1);
@@ -342,77 +522,13 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
         return;
     }
 
-    // Remote ranks are all ranks except root; map by ordinal to concrete rank index.
     const int numRemote = nranks - 1;
 
-    // ---- Simple path: data fits in UB tile in both dimensions ----
     if (totalRows <= tileValidRow && gShape4 <= tileValidCol) {
-        // Single rank case: just copy local data to output
-        if (nranks == 1) {
-            TLOAD(accTileData, parallelGroup[rootIdx]);
-            set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-            wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-            TSTORE(dstGlobalData, accTileData);
-            set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0); // Wait for TSTORE completion
-            wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
-            return;
-        }
-
-        // Step 1: Load root data into accumulator
-        TLOAD(accTileData, parallelGroup[rootIdx]);
-        set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-
-        // Step 2: Start prefetching first remote data into pingTile
-        TLOAD(pingTile, parallelGroup[detail::GetRemoteRank(rootIdx, 0)]);
-        set_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
-
-        // Wait for root data ready
-        wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-
-        // Ping-pong processing: overlap data transfer with computation
-        for (int i = 0; i < numRemote; ++i) {
-            const bool hasNext = (i + 1 < numRemote);
-            const bool usePing = (i % 2 == 0);
-
-            TileData &currentTile = usePing ? pingTile : pongTile;
-            TileData &nextTile = usePing ? pongTile : pingTile;
-            const auto currentEvent = usePing ? EVENT_ID1 : EVENT_ID2;
-            const auto nextEvent = usePing ? EVENT_ID2 : EVENT_ID1;
-
-            // Start prefetch of next remote data (overlapped with current reduction)
-            if (hasNext) {
-                TLOAD(nextTile, parallelGroup[detail::GetRemoteRank(rootIdx, i + 1)]);
-                set_flag(PIPE_MTE2, PIPE_V, nextEvent);
-            }
-
-            // Wait for current remote data ready
-            wait_flag(PIPE_MTE2, PIPE_V, currentEvent);
-
-            // Perform reduction with current remote data
-            detail::ReduceTiles(accTileData, currentTile, op);
-
-            // Sync based on next operation
-            if (hasNext) {
-                set_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
-                wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
-            } else {
-                // Last iteration: prepare for TSTORE
-                set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
-                wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
-            }
-        }
-
-        // Step 3: Store final result
-        TSTORE(dstGlobalData, accTileData);
-        set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
-        wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
+        TreduceSimplePingPong<ParallelGroupType, GlobalDstData, TileData>(
+            parallelGroup, dstGlobalData, accTileData, pingTile, pongTile, op, rootIdx, nranks, numRemote);
         return;
     }
-
-    // ---- 2D sliding chunked path ----
-    //
-    // Strategy: same 2D sliding as TREDUCE_IMPL, but within each chunk the
-    // remote-rank reduction uses ping-pong double buffering.
 
     constexpr bool isDynamicRow = (TileData::ValidRow == DYNAMIC);
     constexpr bool isDynamicCol = (TileData::ValidCol == DYNAMIC);
@@ -428,132 +544,9 @@ PTO_INTERNAL void TREDUCE_IMPL(ParallelGroupType &parallelGroup, GlobalDstData &
                    "Use a Tile with DYNAMIC ValidCol for partial column chunk support.");
     }
 
-    // Source strides (from root's tensor, assumed same for all ranks)
-    const int srcStride0 = refTensor.GetStride(GlobalTensorDim::DIM_0);
-    const int srcStride1 = refTensor.GetStride(GlobalTensorDim::DIM_1);
-    const int srcStride2 = refTensor.GetStride(GlobalTensorDim::DIM_2);
-    const int srcStride3 = refTensor.GetStride(GlobalTensorDim::DIM_3);
-    const int srcStride4 = refTensor.GetStride(GlobalTensorDim::DIM_4);
-
-    // Destination strides
-    const int dstStride0 = dstGlobalData.GetStride(GlobalTensorDim::DIM_0);
-    const int dstStride1 = dstGlobalData.GetStride(GlobalTensorDim::DIM_1);
-    const int dstStride2 = dstGlobalData.GetStride(GlobalTensorDim::DIM_2);
-    const int dstStride3 = dstGlobalData.GetStride(GlobalTensorDim::DIM_3);
-    const int dstStride4 = dstGlobalData.GetStride(GlobalTensorDim::DIM_4);
-
-    // View types with fully dynamic shape/stride for chunk GlobalTensors
-    using DynShape = Shape<1, 1, 1, DYNAMIC, DYNAMIC>;
-    using DynStride = Stride<DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC>;
-    using SrcViewT = GlobalTensor<T, DynShape, DynStride, GlobalSrcData::layout>;
-    using DstViewT = GlobalTensor<T, DynShape, DynStride, GlobalDstData::layout>;
-    DynStride srcChunkStride(srcStride0, srcStride1, srcStride2, srcStride3, srcStride4);
-    DynStride dstChunkStride(dstStride0, dstStride1, dstStride2, dstStride3, dstStride4);
-
-    // 2D sliding: iterate outer dims, then chunk rows (dim3) and columns (dim4)
-    for (int i0 = 0; i0 < gShape0; ++i0) {
-        for (int i1 = 0; i1 < gShape1; ++i1) {
-            for (int i2 = 0; i2 < gShape2; ++i2) {
-                int64_t srcBase = static_cast<int64_t>(i0) * srcStride0 + static_cast<int64_t>(i1) * srcStride1 +
-                                  static_cast<int64_t>(i2) * srcStride2;
-                int64_t dstBase = static_cast<int64_t>(i0) * dstStride0 + static_cast<int64_t>(i1) * dstStride1 +
-                                  static_cast<int64_t>(i2) * dstStride2;
-
-                for (int rowOff = 0; rowOff < gShape3; rowOff += tileValidRow) {
-                    int currentRows = (rowOff + tileValidRow <= gShape3) ? tileValidRow : (gShape3 - rowOff);
-
-                    if constexpr (isDynamicRow) {
-                        accTileData.RowMaskInternal = currentRows;
-                        pingTile.RowMaskInternal = currentRows;
-                        pongTile.RowMaskInternal = currentRows;
-                    }
-
-                    for (int colOff = 0; colOff < gShape4; colOff += tileValidCol) {
-                        int currentCols = (colOff + tileValidCol <= gShape4) ? tileValidCol : (gShape4 - colOff);
-
-                        if constexpr (isDynamicCol) {
-                            accTileData.ColMaskInternal = currentCols;
-                            pingTile.ColMaskInternal = currentCols;
-                            pongTile.ColMaskInternal = currentCols;
-                        }
-
-                        // Compute element offsets for this chunk
-                        int64_t srcOffset = srcBase + static_cast<int64_t>(rowOff) * srcStride3 +
-                                            static_cast<int64_t>(colOff) * srcStride4;
-                        int64_t dstOffset = dstBase + static_cast<int64_t>(rowOff) * dstStride3 +
-                                            static_cast<int64_t>(colOff) * dstStride4;
-
-                        DynShape chunkShape(1, 1, 1, currentRows, currentCols);
-
-                        // Load root's chunk into accumulator
-                        SrcViewT rootView(parallelGroup[rootIdx].data() + srcOffset, chunkShape, srcChunkStride);
-                        TLOAD(accTileData, rootView);
-
-                        if (nranks == 1) {
-                            // Single rank: just copy chunk
-                            set_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-                            wait_flag(PIPE_MTE2, PIPE_MTE3, EVENT_ID0);
-                        } else {
-                            // Multi-rank: ping-pong reduce chunk from all remote ranks
-                            set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-
-                            // Prefetch first remote chunk into pingTile
-                            SrcViewT firstRemoteView(
-                                parallelGroup[detail::GetRemoteRank(rootIdx, 0)].data() + srcOffset, chunkShape,
-                                srcChunkStride);
-                            TLOAD(pingTile, firstRemoteView);
-                            set_flag(PIPE_MTE2, PIPE_V, EVENT_ID1);
-
-                            // Wait for root data ready
-                            wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-
-                            // Ping-pong reduce over remote ranks
-                            for (int i = 0; i < numRemote; ++i) {
-                                const bool hasNext = (i + 1 < numRemote);
-                                const bool usePing = (i % 2 == 0);
-
-                                TileData &currentTile = usePing ? pingTile : pongTile;
-                                TileData &nextTile = usePing ? pongTile : pingTile;
-                                const auto currentEvent = usePing ? EVENT_ID1 : EVENT_ID2;
-                                const auto nextEvent = usePing ? EVENT_ID2 : EVENT_ID1;
-
-                                // Start prefetch of next remote chunk (overlapped with reduction)
-                                if (hasNext) {
-                                    SrcViewT nextRemoteView(
-                                        parallelGroup[detail::GetRemoteRank(rootIdx, i + 1)].data() + srcOffset,
-                                        chunkShape, srcChunkStride);
-                                    TLOAD(nextTile, nextRemoteView);
-                                    set_flag(PIPE_MTE2, PIPE_V, nextEvent);
-                                }
-
-                                // Wait for current remote data ready
-                                wait_flag(PIPE_MTE2, PIPE_V, currentEvent);
-
-                                // Perform reduction with current remote data
-                                detail::ReduceTiles(accTileData, currentTile, op);
-
-                                // Sync based on next operation
-                                if (hasNext) {
-                                    set_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
-                                    wait_flag(PIPE_V, PIPE_MTE2, EVENT_ID0);
-                                } else {
-                                    // Last iteration: prepare for TSTORE
-                                    set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
-                                    wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
-                                }
-                            }
-                        }
-
-                        // Store reduced chunk to destination
-                        DstViewT dstView(dstGlobalData.data() + dstOffset, chunkShape, dstChunkStride);
-                        TSTORE(dstView, accTileData);
-                        set_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
-                        wait_flag(PIPE_MTE3, PIPE_MTE2, EVENT_ID0);
-                    }
-                }
-            }
-        }
-    }
+    TreduceChunkedPingPong<ParallelGroupType, GlobalDstData, TileData>(
+        parallelGroup, dstGlobalData, accTileData, pingTile, pongTile, op, gShape0, gShape1, gShape2, gShape3, gShape4,
+        tileValidRow, tileValidCol, rootIdx, nranks, numRemote);
 }
 
 } // namespace comm
