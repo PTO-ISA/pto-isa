@@ -104,7 +104,8 @@ PTO_INTERNAL void TExpandsConvTile(TileDataDst &dst, typename TileDataDst::DType
     using U = typename TileDataDst::DType;
     if constexpr (TileDataDst::layout == pto::Layout::NC1HWC0 || TileDataDst::layout == pto::Layout::FRACTAL_Z) {
         // dim4 is c0Size
-        uint64_t totalBytes = dst.GetShape(0) * dst.GetShape(1) * dst.GetShape(2) * dst.GetShape(3) * sizeof(U);
+        uint64_t totalBytes =
+            dst.GetShape(0) * dst.GetShape(1) * dst.GetShape(2) * dst.GetShape(3) * dst.GetShape(4) * sizeof(U);
         uint64_t repeat = totalBytes / BLOCK_BYTE_SIZE;
         uint16_t repeatTimes = static_cast<uint16_t>(repeat);
         PTO_ASSERT(repeatTimes >= 1 && repeatTimes <= EXPANDS_MAX_SUPPORT_REPEAT_TIMES,
@@ -113,8 +114,8 @@ PTO_INTERNAL void TExpandsConvTile(TileDataDst &dst, typename TileDataDst::DType
     } else if constexpr (TileDataDst::layout == pto::Layout::NDC1HWC0 ||
                          TileDataDst::layout == pto::Layout::FRACTAL_Z_3D) {
         // dim5 is c0Size
-        uint64_t totalBytes =
-            dst.GetShape(0) * dst.GetShape(1) * dst.GetShape(2) * dst.GetShape(3) * dst.GetShape(4) * sizeof(U);
+        uint64_t totalBytes = dst.GetShape(0) * dst.GetShape(1) * dst.GetShape(2) * dst.GetShape(3) * dst.GetShape(4) *
+                              dst.GetShape(5) * sizeof(U);
         uint64_t repeat = totalBytes / BLOCK_BYTE_SIZE;
         uint16_t repeatTimes = static_cast<uint16_t>(repeat);
         PTO_ASSERT(repeatTimes >= 1 && repeatTimes <= EXPANDS_MAX_SUPPORT_REPEAT_TIMES,

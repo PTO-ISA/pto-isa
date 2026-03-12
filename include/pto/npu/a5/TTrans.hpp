@@ -29,8 +29,11 @@ __tf__ PTO_INTERNAL void TTransB32RowWise(typename TileData::TileDType __out__ d
     __ubuf__ T *dstPtr = (__ubuf__ T *)__cce_get_tile_ptr(dst);
     __ubuf__ T *srcPtr = (__ubuf__ T *)__cce_get_tile_ptr(src);
 
+    static_assert(TileData::Rows > 0 && TileData::Cols > 0, "Fix: TTRANS tile dimensions must be positive");
+    static_assert((unsigned long long)(TileData::Rows - 1) * srcStride + (TileData::Cols - 1) <= 0xFFFFFFFFULL,
+                  "Fix: TTRANS gather index may overflow uint32_t register");
     if constexpr (std::is_same_v<T, uint32_t> || std::is_same_v<T, int32_t> || std::is_same_v<T, float>) {
-        uint16_t repeatTimes = CeilDivision(TileData::Cols, elementsPerRepeat);
+        uint16_t repeatTimes = CeilDivision(TileData::Rows, elementsPerRepeat);
         __VEC_SCOPE__
         {
             RegTensor<uint32_t> vreg0;
@@ -38,12 +41,12 @@ __tf__ PTO_INTERNAL void TTransB32RowWise(typename TileData::TileDType __out__ d
             MaskReg preg;
             constexpr auto distValue =
                 std::integral_constant<::DistVST, static_cast<::DistVST>(GetDistVst<T, DistVST::DIST_NORM_B32>())>();
-            for (uint16_t row = 0; row < (uint16_t)TileData::Rows; ++row) {
-                uint32_t sreg = (uint32_t)TileData::Cols;
+            for (uint16_t row = 0; row < (uint16_t)TileData::Cols; ++row) {
+                uint32_t sreg = (uint32_t)TileData::Rows;
                 for (uint16_t chunk = 0; chunk < repeatTimes; ++chunk) {
                     preg = CreatePredicate<T>(sreg);
                     vci((RegTensor<int32_t> &)vreg0, (int32_t)(chunk * elementsPerRepeat), INC_ORDER);
-                    vmins(vreg0, vreg0, (uint32_t)(TileData::Cols - 1), preg);
+                    vmins(vreg0, vreg0, (uint32_t)(TileData::Rows - 1), preg);
                     vmuls(vreg0, vreg0, srcStride, preg);
                     vadds(vreg0, vreg0, row, preg);
                     vgather2(vreg1, srcPtr, (RegTensor<uint32_t> &)vreg0, preg);
@@ -64,9 +67,12 @@ __tf__ PTO_INTERNAL void TTransB16RowWise(typename TileData::TileDType __out__ d
     __ubuf__ T *dstPtr = (__ubuf__ T *)__cce_get_tile_ptr(dst);
     __ubuf__ T *srcPtr = (__ubuf__ T *)__cce_get_tile_ptr(src);
 
+    static_assert(TileData::Rows > 0 && TileData::Cols > 0, "Fix: TTRANS tile dimensions must be positive");
+    static_assert((unsigned long long)(TileData::Rows - 1) * srcStride + (TileData::Cols - 1) <= 0xFFFFULL,
+                  "Fix: TTRANS gather index may overflow uint16_t register");
     if constexpr (std::is_same_v<T, uint16_t> || std::is_same_v<T, int16_t> || std::is_same_v<T, half> ||
                   std::is_same_v<T, bfloat16_t>) {
-        uint16_t repeatTimes = CeilDivision(TileData::Cols, elementsPerRepeat);
+        uint16_t repeatTimes = CeilDivision(TileData::Rows, elementsPerRepeat);
         __VEC_SCOPE__
         {
             RegTensor<uint16_t> vreg0;
@@ -74,12 +80,12 @@ __tf__ PTO_INTERNAL void TTransB16RowWise(typename TileData::TileDType __out__ d
             MaskReg preg;
             constexpr auto distValue =
                 std::integral_constant<::DistVST, static_cast<::DistVST>(GetDistVst<T, DistVST::DIST_NORM_B16>())>();
-            for (uint16_t row = 0; row < (uint16_t)TileData::Rows; ++row) {
-                uint32_t sreg = (uint32_t)TileData::Cols;
+            for (uint16_t row = 0; row < (uint16_t)TileData::Cols; ++row) {
+                uint32_t sreg = (uint32_t)TileData::Rows;
                 for (uint16_t chunk = 0; chunk < repeatTimes; ++chunk) {
                     preg = CreatePredicate<T>(sreg);
                     vci((RegTensor<int16_t> &)vreg0, (int16_t)(chunk * elementsPerRepeat), INC_ORDER);
-                    vmins(vreg0, vreg0, (uint16_t)(TileData::Cols - 1), preg);
+                    vmins(vreg0, vreg0, (uint16_t)(TileData::Rows - 1), preg);
                     vmuls(vreg0, vreg0, srcStride, preg);
                     vadds(vreg0, vreg0, row, preg);
                     vgather2(vreg1, srcPtr, (RegTensor<uint16_t> &)vreg0, preg);
@@ -100,9 +106,12 @@ __tf__ PTO_INTERNAL void TTransB8RowWise(typename TileData::TileDType __out__ ds
     __ubuf__ T *dstPtr = (__ubuf__ T *)__cce_get_tile_ptr(dst);
     __ubuf__ T *srcPtr = (__ubuf__ T *)__cce_get_tile_ptr(src);
 
+    static_assert(TileData::Rows > 0 && TileData::Cols > 0, "Fix: TTRANS tile dimensions must be positive");
+    static_assert((unsigned long long)(TileData::Rows - 1) * srcStride + (TileData::Cols - 1) <= 0xFFFFULL,
+                  "Fix: TTRANS gather index may overflow uint16_t register");
     if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, int8_t>) {
         constexpr uint32_t sregLower = elementsPerRepeat >> 1;
-        uint16_t repeatTimes = CeilDivision(TileData::Cols, sregLower);
+        uint16_t repeatTimes = CeilDivision(TileData::Rows, sregLower);
         __VEC_SCOPE__
         {
             RegTensor<uint16_t> vreg0;
@@ -110,12 +119,12 @@ __tf__ PTO_INTERNAL void TTransB8RowWise(typename TileData::TileDType __out__ ds
             MaskReg preg;
             constexpr auto distValue =
                 std::integral_constant<::DistVST, static_cast<::DistVST>(GetDistVst<T, DistVST::DIST_PK_B16>())>();
-            for (uint16_t row = 0; row < (uint16_t)TileData::Rows; ++row) {
-                uint32_t sreg = (uint32_t)TileData::Cols;
+            for (uint16_t row = 0; row < (uint16_t)TileData::Cols; ++row) {
+                uint32_t sreg = (uint32_t)TileData::Rows;
                 for (uint16_t chunk = 0; chunk < repeatTimes; ++chunk) {
                     preg = CreatePredicate<uint16_t>(sreg);
                     vci((RegTensor<int16_t> &)vreg0, (int16_t)(chunk * sregLower), INC_ORDER);
-                    vmins(vreg0, vreg0, (uint16_t)(TileData::Cols - 1), preg);
+                    vmins(vreg0, vreg0, (uint16_t)(TileData::Rows - 1), preg);
                     vmuls(vreg0, vreg0, srcStride, preg);
                     vadds(vreg0, vreg0, row, preg);
                     vgather2((RegTensor<uint16_t> &)vreg1, (__ubuf__ uint8_t *)srcPtr, (RegTensor<uint16_t> &)vreg0,
@@ -137,6 +146,9 @@ __tf__ PTO_INTERNAL void TTransB32ColWise(typename TileData::TileDType __out__ d
     __ubuf__ T *dstPtr = (__ubuf__ T *)__cce_get_tile_ptr(dst);
     __ubuf__ T *srcPtr = (__ubuf__ T *)__cce_get_tile_ptr(src);
 
+    static_assert(TileData::Rows > 0 && TileData::Cols > 0, "Fix: TTRANS tile dimensions must be positive");
+    static_assert((unsigned long long)(TileData::Rows - 1) * srcStride + (TileData::Cols - 1) <= 0xFFFFFFFFULL,
+                  "Fix: TTRANS gather index may overflow uint32_t register");
     if constexpr (std::is_same_v<T, uint32_t> || std::is_same_v<T, int32_t> || std::is_same_v<T, float>) {
         uint16_t repeatTimes = CeilDivision(TileData::Rows, elementsPerRepeat);
         __VEC_SCOPE__
@@ -172,6 +184,9 @@ __tf__ PTO_INTERNAL void TTransB16ColWise(typename TileData::TileDType __out__ d
     __ubuf__ T *dstPtr = (__ubuf__ T *)__cce_get_tile_ptr(dst);
     __ubuf__ T *srcPtr = (__ubuf__ T *)__cce_get_tile_ptr(src);
 
+    static_assert(TileData::Rows > 0 && TileData::Cols > 0, "Fix: TTRANS tile dimensions must be positive");
+    static_assert((unsigned long long)(TileData::Rows - 1) * srcStride + (TileData::Cols - 1) <= 0xFFFFULL,
+                  "Fix: TTRANS gather index may overflow uint16_t register");
     if constexpr (std::is_same_v<T, uint16_t> || std::is_same_v<T, int16_t> || std::is_same_v<T, half> ||
                   std::is_same_v<T, bfloat16_t>) {
         uint16_t repeatTimes = CeilDivision(TileData::Rows, elementsPerRepeat);
@@ -208,6 +223,9 @@ __tf__ PTO_INTERNAL void TTransB8ColWise(typename TileData::TileDType __out__ ds
     __ubuf__ T *dstPtr = (__ubuf__ T *)__cce_get_tile_ptr(dst);
     __ubuf__ T *srcPtr = (__ubuf__ T *)__cce_get_tile_ptr(src);
 
+    static_assert(TileData::Rows > 0 && TileData::Cols > 0, "Fix: TTRANS tile dimensions must be positive");
+    static_assert((unsigned long long)(TileData::Rows - 1) * srcStride + (TileData::Cols - 1) <= 0xFFFFULL,
+                  "Fix: TTRANS gather index may overflow uint16_t register");
     if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, int8_t>) {
         constexpr uint32_t sregLower = elementsPerRepeat >> 1;
         uint16_t repeatTimes = CeilDivision(TileData::Rows, sregLower);
@@ -245,6 +263,10 @@ PTO_INTERNAL void TTRANS_IMPL(TileDataDst &dst, TileDataSrc &src, TileDataTmp &t
     static_assert(sizeof(T) == 4 || sizeof(T) == 2 || sizeof(T) == 1, "Fix: TTRANS has unsupported data type.");
     static_assert(sizeof(T) == sizeof(U), "Fix: TTRANS has inconsistent input and output data types.");
     static_assert(TileDataSrc::isRowMajor, "Fix: TTRANS has not supported layout type.");
+    static_assert(TileDataSrc::Rows > 0, "Fix: TTRANS source tile Rows must be positive");
+    static_assert(TileDataSrc::Cols > 0, "Fix: TTRANS source tile Cols must be positive");
+    static_assert(TileDataSrc::Rows <= TileDataDst::RowStride,
+                  "Fix: TTRANS destination stride must accommodate transposed source rows");
 
     if constexpr (TileDataSrc::isRowMajor) {
         static_assert(TileDataSrc::Cols * sizeof(T) % 32 == 0, "Fix: TTRANS has inconsistent input shape.");

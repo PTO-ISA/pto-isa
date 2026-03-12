@@ -198,3 +198,119 @@ TEST_F(TTRANSTest, case_float_8x8_1x8_1x8)
 {
     test_ttrans<float, 8, 8, 1, 8, 1, 8>();
 }
+TEST_F(TTRANSTest, case_float_128x128_128x128_100x100)
+{
+    test_ttrans<float, 128, 128, 128, 128, 100, 100>();
+}
+TEST_F(TTRANSTest, case_float_8x256_256x8_256x8)
+{
+    test_ttrans<float, 8, 256, 256, 8, 256, 8>();
+}
+TEST_F(TTRANSTest, case_float_8x512_512x8_512x8)
+{
+    test_ttrans<float, 8, 512, 512, 8, 512, 8>();
+}
+TEST_F(TTRANSTest, case_float_256x8_8x256_8x256)
+{
+    test_ttrans<float, 256, 8, 8, 256, 8, 256>();
+}
+TEST_F(TTRANSTest, case_half_16x256_256x16_256x16)
+{
+    test_ttrans<aclFloat16, 16, 256, 256, 16, 256, 16, true>();
+}
+TEST_F(TTRANSTest, case_uint8_64x256_256x64_200x60)
+{
+    test_ttrans<uint8_t, 64, 256, 256, 64, 200, 60>();
+}
+TEST_F(TTRANSTest, case_float_8x536_532x8_532x8)
+{
+    test_ttrans<float, 8, 536, 532, 8, 532, 8>();
+}
+TEST_F(TTRANSTest, case_float_8x624_618x8_618x8)
+{
+    test_ttrans<float, 8, 624, 618, 8, 618, 8>();
+}
+TEST_F(TTRANSTest, case_float_8x536_532x8_400x4)
+{
+    test_ttrans<float, 8, 536, 532, 8, 400, 4>();
+}
+TEST_F(TTRANSTest, case_float_8x640_640x8_640x8)
+{
+    test_ttrans<float, 8, 640, 640, 8, 640, 8>();
+}
+TEST_F(TTRANSTest, case_float_8x1024_1024x8_1024x8)
+{
+    test_ttrans<float, 8, 1024, 1024, 8, 1024, 8>();
+}
+TEST_F(TTRANSTest, case_float_8x4096_4096x8_4096x8)
+{
+    test_ttrans<float, 8, 4096, 4096, 8, 4096, 8>();
+}
+TEST_F(TTRANSTest, case_float_8x2048_2048x8_1500x4)
+{
+    test_ttrans<float, 8, 2048, 2048, 8, 1500, 4>();
+}
+TEST_F(TTRANSTest, case_float_8x520_513x8_513x8)
+{
+    test_ttrans<float, 8, 520, 513, 8, 513, 8>();
+}
+TEST_F(TTRANSTest, case_float_8x448_448x8_300x6)
+{
+    test_ttrans<float, 8, 448, 448, 8, 300, 6>();
+}
+TEST_F(TTRANSTest, case_float_1024x8_1x1024_1x1024)
+{
+    test_ttrans<float, 1024, 8, 1, 1024, 1, 1024>();
+}
+TEST_F(TTRANSTest, case_float_512x8_2x512_2x512)
+{
+    test_ttrans<float, 512, 8, 2, 512, 2, 512>();
+}
+TEST_F(TTRANSTest, case_float_2048x8_8x2048_8x2048)
+{
+    test_ttrans<float, 2048, 8, 8, 2048, 8, 2048>();
+}
+TEST_F(TTRANSTest, case_float_176x176_176x176_150x150)
+{
+    test_ttrans<float, 176, 176, 176, 176, 150, 150>();
+}
+TEST_F(TTRANSTest, case_float_256x64_64x256_50x200)
+{
+    test_ttrans<float, 256, 64, 64, 256, 50, 200>();
+}
+TEST_F(TTRANSTest, case_half_16x512_512x16_512x16)
+{
+    test_ttrans<aclFloat16, 16, 512, 512, 16, 512, 16, true>();
+}
+TEST_F(TTRANSTest, case_half_16x2064_2064x16_2064x16)
+{
+    test_ttrans<aclFloat16, 16, 2064, 2064, 16, 2064, 16, true>();
+}
+TEST_F(TTRANSTest, case_half_512x16_16x512_10x400)
+{
+    test_ttrans<aclFloat16, 512, 16, 16, 512, 10, 400, true>();
+}
+TEST_F(TTRANSTest, case_half_128x128_128x128_128x128)
+{
+    test_ttrans<aclFloat16, 128, 128, 128, 128, 128, 128, true>();
+}
+TEST_F(TTRANSTest, case_uint8_32x1024_1024x32_1024x32)
+{
+    test_ttrans<uint8_t, 32, 1024, 1024, 32, 1024, 32>();
+}
+TEST_F(TTRANSTest, case_uint8_1024x32_32x1024_32x1024)
+{
+    test_ttrans<uint8_t, 1024, 32, 32, 1024, 32, 1024>();
+}
+TEST_F(TTRANSTest, case_uint8_64x128_128x64_100x50)
+{
+    test_ttrans<uint8_t, 64, 128, 128, 64, 100, 50>();
+}
+TEST_F(TTRANSTest, case_float_8x64_64x8_1x1)
+{
+    test_ttrans<float, 8, 64, 64, 8, 1, 1>();
+}
+TEST_F(TTRANSTest, case_float_8x16_16x8_16x1)
+{
+    test_ttrans<float, 8, 16, 16, 8, 16, 1>();
+}

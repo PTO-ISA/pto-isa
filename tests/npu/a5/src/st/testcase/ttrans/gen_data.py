@@ -13,7 +13,9 @@
 import os
 
 import numpy as np
+
 np.random.seed(19)
+
 
 def gen_random_data(dtype, shape):
     if dtype in [np.float32, np.float16]:
@@ -26,6 +28,7 @@ def gen_random_data(dtype, shape):
         return np.random.randint(0, 255, size=shape).astype(dtype)
     else:
         return np.random.randint(1, 10, size=shape).astype(dtype)
+
 
 def gen_golden_data(param):
     dtype = param.dtype
@@ -42,7 +45,7 @@ def gen_golden_data(param):
 
 class TTRANSParams:
     def __init__(self, dtype, dst_row, dst_col, src_row, src_col, valid_row, valid_col):
-        self.dtype = dtype 
+        self.dtype = dtype
         self.dst_row = dst_row
         self.dst_col = dst_col
         self.src_row = src_row
@@ -50,12 +53,12 @@ class TTRANSParams:
         self.valid_row = valid_row
         self.valid_col = valid_col
         dtype_str = {
-            np.float32: 'float',
-            np.float16: 'half',
-            np.int32: 'int32',
-            np.int16: 'int16',
-            np.int8: 'int8',
-            np.uint8: 'uint8',
+            np.float32: "float",
+            np.float16: "half",
+            np.int32: "int32",
+            np.int16: "int16",
+            np.int8: "int8",
+            np.uint8: "uint8",
         }[dtype]
         self.name = f"TTRANSTest.case_{dtype_str}_{dst_row}x{dst_col}_{src_row}x{src_col}_{valid_row}x{valid_col}"
 
@@ -87,6 +90,35 @@ if __name__ == "__main__":
         TTRANSParams(np.uint8, 32, 32, 32, 32, 32, 32),
         TTRANSParams(np.uint8, 64, 64, 64, 64, 22, 63),
         TTRANSParams(np.float32, 8, 8, 1, 8, 1, 8),
+        TTRANSParams(np.float32, 8, 536, 532, 8, 532, 8),
+        TTRANSParams(np.float32, 8, 624, 618, 8, 618, 8),
+        TTRANSParams(np.float32, 8, 536, 532, 8, 400, 4),
+        TTRANSParams(np.float32, 128, 128, 128, 128, 100, 100),
+        TTRANSParams(np.float32, 8, 256, 256, 8, 256, 8),
+        TTRANSParams(np.float32, 8, 512, 512, 8, 512, 8),
+        TTRANSParams(np.float32, 256, 8, 8, 256, 8, 256),
+        TTRANSParams(np.float16, 16, 256, 256, 16, 256, 16),
+        TTRANSParams(np.uint8, 64, 256, 256, 64, 200, 60),
+        TTRANSParams(np.float32, 8, 640, 640, 8, 640, 8),
+        TTRANSParams(np.float32, 8, 1024, 1024, 8, 1024, 8),
+        TTRANSParams(np.float32, 8, 4096, 4096, 8, 4096, 8),
+        TTRANSParams(np.float32, 8, 2048, 2048, 8, 1500, 4),
+        TTRANSParams(np.float32, 8, 520, 513, 8, 513, 8),
+        TTRANSParams(np.float32, 8, 448, 448, 8, 300, 6),
+        TTRANSParams(np.float32, 1024, 8, 1, 1024, 1, 1024),
+        TTRANSParams(np.float32, 512, 8, 2, 512, 2, 512),
+        TTRANSParams(np.float32, 2048, 8, 8, 2048, 8, 2048),
+        TTRANSParams(np.float32, 176, 176, 176, 176, 150, 150),
+        TTRANSParams(np.float32, 256, 64, 64, 256, 50, 200),
+        TTRANSParams(np.float16, 16, 512, 512, 16, 512, 16),
+        TTRANSParams(np.float16, 16, 2064, 2064, 16, 2064, 16),
+        TTRANSParams(np.float16, 512, 16, 16, 512, 10, 400),
+        TTRANSParams(np.float16, 128, 128, 128, 128, 128, 128),
+        TTRANSParams(np.uint8, 32, 1024, 1024, 32, 1024, 32),
+        TTRANSParams(np.uint8, 1024, 32, 32, 1024, 32, 1024),
+        TTRANSParams(np.uint8, 64, 128, 128, 64, 100, 50),
+        TTRANSParams(np.float32, 8, 64, 64, 8, 1, 1),
+        TTRANSParams(np.float32, 8, 16, 16, 8, 16, 1),
     ]
 
     for case in case_list:

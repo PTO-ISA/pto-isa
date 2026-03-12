@@ -543,7 +543,7 @@ AICORE inline void compute_p(int tile_id, int row_slice, __gm__ float *qk_tile_f
         TASSIGN(l1_exp_max_slice, (uint64_t)l1_exp_max_ififo.data() + reduce_row_byte_offset);
 
         // Extract current slice state from full-length reduce tiles
-        // TODO: change to TEXTRACT when available
+        // Please change to TEXTRACT when available
 
         wait_flag(PIPE_MTE3, PIPE_V, pTileEventId);
         if (initFlag) {
@@ -1039,6 +1039,7 @@ extern "C" void call_kernel(void *stream,
     // ---- fixed tuning knobs / compile-time params ----
     constexpr int CUBE_S0 = 128;
     constexpr int CUBE_S1 = 128;
+    constexpr int HEAD_SIZE = 128;
     constexpr int TILE_S1 = 256;
 
     constexpr int QK_PRELOAD = 4;
@@ -1047,7 +1048,7 @@ extern "C" void call_kernel(void *stream,
     constexpr int CV_FIFO_CONS_SYNC_PERIOD = 1;
 
     // ---- validate supported runtime params ----
-    if (headSize != 128) {
+    if (headSize != HEAD_SIZE) {
         // unsupported HEAD
         return;
     }

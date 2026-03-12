@@ -140,8 +140,16 @@ struct TPipe {
         PTO_INTERNAL void allocate() const
         {
             // Cube waits for Vector to free buffer
-            // Or Vector waits for Cube to free buffer
-            wait_flag_dev(FlagID + 1);
+            if constexpr (is_c2v) {
+#ifdef __DAV_CUBE__
+                wait_flag_dev(FlagID + 1);
+#endif
+            } else {
+                // Vector waits for Cube to free buffer
+#ifdef __DAV_VEC__
+                wait_flag_dev(FlagID + 1);
+#endif
+            }
         }
 
         // Forward dependency: record (producer) and wait (consumer)
@@ -292,7 +300,17 @@ struct TPipe {
         {
             // Vector frees buffer for Cube
             // Or Cube frees buffer for Vector
-            ffts_cross_core_sync(PIPE_MTE2, getFFTSMsgCfg(TSyncCVMode::CV_CORES_SYNC, FlagID + 1));
+            if constexpr (is_c2v) {
+#ifdef __DAV_VEC__
+                // Vec consumer frees buffer for Cube
+                ffts_cross_core_sync(PIPE_MTE2, getFFTSMsgCfg(TSyncCVMode::CV_CORES_SYNC, FlagID + 1));
+#endif
+            } else { // is_v2c
+                     // cube consumer frees buffer for vec
+#ifdef __DAV_CUBE__
+                ffts_cross_core_sync(PIPE_MTE2, getFFTSMsgCfg(TSyncCVMode::CV_CORES_SYNC, FlagID + 1));
+#endif
+            }
         }
 
         template <typename T, int ProdM, int ProdN, int ConsM, int ConsN>

@@ -1008,6 +1008,17 @@ public:
     using TileDType = typename MemoryQualifier<Loc_, DType>::type;
 #endif
 
+#ifdef __CPU_SIM
+    // For CPU sim, return reference to pointer (allows TASSIGN to modify)
+    AICORE TileDType &data()
+    {
+        return data_;
+    }
+    AICORE TileDType data() const
+    {
+        return data_;
+    }
+#else
     AICORE TileDType &data()
     {
         return data_;
@@ -1016,6 +1027,7 @@ public:
     {
         return data_;
     }
+#endif
     template <typename T, typename AddrType>
     friend AICORE void TASSIGN_IMPL(T &tile, AddrType addr);
 
@@ -1265,12 +1277,19 @@ public:
         return *(ptr + offset);
     }
     // constructor for static shape
+#ifdef __CPU_SIM
+    AICORE Tile() : data_(internalStorage_){};
+#else
     AICORE Tile(){};
+#endif
 
     // constructor for both dimensions are runtime variables
     template <int RowMask = ValidRow, int ColMask = ValidCol>
     AICORE Tile(std::enable_if_t<RowMask == DYNAMIC && ColMask == DYNAMIC, size_t> VR,
                 std::enable_if_t<RowMask == DYNAMIC && ColMask == DYNAMIC, size_t> VC)
+#ifdef __CPU_SIM
+        : data_(internalStorage_)
+#endif
     {
         RowMaskInternal = VR;
         ColMaskInternal = VC;
@@ -1279,6 +1298,9 @@ public:
     // constructor for row dimension is runtime variables
     template <int RowMask = ValidRow, int ColMask = ValidCol>
     AICORE Tile(std::enable_if_t<(RowMask == DYNAMIC) && (ColMask > 0), size_t> VR)
+#ifdef __CPU_SIM
+        : data_(internalStorage_)
+#endif
     {
         RowMaskInternal = VR;
     }
@@ -1286,6 +1308,9 @@ public:
     // constructor for col dimension is runtime variables
     template <int RowMask = ValidRow, int ColMask = ValidCol>
     AICORE Tile(std::enable_if_t<(RowMask > 0) && (ColMask == DYNAMIC), size_t> VC)
+#ifdef __CPU_SIM
+        : data_(internalStorage_)
+#endif
     {
         ColMaskInternal = VC;
     }
@@ -1322,7 +1347,14 @@ public:
                   "SFractalSize_ illegal");
 
 #ifdef __CPU_SIM
-    using TileDType = Tile::DType[Rows * Cols];
+    // CPU Sim: data_ is a pointer that TASSIGN can redirect to shared NPU memory
+    using TileDType = Tile::DType *;
+
+private:
+    // Internal storage for tiles not explicitly TASSIGN'd
+    Tile::DType internalStorage_[Rows * Cols] = {};
+
+public:
 #else
 #ifdef __PTO_AUTO__
     using TileDType = typename MemoryQualifier<Loc, DType>::type tile_size(Rows *Cols);
@@ -1331,6 +1363,17 @@ public:
 #endif
 #endif
 
+#ifdef __CPU_SIM
+    // For CPU sim, return reference to pointer (allows TASSIGN to modify)
+    AICORE TileDType &data()
+    {
+        return data_;
+    }
+    AICORE TileDType data() const
+    {
+        return data_;
+    }
+#else
     AICORE TileDType &data()
     {
         return data_;
@@ -1339,6 +1382,7 @@ public:
     {
         return data_;
     }
+#endif
 
     int RowMaskInternal;
     int ColMaskInternal;
