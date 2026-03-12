@@ -167,14 +167,16 @@ struct TPipe {
                 }
 #endif
             } else { // is_v2c (both gm and ub)
-                // Vec producer waits for Cube consumer to free buffer
-                // Cube signals on BOTH, Vec waits on flag_id+1 only
+                     // Vec producer waits for Cube consumer to free buffer
+                     // Cube signals on BOTH, Vec waits on flag_id+1 only
+#ifdef __DAV_VEC__
                 uint8_t waitCubeID = FlagID + 1;
                 if constexpr (!IsStart) {
                     wait_intra_block(PIPE_MTE3, waitCubeID);
                 } else {
                     wait_intra_block(PIPE_MTE3, waitCubeID + 1);
                 }
+#endif
             }
         }
 
@@ -460,12 +462,14 @@ struct TPipe {
         {
             if constexpr (is_c2v_gm) {
                 // Vec consumer frees buffer for Cube - signals on PIPE_MTE2, flag_id+1 only
+#ifdef __DAV_VEC__
                 uint8_t freeCubeID = FlagID + 1;
                 if constexpr (!IsRelease) {
                     set_intra_block(PIPE_MTE2, freeCubeID);
                 } else {
                     set_intra_block(PIPE_MTE2, freeCubeID + 1);
                 }
+#endif
             } else if constexpr (is_c2v_ub) {
                 // Vec consumer frees buffer for Cube - signals on PIPE_V, flag_id+1 only
                 // Vec signals after vector ops complete (PIPE_V)
@@ -486,8 +490,6 @@ struct TPipe {
                     set_intra_block(PIPE_MTE1, freeVec0ID);
                     set_intra_block(PIPE_MTE1, freeVec1ID);
                 } else {
-                    set_intra_block(PIPE_MTE1, freeVec0ID + 1);
-                    set_intra_block(PIPE_MTE1, freeVec1ID + 1);
                 }
 #endif
             }
@@ -511,6 +513,14 @@ struct TPipe {
                 TASSIGN_IMPL(tileSub, (uint64_t)tile.data() + col_byte_offset);
                 TLOAD_IMPL(tileSub, globalTensorSub);
             }
+        }
+
+        template <typename T, int ProdM, int ProdN, int ConsM, int ConsN>
+        PTO_INTERNAL void popVecTileFromVecFiFo(DataFiFo &fifo, TileDataCons &tile)
+        {
+            size_t buf_idx = static_cast<size_t>(tile_id) % fifo.fifoDepth;
+            constexpr int kTileFactor = ConsN / ProdN;
+            size_t entryBase = static_cast<size_t>(buf_idx) * kTileFactor * ProdM * ProdN * sizeof(T);
         }
 
         template <typename T, int ConsM, int ConsN, int ProdN>
@@ -541,6 +551,9 @@ struct TPipe {
                     popVecTileFromGMFiFo<T, ProdM, ProdN, ConsM, ConsN>(fifo, tile);
                     return true;
                 } else if constexpr (DataFiFo::fifoType == FIFOType::VEC_FIFO) {
+                    uint32_t buf_idx = static_cast<uint32_t>(tile_id % DataFiFo::fifoDepth);
+                    uint64_t fifoBase = (fifo.tilePtr != nullptr) ? (uint64_t)fifo.tilePtr->data() : fifo.fifoBase;
+                    size_t entryBase = buf_idx * ConsM * ConsN * sizeof(T);
                     return false;
                 }
             } else if constexpr (TileDataCons::Loc == TileType::Mat) {
