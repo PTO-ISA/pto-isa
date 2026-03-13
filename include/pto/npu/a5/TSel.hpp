@@ -106,8 +106,8 @@ __tf__ PTO_INTERNAL void TSel_b16_8(typename DstTile::TileDType __out__ dstData,
     } // end of vf
 }
 
-template <typename DstTile, typename MaskTile, typename Src0Tile, typename Src1Tile>
-PTO_INTERNAL void TSEL_IMPL(DstTile &dst, MaskTile &selMask, Src0Tile &src0, Src1Tile &src1)
+template <typename DstTile, typename MaskTile, typename Src0Tile, typename Src1Tile, typename TmpTile>
+PTO_INTERNAL void TSEL_IMPL(DstTile &dst, MaskTile &selMask, Src0Tile &src0, Src1Tile &src1, TmpTile &tmp)
 {
     static_assert(sizeof(typename DstTile::DType) == 4 || sizeof(typename DstTile::DType) == 2 ||
                       sizeof(typename DstTile::DType) == 1,

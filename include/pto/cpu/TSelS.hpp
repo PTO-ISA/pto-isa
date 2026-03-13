@@ -28,8 +28,8 @@ void TSelS_Impl(typename TileData::TileDType dst, typename TileData::DType scala
     }
 }
 
-template <typename TileData>
-__aicore__ PTO_INLINE void TSELS_IMPL(TileData &dst, TileData &src0, TileData &src1, uint8_t selectMode)
+template <typename TileData, typename TmpTile>
+__aicore__ PTO_INLINE void TSELS_IMPL(TileData &dst, TileData &src0, TileData &src1, TmpTile &tmp, uint8_t selectMode)
 {
     unsigned row = dst.GetValidRow();
     unsigned col = dst.GetValidCol();
