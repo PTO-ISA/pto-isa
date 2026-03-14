@@ -22,13 +22,14 @@ enum class SELMODE : uint8_t
     VSEL_TENSOR_TENSOR_MODE = 2,
 };
 
-template <typename DstTile, typename MaskTile, typename Src0Tile, typename Src1Tile>
+template <typename DstTile, typename MaskTile, typename Src0Tile, typename Src1Tile, typename TmpTile>
 __tf__ PTO_INTERNAL void TSel(typename DstTile::TileDType __out__ dst, typename MaskTile::TileDType __in__ selMask,
                               typename Src0Tile::TileDType __in__ src0, typename Src1Tile::TileDType __in__ src1,
-                              unsigned validRow, unsigned validCol)
+                              typename TmpTile::TileDType __in__ tmp, unsigned validRow, unsigned validCol)
 {
     using T = std::conditional_t<sizeof(typename DstTile::DType) == 4, float, half>;
     using MaskT = typename MaskTile::DType;
+
     constexpr unsigned dstRowStride = DstTile::RowStride;
     constexpr unsigned src0RowStride = Src0Tile::RowStride;
     constexpr unsigned src1RowStride = Src1Tile::RowStride;
@@ -39,7 +40,9 @@ __tf__ PTO_INTERNAL void TSel(typename DstTile::TileDType __out__ dst, typename 
     __ubuf__ T *src0Ptr = (__ubuf__ T *)__cce_get_tile_ptr(src0);
     __ubuf__ T *src1Ptr = (__ubuf__ T *)__cce_get_tile_ptr(src1);
     __ubuf__ MaskT *maskPtr = (__ubuf__ MaskT *)__cce_get_tile_ptr(selMask);
-    __ubuf__ uint32_t *cmpMaskPtr = (__ubuf__ uint32_t *)get_imm(TMP_UB_OFFSET); // 8KB tmpbuf addr
+
+    __ubuf__ uint32_t *cmpMaskPtr = (__ubuf__ uint32_t *)__cce_get_tile_ptr(tmp);
+
     uint32_t maskAddr;
     set_mask_count();
     for (unsigned i = 0; i < validRow; i++) {
@@ -57,8 +60,8 @@ __tf__ PTO_INTERNAL void TSel(typename DstTile::TileDType __out__ dst, typename 
     set_vector_mask(-1, -1);
 }
 
-template <typename DstTile, typename MaskTile, typename Src0Tile, typename Src1Tile>
-PTO_INTERNAL void TSEL_IMPL(DstTile &dst, MaskTile &selMask, Src0Tile &src0, Src1Tile &src1)
+template <typename DstTile, typename MaskTile, typename Src0Tile, typename Src1Tile, typename TmpTile>
+PTO_INTERNAL void TSEL_IMPL(DstTile &dst, MaskTile &selMask, Src0Tile &src0, Src1Tile &src1, TmpTile &tmp)
 {
     static_assert(sizeof(typename DstTile::DType) == 4 || sizeof(typename DstTile::DType) == 2,
                   "Fix: TSEL only support 16B and 32B data type.");
@@ -70,8 +73,8 @@ PTO_INTERNAL void TSEL_IMPL(DstTile &dst, MaskTile &selMask, Src0Tile &src0, Src
     unsigned validRow = dst.GetValidRow();
     unsigned validCol = dst.GetValidCol();
 
-    TSel<DstTile, MaskTile, Src0Tile, Src1Tile>(dst.data(), selMask.data(), src0.data(), src1.data(), validRow,
-                                                validCol);
+    TSel<DstTile, MaskTile, Src0Tile, Src1Tile, TmpTile>(dst.data(), selMask.data(), src0.data(), src1.data(),
+                                                         tmp.data(), validRow, validCol);
 }
 } // namespace pto
 #endif

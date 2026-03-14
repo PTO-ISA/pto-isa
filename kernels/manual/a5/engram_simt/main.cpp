@@ -18,6 +18,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <string>
 #include <type_traits>
 #include <vector>
+#include "securec.h"
 
 #include "test_common.h"
 #include "generated_cases.h"
@@ -50,12 +51,13 @@ static bool FullResultCmp(const std::vector<float> &expected, const std::vector<
     float maxDiff = 0.0f;
     size_t maxIdx = 0;
     size_t firstErrIdx = n;
+    constexpr int maxErrPrint = 5;
     for (size_t i = 0; i < n; ++i) {
         float diff = std::fabs(expected[i] - actual[i]);
         float relDenom = std::max(std::fabs(expected[i]), 1e-8f);
         float rel = diff / relDenom;
         if (diff > eps && rel > eps) {
-            if (errCount < 5) {
+            if (errCount < maxErrPrint) {
                 printf("  ERR[%zu]: exp=%.6e act=%.6e diff=%.6e\n", i, expected[i], actual[i], diff);
             }
             if (firstErrIdx == n)
@@ -117,9 +119,10 @@ static bool RunOneCase(const std::string &caseName, int tableRows)
     aclrtMalloc((void **)&dGateW, hidBytes, ACL_MEM_MALLOC_HUGE_FIRST);
     aclrtMalloc((void **)&dOutput, outBytes, ACL_MEM_MALLOC_HUGE_FIRST);
 
+    constexpr int tableMod = 8;
     for (size_t r = 0; r < (size_t)tableRows; ++r)
         for (size_t c = 0; c < (size_t)D; ++c)
-            hTable[r * D + c] = (float)(((r + c) % 8) + 1) * 0.0625f;
+            hTable[r * D + c] = (float)(((r + c) % tableMod) + 1) * 0.0625f;
 
     size_t fSz = 0;
     ReadFile(gDir + "/indices.bin", fSz, hIdx, idxBytes);
@@ -143,7 +146,10 @@ static bool RunOneCase(const std::string &caseName, int tableRows)
     std::vector<float> golden(B * D);
     std::vector<float> actual(B * D);
     ReadFile(gDir + "/golden.bin", fSz, golden.data(), outBytes);
-    memcpy(actual.data(), hOutput, outBytes);
+    if (memcpy_s(actual.data(), outBytes, hOutput, outBytes) != EOK) {
+        printf("[ERROR] memcpy_s failed for actual output\n");
+        return false;
+    }
 
     bool pass = FullResultCmp(golden, actual, 0.001f);
 
@@ -188,15 +194,15 @@ int main(int argc, char **argv)
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg.rfind("--case=", 0) == 0) {
-            filter_arg = arg.substr(7);
+            filter_arg = arg.substr(strlen("--case="));
             continue;
         }
         if (arg.rfind("--cases=", 0) == 0) {
-            filter_arg = arg.substr(8);
+            filter_arg = arg.substr(strlen("--cases="));
             continue;
         }
         if (arg.rfind("--npu=", 0) == 0) {
-            g_chip_id = std::stoi(arg.substr(6));
+            g_chip_id = std::stoi(arg.substr(strlen("--npu=")));
             continue;
         }
         if ((arg == "--case" || arg == "--cases") && (i + 1) < argc) {

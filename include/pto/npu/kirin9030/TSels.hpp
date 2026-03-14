@@ -112,8 +112,9 @@ __tf__ PTO_INTERNAL void TSels_b16_8(typename TileDataDst::TileDType __out__ dst
     } // end of vf
 }
 
-template <typename TileDataDst, typename TileDataMask, typename TileDataSrc>
-PTO_INTERNAL void TSELS_IMPL(TileDataDst &dst, TileDataMask &mask, TileDataSrc &src, typename TileDataSrc::DType scalar)
+template <typename TileDataDst, typename TileDataMask, typename TileDataSrc, typename TileDataTmp>
+PTO_INTERNAL void TSELS_IMPL(TileDataDst &dst, TileDataMask &mask, TileDataSrc &src, TileDataTmp &tmp,
+                             typename TileDataSrc::DType scalar)
 {
     using T = typename TileDataDst::DType;
     static_assert(std::is_same_v<typename TileDataSrc::DType, typename TileDataDst::DType>,

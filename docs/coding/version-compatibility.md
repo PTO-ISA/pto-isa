@@ -290,14 +290,3 @@ python3 tests/verify_accuracy.py --all-platforms
 # 4. Performance regression test
 python3 tests/benchmark.py --compare-baseline
 ```
-
----
-
-## References
-
-- [Getting Started](../getting-started.md)
-- [Programming Guide](README.md)
-- [Compilation Process](compilation-process.md)
-- [Error Codes](error-codes.md)
-- [Release Notes](../CHANGELOG.md)
-

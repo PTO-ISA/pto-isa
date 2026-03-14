@@ -55,14 +55,14 @@ PTO_INST RecordEvent TPARTADD(TileDataDst& dst, TileDataSrc0& src0, TileDataSrc1
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `dst/src0/src1` element types 必须是 identical,且必须是以下之一： `int32_t`, `int16_t`, `half`, `float`.
-  - All three tiles 必须是 行主序 (`isRowMajor`）。
-  - 运行时： if `dst.GetValidRow() == 0`或`dst.GetValidCol() == 0`, the op returns early.
-  - 运行时： the implementation requires at least one input's valid region to match `dst`'s valid region,且the other's valid region not greater than `dst`'s valid region (otherwise it asserts).
+  - `dst`/`src0`/`src1` 元素类型必须相同，且必须是以下之一：`int32_t`、`int16_t`、`half`、`float`。
+  - 三个 Tile 都必须是行主序（`isRowMajor`）。
+  - 运行时：若 `dst.GetValidRow() == 0` 或 `dst.GetValidCol() == 0`，操作提前返回。
+  - 运行时：实现要求至少一个输入的有效区域与 `dst` 的有效区域匹配，另一个输入的有效区域不大于 `dst` 的有效区域（否则断言失败）。
 - **实现检查 (A5)**:
-  - `dst/src0/src1` element types 必须是 identical,且必须是以下之一： `uint8_t`, `int8_t`, `uint16_t`, `int16_t`, `uint32_t`, `int32_t`, `half`, `float`, `bfloat16_t`.
-  - 运行时： if `dst` has a zero valid region, the op returns early.
-  - Only certain partial-validity patterns are handled (例如， one source equal to `dst` while the other is smaller by valid-rows或valid-cols); other patterns are not supported (target-defined behavior).
+  - `dst`/`src0`/`src1` 元素类型必须相同，且必须是以下之一：`uint8_t`、`int8_t`、`uint16_t`、`int16_t`、`uint32_t`、`int32_t`、`half`、`float`、`bfloat16_t`。
+  - 运行时：若 `dst` 的有效区域为零，操作提前返回。
+  - 仅处理特定的部分有效性模式（例如，一个源与 `dst` 相等，另一个源在有效行或有效列上更小）；其他模式不受支持（由目标定义行为）。
 
 ## 示例
 

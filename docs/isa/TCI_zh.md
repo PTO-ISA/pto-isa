@@ -10,17 +10,17 @@
 
 ## 数学语义
 
-For a linearized index `k` over the valid elements:
+对于有效元素上的线性化索引 `k`：
 
-- Ascending:
+- 升序：
 
   $$ \mathrm{dst}_{k} = S + k $$
 
-- Descending:
+- 降序：
 
   $$ \mathrm{dst}_{k} = S - k $$
 
-The linearization order depends on the tile layout (implementation-defined).
+线性化顺序取决于 Tile 布局（实现定义）。
 
 ## 汇编语法
 
@@ -56,11 +56,11 @@ PTO_INST RecordEvent TCI(TileData& dst, T S, WaitEvents&... events);
 ## 约束
 
 - **实现检查 (A2A3/A5)**:
-  - `TileData::DType` 必须是 exactly the same type 作为 scalar template parameter `T`.
-  - `dst/scalar` element types 必须是 identical,且必须是以下之一： `int32_t`, `uint32_t`, `int16_t`, `uint16_t`.
-  - `TileData::Cols != 1` (this is the condition enforced 由实现).
+  - `TileData::DType` 必须与标量模板参数 `T` 的类型完全相同。
+  - `dst`/`scalar` 元素类型必须相同，且必须是以下之一：`int32_t`、`uint32_t`、`int16_t`、`uint16_t`。
+  - `TileData::Cols != 1`（此为实现强制执行的条件）。
 - **有效区域**:
-  - 实现使用 `dst.GetValidCol()` 作为 sequence length且does not consult `dst.GetValidRow()`.
+  - 实现使用 `dst.GetValidCol()` 作为序列长度，不参考 `dst.GetValidRow()`。
 
 ## 示例
 

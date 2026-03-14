@@ -10,11 +10,11 @@
 
 ## 数学语义
 
-Sorts values from `src` into `dst` and produces an index mapping in `idx`. Conceptually, for each row `i`:
+将 `src` 中的值排序后写入 `dst`，并在 `idx` 中生成索引映射。概念上，对每一行 `i`：
 
 $$ \mathrm{dst}_{i,k} = \mathrm{src}_{i,\pi_i(k)} $$
 
-where $\pi_i$ is a permutation of the indices in the row. Sort order and stability are target-defined.
+其中 $\pi_i$ 是该行索引的一个排列。排序顺序和稳定性由目标定义。
 
 ## 汇编语法
 
@@ -52,14 +52,14 @@ PTO_INST RecordEvent TSORT32(DstTileData& dst, SrcTileData& src, IdxTileData& id
 
 ## 约束
 
-- `TSORT32` does not take `WaitEvents&...`且does not c所有`TSYNC(...)` internally; synchronize explicitly if needed.
+- `TSORT32` 不接受 `WaitEvents&...` 参数，也不在内部调用 `TSYNC(...)`；如有需要请显式同步。
 - **实现检查 (A2A3/A5)**:
-  - `DstTileData::DType` 必须是 `half`或`float`.
-  - `SrcTileData::DType` 必须匹配 `DstTileData::DType`.
-  - `IdxTileData::DType` 必须是 `uint32_t`.
-  - `dst/src/idx` tile 位置 必须是 `TileType::Vec`,且所有必须是 行主序 (`isRowMajor`）。
+  - `DstTileData::DType` 必须是 `half` 或 `float`。
+  - `SrcTileData::DType` 必须与 `DstTileData::DType` 匹配。
+  - `IdxTileData::DType` 必须是 `uint32_t`。
+  - `dst`/`src`/`idx` Tile 位置必须是 `TileType::Vec`，且都必须是行主序（`isRowMajor`）。
 - **有效区域**:
-  - 实现使用 `dst.GetValidRow()` 作为 number of rows且uses `src.GetValidCol()` to determine how many 32-element blocks to sort per row.
+  - 实现使用 `dst.GetValidRow()` 作为行数，并使用 `src.GetValidCol()` 确定每行需要排序的 32 元素块的数量。
 
 ## 示例
 

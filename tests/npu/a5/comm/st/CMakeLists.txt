@@ -86,6 +86,4 @@ include_directories(
     ${ASCEND_HOME_PATH}/include/hccl
 )
 
-
-
 add_subdirectory(testcase)

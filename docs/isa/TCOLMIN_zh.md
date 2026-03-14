@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-Let `R = src.GetValidRow()` and `C = src.GetValidCol()`. For `0 <= j < C`:
+设 `R = src.GetValidRow()`，`C = src.GetValidCol()`。对 `0 <= j < C`：
 
 $$ \mathrm{dst}_{0,j} = \min_{0 \le i < R} \mathrm{src}_{i,j} $$
 
@@ -49,15 +49,15 @@ PTO_INST RecordEvent TCOLMIN(TileDataOut& dst, TileDataIn& src, WaitEvents&... e
 
 实现检查 (NPU):
 
-- Tile 位置: `dst`且`src` 必须是 `TileType::Vec`.
-- Tile 布局: 都tiles 必须是 ND 分形（`isRowMajor`且`SLayout::NoneBox`）。
-- 数据类型:
-  - A2A3: `half`, `float`, `int16_t`, `int32_t`.
-  - A5: `half`, `float`, `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `bfloat16_t`.
-- 数据类型一致性: `dst.DType == src.DType`.
-- 运行期有效区域检查:
-  - `src.GetValidCol() == dst.GetValidCol()`.
-  - If `src.GetValidRow() == 0`或`src.GetValidCol() == 0`, the implementation returns early.
+- Tile 位置：`dst` 和 `src` 必须是 `TileType::Vec`。
+- Tile 布局：所有 Tile 必须是 ND 分形（`isRowMajor` 且 `SLayout::NoneBox`）。
+- 数据类型：
+  - A2A3：`half`、`float`、`int16_t`、`int32_t`。
+  - A5：`half`、`float`、`int8_t`、`uint8_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`bfloat16_t`。
+- 数据类型一致性：`dst.DType == src.DType`。
+- 运行期有效区域检查：
+  - `src.GetValidCol() == dst.GetValidCol()`。
+  - 若 `src.GetValidRow() == 0` 或 `src.GetValidCol() == 0`，实现提前返回。
 
 ## 示例
 

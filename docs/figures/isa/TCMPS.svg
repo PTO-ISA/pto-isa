@@ -66,12 +66,12 @@ svg { font-family: Arial, Helvetica, sans-serif; }
 <rect x="516" y="266" width="22" height="22" class="cell cellMasked" />
 <rect x="538" y="266" width="22" height="22" class="cell cellMasked" />
 <rect x="450" y="178" width="88" height="88" class="validBox" stroke="#1D8E63" />
-<text x="549" y="262" class="axisText">Rv</text>
-<text x="629" y="190" class="axisText" text-anchor="end">Cv</text>
-<path d="M 555 188 L 589 188" class="axisLine" marker-end="url(#axisArrow)" />
-<path d="M 555 188 L 555 222" class="axisLine" marker-end="url(#axisArrow)" />
-<text x="593" y="192" class="axisText">c</text>
-<text x="553" y="226" class="axisText" text-anchor="end">r</text>
+<text x="454" y="262" class="axisText">Rv</text>
+<text x="534" y="190" class="axisText" text-anchor="end">Cv</text>
+<path d="M 460 188 L 494 188" class="axisLine" marker-end="url(#axisArrow)" />
+<path d="M 460 188 L 460 222" class="axisLine" marker-end="url(#axisArrow)" />
+<text x="498" y="192" class="axisText">c</text>
+<text x="458" y="226" class="axisText" text-anchor="end">r</text>
 <rect x="640" y="186" width="110" height="54" rx="10" class="scalarBox" />
 <text x="652" y="206" class="smallLabel">scalar</text>
 <text x="652" y="228" class="scalarValue" fill="#1D8E63">s</text>
@@ -112,7 +112,7 @@ svg { font-family: Arial, Helvetica, sans-serif; }
 <circle cx="600" cy="324" r="22" class="opCircle" stroke="#1D8E63" />
 <rect x="583" y="307" width="34" height="34" rx="6" class="opRect" stroke="#1D8E63" />
 <text x="600" y="327.0" class="opText" font-size="10px" text-anchor="middle">TCMPS</text>
-<path d="M 505 300 L 505 324 L 579 324" class="arrow" stroke="#1D8E63" marker-end="url(#arrow)" />
+<path d="M 505 288 L 505 324 L 579 324" class="arrow" stroke="#1D8E63" marker-end="url(#arrow)" />
 <path d="M 695 252 L 695 324 L 621 324" class="arrow" stroke="#1D8E63" marker-end="url(#arrow)" />
 <path d="M 600 346 L 600 361" class="arrow" stroke="#1D8E63" marker-end="url(#arrow)" />
 <rect x="40" y="502" width="1120" height="194" class="procBox" />

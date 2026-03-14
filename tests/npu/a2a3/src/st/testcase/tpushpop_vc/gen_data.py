@@ -16,7 +16,7 @@ import numpy as np
 np.random.seed(19)
 
 
-def gen_golden_data(case_name, m, k, n, quant_type, input_type, output_type):
+def gen_golden_data(case_name, case_params):
     """
     K-tiling with partial sum accumulation.
 
@@ -29,6 +29,7 @@ def gen_golden_data(case_name, m, k, n, quant_type, input_type, output_type):
     Computation:
     Output[m, n] = sum_k(A[m, k] * (B_quant[k, n] - offset[k]) * scale[k])
     """
+    m, k, n, quant_type, input_type, output_type = case_params
     # Matrix A: [M, K]
     x1_gm = np.random.uniform(-2, 2, [m, k]).astype(input_type)
 
@@ -37,15 +38,15 @@ def gen_golden_data(case_name, m, k, n, quant_type, input_type, output_type):
     offset_gm = np.random.uniform(-1, 1, [k]).astype(output_type)
 
     # Matrix B: [K, N]
-    B_float = np.random.uniform(-2, 2, [k, n]).astype(output_type)
+    b_float = np.random.uniform(-2, 2, [k, n]).astype(output_type)
 
     # Quantize B using per-row scale/offset
     if quant_type == np.int8:
-        B_quant_raw = B_float / scale_gm[:, None] + offset_gm[:, None]
-        quant_b_gm = np.clip(np.round(B_quant_raw), -128, 127).astype(np.int8)
+        b_quant_raw = b_float / scale_gm[:, None] + offset_gm[:, None]
+        quant_b_gm = np.clip(np.round(b_quant_raw), -128, 127).astype(np.int8)
     else:  # int16
-        B_quant_raw = B_float / scale_gm[:, None] + offset_gm[:, None]
-        quant_b_gm = np.clip(np.round(B_quant_raw), -32768, 32767).astype(np.int16)
+        b_quant_raw = b_float / scale_gm[:, None] + offset_gm[:, None]
+        quant_b_gm = np.clip(np.round(b_quant_raw), -32768, 32767).astype(np.int16)
 
     # Save inputs
     x1_gm.tofile("./x1_gm.bin")
@@ -54,11 +55,9 @@ def gen_golden_data(case_name, m, k, n, quant_type, input_type, output_type):
     offset_gm.tofile("./offset_gm.bin")
 
     # Compute golden: dequantize B and compute matmul
-    # B_dequant[k, n] = (B_quant[k, n] - offset[k]) * scale[k]
-    B_dequant = (quant_b_gm.astype(output_type) - offset_gm[:, None]) * scale_gm[:, None]
+    b_dequant = (quant_b_gm.astype(output_type) - offset_gm[:, None]) * scale_gm[:, None]
 
-    # Output = A @ B_dequant
-    golden = np.matmul(x1_gm.astype(output_type), B_dequant).astype(output_type)
+    golden = np.matmul(x1_gm.astype(output_type), b_dequant).astype(output_type)
     golden.tofile("./golden.bin")
 
 
@@ -89,6 +88,5 @@ if __name__ == "__main__":
             os.makedirs(case_name)
         original_dir = os.getcwd()
         os.chdir(case_name)
-        m, k, n, quant_type, input_type, output_type = case_params_list[i]
-        gen_golden_data(case_name, m, k, n, quant_type, input_type, output_type)
+        gen_golden_data(case_name, case_params_list[i])
         os.chdir(original_dir)

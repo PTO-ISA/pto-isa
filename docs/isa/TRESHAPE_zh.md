@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-除非另有说明, semantics are defined over the valid region and target-dependent behavior is marked as implementation-defined.
+除非另有说明，语义定义在有效区域上，目标相关行为标记为实现定义。
 
 ## 汇编语法
 
@@ -43,12 +43,12 @@ PTO_INST RecordEvent TRESHAPE(TileDataOut& dst, TileDataIn& src, WaitEvents&... 
 
 ## 约束
 
-Enforced by `TRESHAPE_IMPL`:
+由 `TRESHAPE_IMPL` 强制执行：
 
-- **Tile 类型必须匹配**： `TileDataIn::Loc == TileDataOut::Loc`.
-- **总字节大小必须匹配**： `sizeof(InElem) * InNumel == sizeof(OutElem) * OutNumel`.
+- **Tile 类型必须匹配**：`TileDataIn::Loc == TileDataOut::Loc`。
+- **总字节大小必须匹配**：`sizeof(InElem) * InNumel == sizeof(OutElem) * OutNumel`。
 - **不允许 boxed/non-boxed 转换**：
-  - cannot reshape between `SLayout::NoneBox`且boxed layouts.
+  - 不能在 `SLayout::NoneBox` 与 boxed 布局之间进行 reshape。
 
 ## 示例
 

@@ -17,6 +17,19 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <pto/npu/a5/utils.hpp>
 
 namespace pto {
+
+template <typename DATA_T, typename OP_T, typename EN1 = void, typename EN2 = void>
+struct ExtractRegTypes {
+    using RegT = RegTensor<DATA_T>;
+    using MaskRT = MaskReg;
+};
+
+template <typename DATA_T, typename OP_T>
+struct ExtractRegTypes<DATA_T, OP_T, std::void_t<typename OP_T::RegT>, std::void_t<typename OP_T::MaskRT>> {
+    using RegT = typename OP_T::RegT;
+    using MaskRT = typename OP_T::MaskRT;
+};
+
 template <typename Op, typename T, unsigned ElementsPerRepeat, unsigned BlockSizeElem>
 PTO_INTERNAL void TBinOps_1D_NoPostUpdate(__ubuf__ T *dstPtr, __ubuf__ T *src0Ptr, __ubuf__ T *src1Ptr,
                                           unsigned validRows, unsigned validCols)
@@ -24,8 +37,9 @@ PTO_INTERNAL void TBinOps_1D_NoPostUpdate(__ubuf__ T *dstPtr, __ubuf__ T *src0Pt
     uint16_t repeatTimes = CeilDivision(validRows * validCols, ElementsPerRepeat);
     __VEC_SCOPE__
     {
-        RegTensor<T> vreg0, vreg1, vreg2;
-        MaskReg preg;
+        using RTypes = ExtractRegTypes<T, Op>;
+        typename RTypes::RegT vreg0, vreg1, vreg2;
+        typename RTypes::MaskRT preg;
 
         constexpr auto distValue =
             std::integral_constant<::DistVST, static_cast<::DistVST>(GetDistVst<T, DistVST::DIST_NORM>())>();
@@ -47,8 +61,9 @@ PTO_INTERNAL void TBinOps_1D_PostUpdate(__ubuf__ T *dstPtr, __ubuf__ T *src0Ptr,
     uint16_t repeatTimes = CeilDivision(validRows * validCols, ElementsPerRepeat);
     __VEC_SCOPE__
     {
-        RegTensor<T> vreg0_PU, vreg1_PU, vreg2_PU;
-        MaskReg preg;
+        using RTypes = ExtractRegTypes<T, Op>;
+        typename RTypes::RegT vreg0_PU, vreg1_PU, vreg2_PU;
+        typename RTypes::MaskRT preg;
 
         constexpr auto distValue =
             std::integral_constant<::DistVST, static_cast<::DistVST>(GetDistVst<T, DistVST::DIST_NORM>())>();
@@ -72,8 +87,9 @@ PTO_INTERNAL void TBinOps_2D_NoPostUpdate(__ubuf__ T *dstPtr, __ubuf__ T *src0Pt
 
     __VEC_SCOPE__
     {
-        RegTensor<T> vreg0, vreg1, vreg2;
-        MaskReg preg;
+        using RTypes = ExtractRegTypes<T, Op>;
+        typename RTypes::RegT vreg0, vreg1, vreg2;
+        typename RTypes::MaskRT preg;
         constexpr auto distValue =
             std::integral_constant<::DistVST, static_cast<::DistVST>(GetDistVst<T, DistVST::DIST_NORM>())>();
         for (uint16_t i = 0; i < (uint16_t)(validRows); ++i) {
@@ -98,8 +114,9 @@ PTO_INTERNAL void TBinOps_2D_PostUpdate(__ubuf__ T *dstPtr, __ubuf__ T *src0Ptr,
 
     __VEC_SCOPE__
     {
-        RegTensor<T> vreg0_PU, vreg1_PU, vreg2_PU;
-        MaskReg preg;
+        using RTypes = ExtractRegTypes<T, Op>;
+        typename RTypes::RegT vreg0_PU, vreg1_PU, vreg2_PU;
+        typename RTypes::MaskRT preg;
         constexpr auto distValue =
             std::integral_constant<::DistVST, static_cast<::DistVST>(GetDistVst<T, DistVST::DIST_NORM>())>();
         for (uint16_t i = 0; i < (uint16_t)(validRows); ++i) {

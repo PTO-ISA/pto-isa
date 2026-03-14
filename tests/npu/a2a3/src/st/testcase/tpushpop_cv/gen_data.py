@@ -16,7 +16,8 @@ import numpy as np
 np.random.seed(19)
 
 
-def gen_golden_data(case_name, m, k, n, input_type, output_type):
+def gen_golden_data(case_name, case_params):
+    m, k, n, input_type, output_type = case_params
     x1_gm = np.random.uniform(-2, 2, [m, k]).astype(input_type)
     x2_gm = np.random.uniform(-2, 2, [k, n]).astype(input_type)
     bias_gm = np.random.uniform(-1, 1, [m, n]).astype(output_type)
@@ -49,6 +50,5 @@ if __name__ == "__main__":
             os.makedirs(case_name)
         original_dir = os.getcwd()
         os.chdir(case_name)
-        m, k, n, input_type, output_type = case_params_list[i]
-        gen_golden_data(case_name, m, k, n, input_type, output_type)
+        gen_golden_data(case_name, case_params_list[i])
         os.chdir(original_dir)

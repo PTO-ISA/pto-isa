@@ -31,7 +31,7 @@ enum class VecCubeRatio : uint8_t
     V2C1_VECS = 2, // 2 Vector cores : 1 Cube core
 };
 
-template <typename DataType, FIFOType FifoType, int Depth, int Period, typename Enable = void>
+template <typename DataType, FIFOType FifoType, int Depth, int Period, int LocalDepth = 0, typename Enable = void>
 struct DataFIFO;
 
 // 1. Specialization for GM FIFO
@@ -40,15 +40,22 @@ struct IsGMFiFo {
     static constexpr bool value = (T == FIFOType::GM_FIFO);
 };
 
-template <typename DataType, FIFOType FifoType, int Depth, int Period>
-struct DataFIFO<DataType, FifoType, Depth, Period, typename std::enable_if<IsGMFiFo<FifoType>::value>::type> {
+template <typename DataType, FIFOType FifoType, int Depth, int Period, int LocalDepth>
+struct DataFIFO<DataType, FifoType, Depth, Period, LocalDepth,
+                typename std::enable_if<IsGMFiFo<FifoType>::value>::type> {
     static constexpr int fifoDepth = Depth;
     static constexpr int fifoPeriod = Period;
     static constexpr FIFOType fifoType = FifoType;
     using DType = DataType;
-
     // base address of the GM FIFO buffer in global memory
     __gm__ DataType *fifoBase = nullptr;
+    // base address of local FIFO buffer in local memory
+    uint32_t localFiFoBase = 0;
+    static constexpr int localFiFoDepth = LocalDepth;
+    static constexpr bool useLocalFiFo = (localFiFoDepth > 0);
+
+    PTO_INTERNAL DataFIFO(__gm__ DataType *ptr, uint32_t localBase) : fifoBase(ptr), localFiFoBase(localBase)
+    {}
 
     PTO_INTERNAL DataFIFO(__gm__ DataType *ptr) : fifoBase(ptr)
     {}
@@ -65,8 +72,9 @@ struct IsTileFiFo {
     static constexpr bool value = (T == FIFOType::VEC_FIFO) || (T == FIFOType::MAT_FIFO);
 };
 
-template <typename DataType, FIFOType FifoType, int Depth, int Period>
-struct DataFIFO<DataType, FifoType, Depth, Period, typename std::enable_if<IsTileFiFo<FifoType>::value>::type> {
+template <typename DataType, FIFOType FifoType, int Depth, int Period, int LocalDepth_unused>
+struct DataFIFO<DataType, FifoType, Depth, Period, LocalDepth_unused,
+                typename std::enable_if<IsTileFiFo<FifoType>::value>::type> {
     static constexpr int fifoDepth = Depth;
     static constexpr int fifoPeriod = Period;
     static constexpr FIFOType fifoType = FifoType;

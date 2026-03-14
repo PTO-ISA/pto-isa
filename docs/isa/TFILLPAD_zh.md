@@ -8,15 +8,13 @@
 
 复制 Tile 并在有效区域外使用编译时填充值进行填充。
 
-Copy a source tile into a destination tile and fill the remaining (padded) elements with a compile-time pad value
-selected by `TileDataDst::PadVal` (e.g., `PadValue::Min`/`PadValue::Max`）。
+将源 Tile 复制到目标 Tile 中，并使用由 `TileDataDst::PadVal` 选定的编译时填充值（如 `PadValue::Min`/`PadValue::Max`）填充剩余（填充）元素。
 
-This is commonly used to materialize deterministic values outside the runtime valid region so that subsequent ops can
-operate on a full static tile shape.
+此操作常用于在运行时有效区域之外确定性地物化特定值，使后续操作能够在完整的静态 Tile 形状上运算。
 
 ## 数学语义
 
-Let `VR = src.GetValidRow()` and `VC = src.GetValidCol()`. 对每个 destination element `(i, j)`:
+设 `VR = src.GetValidRow()`，`VC = src.GetValidCol()`。对每个目标元素 `(i, j)`：
 
 $$
 \mathrm{dst}_{i,j} =
@@ -26,14 +24,13 @@ $$
 \end{cases}
 $$
 
-`pad` is determined by `TileDataDst::PadVal` and the element type (e.g., `+inf/-inf` for floating types when available,
-otherwise `std::numeric_limits<T>::max()/min()`）。
+`pad` 由 `TileDataDst::PadVal` 和元素类型决定（例如，当浮点类型支持时使用 `+inf/-inf`，否则使用 `std::numeric_limits<T>::max()/min()`）。
 
 ## 汇编语法
 
 PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 
-Synchronous form (conceptual):
+同步形式（概念性）：
 
 ```text
 %dst = tfillpad %src : !pto.tile<...> -> !pto.tile<...>
@@ -53,7 +50,7 @@ pto.tfillpad ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 
 ## C++ 内建接口
 
-Implemented in the backend headers pulled in by `include/pto/common/pto_instr_impl.hpp`:
+在 `include/pto/common/pto_instr_impl.hpp` 引入的后端头文件中实现：
 
 ```cpp
 template <typename TileDataDst, typename TileDataSrc>

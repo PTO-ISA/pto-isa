@@ -10,7 +10,7 @@
 
 ## 数学语义
 
-除非另有说明, semantics are defined over the valid region and target-dependent behavior is marked as implementation-defined.
+除非另有说明，语义定义在有效区域上，目标相关行为标记为实现定义。
 
 ## 汇编语法
 
@@ -40,7 +40,7 @@ PTO_INST RecordEvent TFILLPAD_EXPAND(DstTileData &dst, SrcTileData &src,
 
 ## 约束
 
-Type/layout/location/shape legality is backend-dependent; treat implementation-specific notes as normative 对于that backend.
+类型/布局/位置/形状的合法性由后端决定；对于特定后端，请将实现相关说明视为规范性约束。
 
 ## 示例
 

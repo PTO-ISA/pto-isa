@@ -10,14 +10,14 @@
 
 ## 数学语义
 
-对每个元素 `(i, j)` in the destination valid region:
+对目标有效区域内的每个元素 `(i, j)`：
 
 $$
 \mathrm{dst}_{i,j} =
-egin{cases}
-\mathrm{src0}_{i,j} \cdot \mathrm{src1}_{i,j} & 	ext{if both inputs are defined at } (i,j) \
-\mathrm{src0}_{i,j} & 	ext{if only src0 is defined at } (i,j) \
-\mathrm{src1}_{i,j} & 	ext{if only src1 is defined at } (i,j)
+\begin{cases}
+\mathrm{src0}_{i,j} \cdot \mathrm{src1}_{i,j} & \text{若两个输入在 } (i,j) \text{ 处均有定义} \\\\
+\mathrm{src0}_{i,j} & \text{若仅 src0 在 } (i,j) \text{ 处有定义} \\\\
+\mathrm{src1}_{i,j} & \text{若仅 src1 在 } (i,j) \text{ 处有定义}
 \end{cases}
 $$
 
@@ -115,4 +115,3 @@ void example_manual() {
 # IR Level 2 (DPS)
 pto.tpartmul ins(%src0, %src1 : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
-

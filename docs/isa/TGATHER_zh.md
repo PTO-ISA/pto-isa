@@ -12,19 +12,19 @@
 
 基于索引的 gather（概念性定义）：
 
-Let `R = dst.GetValidRow()` and `C = dst.GetValidCol()`. For `0 <= i < R` and `0 <= j < C`:
+设 `R = dst.GetValidRow()`，`C = dst.GetValidCol()`。对于 `0 <= i < R` 且 `0 <= j < C`：
 
 $$ \mathrm{dst}_{i,j} = \mathrm{src0}\!\left[\mathrm{indices}_{i,j}\right] $$
 
-Exact index interpretation and bounds behavior are implementation-defined.
+确切的索引解释和边界行为由实现定义。
 
-Mask-pattern gather is an implementation-defined selection/reduction controlled by `pto::MaskPattern`.
+基于掩码模式的 gather 是由 `pto::MaskPattern` 控制的实现定义的选择/归约操作。
 
 ## 汇编语法
 
 PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 
-Index-based gather:
+基于索引的 gather：
 
 ```text
 %dst = tgather %src0, %indices : !pto.tile<...> -> !pto.tile<...>
@@ -52,7 +52,7 @@ pto.tgather ins(%src, {maskPattern = #pto.mask_pattern<P0101>} : !pto.tile_buf<.
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/type.hpp`:
+声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/type.hpp`：
 
 ```cpp
 template <typename TileDataD, typename TileDataS0, typename TileDataS1, typename... WaitEvents>
@@ -64,30 +64,28 @@ PTO_INST RecordEvent TGATHER(DstTileData& dst, SrcTileData& src, WaitEvents&... 
 
 ## 约束
 
-- **基于索引的 gather： 实现检查 (A2A3)**:
-  - `sizeof(DstTileData::DType)` 必须是 必须是 `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `float`.
-  - `sizeof(Src1TileData::DType)` 必须是 必须是 `int32_t`, `uint32_t`.
-  - `DstTileData::DType` 必须是 相同的类型 `Src0TileData::DType`.
-  - `src1.GetValidCol() == Src1TileData::Cols`且`dst.GetValidCol() == DstTileData::Cols`.
-- **基于索引的 gather： 实现检查 (A5)**:
-  - `sizeof(DstTileData::DType)` 必须是 必须是 `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `float`.
-  - `sizeof(Src1TileData::DType)` 必须是 必须是 `int16_t`, `uint16_t`, `int32_t`, `uint32_t`.
-  - `DstTileData::DType` 必须是 相同的类型 `Src0TileData::DType`.
-  - `src1.GetValidCol() == Src1TileData::Cols`且`dst.GetValidCol() == DstTileData::Cols`.
-- **基于掩码模式的 gather： 实现检查 (A2A3)**:
-  - 源元素大小 必须是 `2`或`4` 字节.
-  - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int16_t`或`uint16_t`或`int32_t`或`uint32_t`
-   或`half`或`bfloat16_t`或`float`.
-  - `dst`且`src` 必须都是 `TileType::Vec`且行主序.
-  - `sizeof(dst element) == sizeof(src element)`且`dst.GetValidCol() == DstTileData::Cols` (连续的目标存储).
-- **基于掩码模式的 gather： 实现检查 (A5)**:
-  - 源元素大小 必须是 `1`或`2`或`4` 字节.
-  - `dst`且`src` 必须都是 `TileType::Vec`且行主序.
-  - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int8_t`或`uint8_t`或`int16_t`或`uint16_t`或`int32_t`或`uint32_t`
-   或`half`或`bfloat16_t`或`float`或`float8_e4m3_t`or `float8_e5m2_t`或`hifloat8_t`.
-  - 支持的数据类型限制为目标定义的集合 (通过 `static_assert` 在实现中),且`sizeof(dst element) == sizeof(src element)`, `dst.GetValidCol() == DstTileData::Cols` (连续的目标存储).
+- **基于索引的 gather：实现检查 (A2A3)**:
+  - `sizeof(DstTileData::DType)` 对应类型必须是 `int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`float` 之一。
+  - `sizeof(Src1TileData::DType)` 对应类型必须是 `int32_t`、`uint32_t` 之一。
+  - `DstTileData::DType` 必须与 `Src0TileData::DType` 类型相同。
+  - `src1.GetValidCol() == Src1TileData::Cols` 且 `dst.GetValidCol() == DstTileData::Cols`。
+- **基于索引的 gather：实现检查 (A5)**:
+  - `sizeof(DstTileData::DType)` 对应类型必须是 `int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`float` 之一。
+  - `sizeof(Src1TileData::DType)` 对应类型必须是 `int16_t`、`uint16_t`、`int32_t`、`uint32_t` 之一。
+  - `DstTileData::DType` 必须与 `Src0TileData::DType` 类型相同。
+  - `src1.GetValidCol() == Src1TileData::Cols` 且 `dst.GetValidCol() == DstTileData::Cols`。
+- **基于掩码模式的 gather：实现检查 (A2A3)**:
+  - 源元素大小必须是 `2` 或 `4` 字节。
+  - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`bfloat16_t` 或 `float` 之一。
+  - `dst` 和 `src` 必须都是 `TileType::Vec` 且行主序。
+  - `sizeof(dst element) == sizeof(src element)` 且 `dst.GetValidCol() == DstTileData::Cols`（连续的目标存储）。
+- **基于掩码模式的 gather：实现检查 (A5)**:
+  - 源元素大小必须是 `1`、`2` 或 `4` 字节。
+  - `dst` 和 `src` 必须都是 `TileType::Vec` 且行主序。
+  - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int8_t`、`uint8_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`bfloat16_t`、`float`、`float8_e4m3_t`、`float8_e5m2_t` 或 `hifloat8_t` 之一。
+  - 支持的数据类型限制为目标定义的集合（通过实现中的 `static_assert` 强制执行），且 `sizeof(dst element) == sizeof(src element)`，`dst.GetValidCol() == DstTileData::Cols`（连续的目标存储）。
 - **边界 / 有效性**:
-  - Index bounds 不通过显式运行时断言进行验证; 超出范围的索引由目标定义.
+  - 索引边界不通过显式运行时断言进行验证；超出范围的索引行为由目标定义。
 
 ## 示例
 

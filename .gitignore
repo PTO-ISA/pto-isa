@@ -23,6 +23,8 @@ docs/mkdocs/src/ReleaseNote.md
 docs/mkdocs/src/SECURITY.md
 docs/mkdocs/src/SECURITY_zh.md
 docs/mkdocs/src/all-pages.md
+docs/mkdocs/src/all-pages_zh.md
+docs/mkdocs/src/lang-map.json
 docs/mkdocs/src/cmake/
 docs/mkdocs/src/demos/
 docs/mkdocs/src/docs/

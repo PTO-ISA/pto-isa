@@ -11,13 +11,33 @@
 function(pto_vec_st NAME)
     add_library(${NAME}_kernel SHARED ${NAME}_kernel.cpp)
     target_compile_options(${NAME}_kernel PRIVATE ${CMAKE_CCE_COMPILE_OPTIONS} --cce-aicore-arch=dav-c310-vec -DREGISTER_BASE -std=c++17)
+
+    if(HIGH_PRECISION_IMPL)
+        # Host-arch aware include root: x86_64 first, fallback to aarch64.
+        set(PTO_TOOLKIT_DIR "${ASCEND_HOME_PATH}/x86_64-linux")
+        if(NOT EXISTS "${PTO_TOOLKIT_DIR}")
+            set(PTO_TOOLKIT_DIR "${ASCEND_HOME_PATH}/aarch64-linux")
+        endif()
+
+        target_include_directories(${NAME}_kernel PRIVATE
+            ${PTO_TOOLKIT_DIR}/asc
+            ${PTO_TOOLKIT_DIR}/asc/include/interface
+            ${PTO_TOOLKIT_DIR}/ascendc/include/basic_api
+            ${PTO_TOOLKIT_DIR}/ascendc/include/basic_api/impl
+        )
+
+
+        message(STATUS "!!! Using high-precision algorithms.")
+        add_compile_definitions(HIGH_PRECISION_IMPL)
+    endif()
+
     target_include_directories(${NAME}_kernel PRIVATE 
         ${ASCEND_HOME_PATH}/pkg_inc/
         ${ASCEND_HOME_PATH}/pkg_inc/profiling/
         ${ASCEND_HOME_PATH}/pkg_inc/runtime/runtime
     )
     target_link_options(${NAME}_kernel PRIVATE --cce-fatobj-link)
-    
+
     add_executable(${NAME} main.cpp)
     target_compile_options(${NAME} PRIVATE ${CMAKE_CPP_COMPILE_OPTIONS})
     target_include_directories(${NAME} PRIVATE
@@ -46,7 +66,7 @@ function(pto_cube_st NAME)
         ${ASCEND_HOME_PATH}/pkg_inc/runtime/runtime
     )
     target_link_options(${NAME}_kernel PRIVATE --cce-fatobj-link)
-    
+
     add_executable(${NAME} main.cpp)
     target_compile_options(${NAME} PRIVATE ${CMAKE_CPP_COMPILE_OPTIONS})
     target_include_directories(${NAME} PRIVATE
@@ -99,7 +119,7 @@ endfunction()
 # 定义测试用例列表 testcase下如有新增用例目录需要在此加
 set(ALL_TESTCASES
     tsubs
-    tmaxs    
+    tmaxs
     tci
     tmatmul
     tmatmul_mx
@@ -214,6 +234,8 @@ set(ALL_TESTCASES
     mscatter
     t_dhrystone
     tpack
+    tpushpop_cv
+    tpushpop_vc
 )
 
 if((TEST_CASE IN_LIST ALL_TESTCASES) OR (TEST_CASE STREQUAL "all"))

@@ -10,11 +10,11 @@
 
 ## 数学语义
 
-对每个源元素 `(i, j)`, write:
+对每个源元素 `(i, j)`，写入：
 
 $$ \mathrm{dst}_{\mathrm{idx}_{i,j},\ j} = \mathrm{src}_{i,j} $$
 
-If multiple elements map to the same destination location, the final value is implementation-defined (last writer wins in the current implementation).
+若多个元素映射到同一目标位置，最终值由实现定义（当前实现中以最后写入者为准）。
 
 ## 汇编语法
 
@@ -50,25 +50,25 @@ PTO_INST RecordEvent TSCATTER(TileDataD& dst, TileDataS& src, TileDataI& indexes
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `TileDataD::Loc`, `TileDataS::Loc`, `TileDataI::Loc` 必须是 `TileType::Vec`.
-  - `TileDataD::DType`, `TileDataS::DType` 必须是以下之一： `int32_t`, `int16_t`, `int8_t`, `half`, `float32_t`, `uint32_t`, `uint16_t`, `uint8_t`, `bfloat16_t`.
-  - `TileDataI::DType` 必须是以下之一： `int16_t`, `int32_t`, `uint16_t`或`uint32_t`.
-  - No bounds checks are enforced on `indexes` 值.
-  - 静态有效边界： `TileDataD::ValidRow <= TileDataD::Rows`, `TileDataD::ValidCol <= TileDataD::Cols`, `TileDataS::ValidRow <= TileDataS::Rows`, `TileDataS::ValidCol <= TileDataS::Cols`, `TileDataI::ValidRow <= TileDataI::Rows`, `TileDataI::ValidCol <= TileDataI::Cols`.
-  - `TileDataD::DType`且`TileDataS::DType` 必须是 the same.
-  - When size of `TileDataD::DType` is 4 字节, the size of `TileDataI::DType` 必须是 4 字节.
-  - When size of `TileDataD::DType` is 2 字节, the size of `TileDataI::DType` 必须是 2 字节.
-  - When size of `TileDataD::DType` is 1 字节, the size of `TileDataI::DType` 必须是 2 字节.
+  - `TileDataD::Loc`、`TileDataS::Loc`、`TileDataI::Loc` 必须是 `TileType::Vec`。
+  - `TileDataD::DType`、`TileDataS::DType` 必须是以下之一：`int32_t`、`int16_t`、`int8_t`、`half`、`float32_t`、`uint32_t`、`uint16_t`、`uint8_t`、`bfloat16_t`。
+  - `TileDataI::DType` 必须是以下之一：`int16_t`、`int32_t`、`uint16_t` 或 `uint32_t`。
+  - 不对 `indexes` 值执行边界检查。
+  - 静态有效边界：`TileDataD::ValidRow <= TileDataD::Rows`、`TileDataD::ValidCol <= TileDataD::Cols`、`TileDataS::ValidRow <= TileDataS::Rows`、`TileDataS::ValidCol <= TileDataS::Cols`、`TileDataI::ValidRow <= TileDataI::Rows`、`TileDataI::ValidCol <= TileDataI::Cols`。
+  - `TileDataD::DType` 与 `TileDataS::DType` 必须相同。
+  - 当 `TileDataD::DType` 大小为 4 字节时，`TileDataI::DType` 大小必须为 4 字节。
+  - 当 `TileDataD::DType` 大小为 2 字节时，`TileDataI::DType` 大小必须为 2 字节。
+  - 当 `TileDataD::DType` 大小为 1 字节时，`TileDataI::DType` 大小必须为 2 字节。
 - **实现检查 (A5)**:
-  - `TileDataD::Loc`, `TileDataS::Loc`, `TileDataI::Loc` 必须是 `TileType::Vec`.
-  - `TileDataD::DType`, `TileDataS::DType` 必须是以下之一： `int32_t`, `int16_t`, `int8_t`, `half`, `float32_t`, `uint32_t`, `uint16_t`, `uint8_t`, `bfloat16_t`.
-  - `TileDataI::DType` 必须是以下之一： `int16_t`, `int32_t`, `uint16_t`或`uint32_t`.
-  - No bounds checks are enforced on `indexes` 值.
-  - 静态有效边界： `TileDataD::ValidRow <= TileDataD::Rows`, `TileDataD::ValidCol <= TileDataD::Cols`, `TileDataS::ValidRow <= TileDataS::Rows`, `TileDataS::ValidCol <= TileDataS::Cols`, `TileDataI::ValidRow <= TileDataI::Rows`, `TileDataI::ValidCol <= TileDataI::Cols`.
-  - `TileDataD::DType`且`TileDataS::DType` 必须是 the same.
-  - When size of `TileDataD::DType` is 4 字节, the size of `TileDataI::DType` 必须是 4 字节.
-  - When size of `TileDataD::DType` is 2 字节, the size of `TileDataI::DType` 必须是 2 字节.
-  - When size of `TileDataD::DType` is 1 字节, the size of `TileDataI::DType` 必须是 2 字节.
+  - `TileDataD::Loc`、`TileDataS::Loc`、`TileDataI::Loc` 必须是 `TileType::Vec`。
+  - `TileDataD::DType`、`TileDataS::DType` 必须是以下之一：`int32_t`、`int16_t`、`int8_t`、`half`、`float32_t`、`uint32_t`、`uint16_t`、`uint8_t`、`bfloat16_t`。
+  - `TileDataI::DType` 必须是以下之一：`int16_t`、`int32_t`、`uint16_t` 或 `uint32_t`。
+  - 不对 `indexes` 值执行边界检查。
+  - 静态有效边界：`TileDataD::ValidRow <= TileDataD::Rows`、`TileDataD::ValidCol <= TileDataD::Cols`、`TileDataS::ValidRow <= TileDataS::Rows`、`TileDataS::ValidCol <= TileDataS::Cols`、`TileDataI::ValidRow <= TileDataI::Rows`、`TileDataI::ValidCol <= TileDataI::Cols`。
+  - `TileDataD::DType` 与 `TileDataS::DType` 必须相同。
+  - 当 `TileDataD::DType` 大小为 4 字节时，`TileDataI::DType` 大小必须为 4 字节。
+  - 当 `TileDataD::DType` 大小为 2 字节时，`TileDataI::DType` 大小必须为 2 字节。
+  - 当 `TileDataD::DType` 大小为 1 字节时，`TileDataI::DType` 大小必须为 2 字节。
 
 ## 示例
 

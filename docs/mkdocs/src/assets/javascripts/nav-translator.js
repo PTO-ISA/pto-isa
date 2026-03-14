@@ -8,546 +8,275 @@
 // See LICENSE in the root of the software repository for the full text of the License.
 // --------------------------------------------------------------------------------
 
-// 导航栏中英文映射表
-const NAV_TRANSLATIONS = {
-    // 顶级导航
-    'Home': '首页',
-    'Getting Started': '快速开始',
-    'PTO Virtual ISA Manual': 'PTO 虚拟 ISA 手册',
-    'Programming Model': '编程模型',
-    'ISA Reference': 'ISA 参考',
-    'Machine Model': '机器模型',
-    'Examples': '示例',
-    'Examples & Kernels': '示例与算子',
-    'Documentation': '文档',
-    'Full Index': '完整索引',
-    
-    // PTO Virtual ISA Manual 子项
-    'Preface': '前言',
-    'Overview': '概述',
-    'Execution Model': '执行模型',
-    'State and Types': '状态与类型',
-    'Tiles and GlobalTensor': 'Tile 与 GlobalTensor',
-    'Synchronization': '同步',
-    'PTO Assembly (PTO-AS)': 'PTO 汇编 (PTO-AS)',
-    'Instruction Set (overview)': '指令集（概述）',
-    'Programming Guide': '编程指南',
-    'Virtual ISA and IR': '虚拟 ISA 与 IR',
-    'Bytecode and Toolchain': '字节码与工具链',
-    'Memory Ordering and Consistency': '内存顺序与一致性',
-    'Backend Profiles and Conformance': '后端配置与一致性',
-    'Glossary': '术语表',
-    'Instruction Contract Template': '指令契约模板',
-    'Diagnostics Taxonomy': '诊断分类',
-    'Instruction Family Matrix': '指令族矩阵',
-    
-    // Programming Model 子项
-    'Tile': 'Tile',
-    'GlobalTensor': 'GlobalTensor',
-    'Scalar': 'Scalar',
-    'Event': 'Event',
-    'Tutorial': '教程',
-    'Tutorials': '教程集',
-    'Vec Add': '向量加法',
-    'Row Softmax': '行 Softmax',
-    'GEMM': 'GEMM',
-    'Example: Vec Add': '示例：向量加法',
-    'Example: Row Softmax': '示例：行 Softmax',
-    'Example: GEMM': '示例：GEMM',
-    'Optimization': '优化',
-    'Debugging': '调试',
-    
-    // ISA Reference 子项
-    'ISA Conventions': 'ISA 约定',
-    'PTO AS Reference': 'PTO AS 参考',
-    'PTO-AS Specification': 'PTO-AS 规范',
-    'Conventions': '约定',
-    'Non-ISA Operations': '非 ISA 操作',
-    'Elementwise Operations': '逐元素操作',
-    'Tile-Scalar Operations': 'Tile-标量操作',
-    'Axis Operations': '轴操作',
-    'Memory Operations': '内存操作',
-    'Matrix Operations': '矩阵操作',
-    'Data Movement Operations': '数据搬运操作',
-    'Complex Operations': '复杂操作',
-    'Manual Binding Operations': '手动绑定操作',
-    'Scalar Arithmetic Operations': '标量算术操作',
-    'Control Flow Operations': '控制流操作',
-    'PTO ISA Table': 'PTO ISA 表',
-    'Manual / Resource Binding': '手动/资源绑定',
-    'Elementwise (Tile-Tile)': '逐元素（Tile-Tile）',
-    'Tile-Scalar / Tile-Immediate': 'Tile-标量/Tile-立即数',
-    'Axis Reduce / Expand': '轴归约/扩展',
-    'Memory (GM <-> Tile)': '内存（GM <-> Tile）',
-    'Matrix Multiply': '矩阵乘',
-    'Data Movement / Layout': '数据搬运/布局',
-    'Complex Instructions': '复杂指令',
-    'Reference': '参考',
-    'Intrinsics Header': '内建函数头文件',
-    'All Instructions Index': '全部指令索引',
-    'ISA index': 'ISA 索引',
-    'PTO IR ops index': 'PTO IR 操作索引',
-    'ISA conventions': 'ISA 约定',
-    'PTO ISA table': 'PTO ISA 表',
-    'Intrinsics header': '内建函数头文件',
-    'PTO-AS spec': 'PTO-AS 规范',
-    'Grammar conventions': '语法约定',
-    'Grammar index': '语法索引',
-    
-    // Machine Model 子项
-    'Abstract Machine': '抽象机器',
-    'Machine Index': '机器索引',
-    'Abstract machine': '抽象机器',
-    'Machine index': '机器索引',
-    
-    // Examples & Kernels 子项
-    'High-Performance Kernels': '高性能算子',
-    'GEMM Performance': 'GEMM 性能',
-    'Flash Attention': 'Flash Attention',
-    'Baseline Demos': '基础示例',
-    'Add Demo': '加法示例',
-    'GEMM Demo': 'GEMM 示例',
-    'Tests': '测试',
-    'Tests Overview': '测试概览',
-    'Test Scripts': '测试脚本',
-    'Kernels index': '算子索引',
-    'GEMM performance kernel': 'GEMM 性能算子',
-    'Flash Attention kernel': 'Flash Attention 算子',
-    'Baseline add demo': '基础加法示例',
-    'Baseline GEMM demo': '基础 GEMM 示例',
-    'Tests index': '测试索引',
-    'Test scripts': '测试脚本',
-    
-    // Documentation 子项
-    'Docs Index': '文档索引',
-    'Build Documentation': '构建文档',
-    'Docs index': '文档索引',
-    'Build this site': '构建本站点',
-    'Root README': '根目录 README'
-};
+/**
+ * nav-translator.js
+ *
+ * Two responsibilities:
+ *  1. Translate sidebar navigation text labels EN <-> ZH.
+ *  2. Rewrite nav link hrefs to the correct language version using
+ *     the pre-built lang-map.json lookup table (no heuristics).
+ *
+ * On a ZH page the links are rewritten immediately on DOMContentLoaded.
+ * When the user switches language via language-switcher.js the public
+ * window.translateNavigation / window.restoreEnglishNavigation hooks are
+ * called before the page redirect.
+ */
+(function () {
+    'use strict';
 
-// 导航栏翻译函数（内部实现）
-function translateNavigationInternal(targetLang) {
-    if (targetLang !== 'zh') {
-        return; // 只翻译为中文
+    // ── translation table ────────────────────────────────────────────────────
+
+    var NAV_TRANSLATIONS = {
+        'Home': '\u9996\u9875',
+        'Getting Started': '\u5feb\u901f\u5f00\u59cb',
+        'PTO Virtual ISA Manual': 'PTO \u865a\u62df ISA \u624b\u518c',
+        'Programming Model': '\u7f16\u7a0b\u6a21\u578b',
+        'ISA Reference': 'ISA \u53c2\u8003',
+        'Machine Model': '\u673a\u5668\u6a21\u578b',
+        'Examples': '\u793a\u4f8b',
+        'Examples & Kernels': '\u793a\u4f8b\u4e0e\u7b97\u5b50',
+        'Documentation': '\u6587\u6863',
+        'Full Index': '\u5b8c\u6574\u7d22\u5f15',
+        'Preface': '\u524d\u8a00',
+        'Overview': '\u6982\u8ff0',
+        'Execution Model': '\u6267\u884c\u6a21\u578b',
+        'State and Types': '\u72b6\u6001\u4e0e\u7c7b\u578b',
+        'Tiles and GlobalTensor': 'Tile \u4e0e GlobalTensor',
+        'Synchronization': '\u540c\u6b65',
+        'PTO Assembly (PTO-AS)': 'PTO \u6c47\u7f16 (PTO-AS)',
+        'Instruction Set (overview)': '\u6307\u4ee4\u96c6\uff08\u6982\u8ff0\uff09',
+        'Programming Guide': '\u7f16\u7a0b\u6307\u5357',
+        'Virtual ISA and IR': '\u865a\u62df ISA \u4e0e IR',
+        'Bytecode and Toolchain': '\u5b57\u8282\u7801\u4e0e\u5de5\u5177\u94fe',
+        'Memory Ordering and Consistency': '\u5185\u5b58\u987a\u5e8f\u4e0e\u4e00\u81f4\u6027',
+        'Backend Profiles and Conformance': '\u540e\u7aef\u914d\u7f6e\u4e0e\u4e00\u81f4\u6027',
+        'Glossary': '\u672f\u8bed\u8868',
+        'Instruction Contract Template': '\u6307\u4ee4\u5951\u7ea6\u6a21\u677f',
+        'Diagnostics Taxonomy': '\u8bca\u65ad\u5206\u7c7b',
+        'Instruction Family Matrix': '\u6307\u4ee4\u65cf\u77e9\u9635',
+        'Tile': 'Tile',
+        'GlobalTensor': 'GlobalTensor',
+        'Scalar': 'Scalar',
+        'Event': 'Event',
+        'Tutorial': '\u6559\u7a0b',
+        'Tutorials': '\u6559\u7a0b\u96c6',
+        'Vec Add': '\u5411\u91cf\u52a0\u6cd5',
+        'Row Softmax': '\u884c Softmax',
+        'GEMM': 'GEMM',
+        'Optimization': '\u4f18\u5316',
+        'Debugging': '\u8c03\u8bd5',
+        'ISA Conventions': 'ISA \u7ea6\u5b9a',
+        'PTO AS Reference': 'PTO AS \u53c2\u8003',
+        'PTO-AS Specification': 'PTO-AS \u89c4\u8303',
+        'Conventions': '\u7ea6\u5b9a',
+        'Non-ISA Operations': '\u975e ISA \u64cd\u4f5c',
+        'Elementwise Operations': '\u9010\u5143\u7d20\u64cd\u4f5c',
+        'Tile-Scalar Operations': 'Tile-\u6807\u91cf\u64cd\u4f5c',
+        'Axis Operations': '\u8f74\u64cd\u4f5c',
+        'Memory Operations': '\u5185\u5b58\u64cd\u4f5c',
+        'Matrix Operations': '\u77e9\u9635\u64cd\u4f5c',
+        'Data Movement Operations': '\u6570\u636e\u642c\u8fd0\u64cd\u4f5c',
+        'Complex Operations': '\u590d\u6742\u64cd\u4f5c',
+        'Manual Binding Operations': '\u624b\u52a8\u7ed1\u5b9a\u64cd\u4f5c',
+        'Scalar Arithmetic Operations': '\u6807\u91cf\u7b97\u672f\u64cd\u4f5c',
+        'Control Flow Operations': '\u63a7\u5236\u6d41\u64cd\u4f5c',
+        'PTO ISA Table': 'PTO ISA \u8868',
+        'Manual / Resource Binding': '\u624b\u52a8/\u8d44\u6e90\u7ed1\u5b9a',
+        'Elementwise (Tile-Tile)': '\u9010\u5143\u7d20\uff08Tile-Tile\uff09',
+        'Tile-Scalar / Tile-Immediate': 'Tile-\u6807\u91cf/Tile-\u7acb\u5373\u6570',
+        'Axis Reduce / Expand': '\u8f74\u5f52\u7ea6/\u6269\u5c55',
+        'Memory (GM <-> Tile)': '\u5185\u5b58\uff08GM <-> Tile\uff09',
+        'Matrix Multiply': '\u77e9\u9635\u4e58',
+        'Data Movement / Layout': '\u6570\u636e\u642c\u8fd0/\u5e03\u5c40',
+        'Complex Instructions': '\u590d\u6742\u6307\u4ee4',
+        'Reference': '\u53c2\u8003',
+        'Intrinsics Header': '\u5185\u5efa\u51fd\u6570\u5934\u6587\u4ef6',
+        'All Instructions Index': '\u5168\u90e8\u6307\u4ee4\u7d22\u5f15',
+        'Abstract Machine': '\u62bd\u8c61\u673a\u5668',
+        'Machine Index': '\u673a\u5668\u7d22\u5f15',
+        'High-Performance Kernels': '\u9ad8\u6027\u80fd\u7b97\u5b50',
+        'GEMM Performance': 'GEMM \u6027\u80fd',
+        'Flash Attention': 'Flash Attention',
+        'Baseline Demos': '\u57fa\u7840\u793a\u4f8b',
+        'Add Demo': '\u52a0\u6cd5\u793a\u4f8b',
+        'GEMM Demo': 'GEMM \u793a\u4f8b',
+        'Tests': '\u6d4b\u8bd5',
+        'Tests Overview': '\u6d4b\u8bd5\u6982\u89c8',
+        'Test Scripts': '\u6d4b\u8bd5\u811a\u672c',
+        'Docs Index': '\u6587\u6863\u7d22\u5f15',
+        'Build Documentation': '\u6784\u5efa\u6587\u6863',
+    };
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
+    function getCurrentLanguage() {
+        var p = window.location.pathname;
+        return (p.indexOf('_zh/') !== -1 || p.slice(-8) === '_zh.html') ? 'zh' : 'en';
     }
-    
-    console.log('=== translateNavigation called ===');
-    
-    // 查找所有导航链接
-    const navLinks = document.querySelectorAll('.wy-menu-vertical a, nav a, .toctree-l1 > a, .toctree-l2 > a');
-    
-    navLinks.forEach(link => {
-        const originalText = link.textContent.trim();
-        
-        // 跳过空文本
-        if (!originalText) return;
-        
-        // 保存原始英文文本（如果还没保存）
-        if (!link.hasAttribute('data-original-text')) {
-            link.setAttribute('data-original-text', originalText);
-        }
-        
-        // 翻译文本
-        const origText = link.getAttribute('data-original-text');
-        if (NAV_TRANSLATIONS[origText]) {
-            link.textContent = NAV_TRANSLATIONS[origText];
-        }
-        
-        // 修改链接指向中文版本
-        // 获取当前 href
-        const currentHref = link.getAttribute('href');
-        
-        // 只在第一次翻译时保存原始英文 href
-        // 避免重复翻译时错误地将中文链接转换回英文
-        if (!link.hasAttribute('data-original-href')) {
-            if (currentHref && (currentHref.includes('_zh/') || currentHref.includes('_zh.html'))) {
-                // 当前是中文链接，转换回英文
-                let enHref = currentHref;
-                
-                if (enHref.includes('/index_zh/')) {
-                    enHref = enHref.replace('/index_zh/', '/');
-                } else if (enHref.includes('manual/index_zh/')) {
-                    enHref = enHref.replace(/manual\/index_zh\//, 'manual/');
-                } else if (enHref.includes('/README_zh/')) {
-                    enHref = enHref.replace('/README_zh/', '/');
-                } else if (enHref.includes('README_zh/')) {
-                    // 处理相对路径：./README_zh/ -> ./
-                    enHref = enHref.replace(/README_zh\//, '');
-                } else if (enHref.includes('index_zh/')) {
-                    // 处理相对路径：./index_zh/ -> ./
-                    enHref = enHref.replace(/index_zh\//, '');
-                } else {
-                    enHref = enHref.replace(/_zh\//g, '/');
-                }
-                
-                console.log('Converting Chinese link to English:', currentHref, '->', enHref);
-                link.setAttribute('data-original-href', enHref);
-            } else if (currentHref) {
-                // 当前是英文链接，直接保存
-                console.log('Saving English link:', currentHref);
-                link.setAttribute('data-original-href', currentHref);
-            }
-        }
-        
-        // 使用原始 href 进行转换
-        const href = link.getAttribute('data-original-href');
-        
-        // 如果没有保存原始 href，跳过转换
-        if (!href) {
-            console.warn('No original href found for link:', originalText, 'current href:', currentHref);
-            return;
-        }
-        
-        console.log('Translating link:', originalText, 'from', href);
-        
-        if (href && !href.startsWith('#') && !href.startsWith('http')) {
-            let newHref = href;
-            
-            // 特殊处理：根目录首页
-            if (newHref === '../..' || newHref === '../../' || 
-                newHref === '../../..' || newHref === '../../../' ||
-                newHref === '/' || newHref === '/index.html' ||
-                newHref === '/.' || newHref === '/..' || newHref === '/../') {
-                newHref = '/index_zh/';
-            }
-            // 当前目录（README）：./ -> ./README_zh/
-            else if (newHref === './' || newHref === '.') {
-                newHref = './README_zh/';
-            }
-            // 父目录：../ 的处理需要根据上下文判断
-            // 如果链接文本和当前页面标题相同，说明是指向当前目录的自引用
-            // 例如在 /docs/isa/README_zh/ 页面，"Overview" 链接指向 ../（即 /docs/isa/）
-            else if (newHref === '../' || newHref === '..') {
-                // 获取当前页面路径
-                const currentPath = window.location.pathname;
-                
-                // 提取当前目录路径（去掉 README_zh/ 或 index_zh/）
-                let currentDir = currentPath;
-                if (currentPath.endsWith('/README_zh/')) {
-                    currentDir = currentPath.replace(/\/README_zh\/$/, '/');
-                } else if (currentPath.endsWith('/index_zh/')) {
-                    currentDir = currentPath.replace(/\/index_zh\/$/, '/');
-                }
-                
-                // 如果当前在 README_zh 或 index_zh 页面，且链接指向父目录
-                // 检查是否是自引用（链接文本是 Overview/概述 或包含 index/索引）
-                // 自引用的条件：../ 指向的目录就是当前目录（去掉 README_zh 后）
-                const isCurrentDirSelfReference = (currentPath.includes('/README_zh/') || currentPath.includes('/index_zh/')) && 
-                    origText && (
-                        origText.toLowerCase() === 'overview' ||
-                        origText.toLowerCase() === '概述' ||
-                        origText.toLowerCase().includes('index') ||
-                        origText.toLowerCase().includes('索引')
-                    );
-                
-                if (isCurrentDirSelfReference) {
-                    // 这是自引用，使用当前页面的绝对路径
-                    newHref = currentPath;
-                } else {
-                    // 真正的父目录引用
-                    newHref = '../README_zh/';
-                }
-            }
-            // manual 目录的 index：../../manual/ -> ../../manual/index_zh/
-            else if (newHref.endsWith('/manual/') || newHref === 'manual/') {
-                newHref = newHref.replace(/manual\/$/, 'manual/index_zh/');
-            }
-            // 其他以 / 结尾的路径
-            else if (newHref.endsWith('/')) {
-                // 根据导航配置，判断是 README 还是普通文件
-                // README 的特征：
-                // - docs/coding/ (Overview)
-                // - docs/isa/ (ISA index)
-                // - docs/ir/ (PTO IR ops index)
-                // - docs/grammar/ (Grammar index)
-                // - docs/machine/ (Machine index)
-                // - kernels/ (Kernels index)
-                // - tests/ (Tests index)
-                // - docs/coding/tutorials/ (Tutorials)
-                
-                // 普通文件的特征：
-                // - 包含连字符的名称（如 01-overview, vec-add）
-                // - 特定的文件名（Tile, GlobalTensor, Scalar, Event, ProgrammingModel, tutorial, opt, debug）
-                
-                const pathParts = newHref.split('/').filter(p => p && p !== '..');
-                const lastPart = pathParts[pathParts.length - 1];
-                
-                // 判断是否是 README
-                const isReadme = (
-                    // 顶级目录
-                    ['coding', 'isa', 'ir', 'grammar', 'machine', 'kernels', 'tests', 'docs', 'scripts', 'demos', 'include', 'cmake', 'assembly'].includes(lastPart) ||
-                    // tutorials 子目录
-                    lastPart === 'tutorials' ||
-                    // 其他已知的 README 目录
-                    lastPart === 'script' ||
-                    lastPart === 'package' ||
-                    lastPart === 'custom' ||
-                    lastPart === 'baseline' ||
-                    lastPart === 'add' ||
-                    lastPart === 'gemm_basic' ||
-                    lastPart === 'flash_atten' ||
-                    lastPart === 'gemm_performance' ||
-                    lastPart === 'a2a3' ||
-                    lastPart === 'a5' ||
-                    lastPart === 'kirin9030' ||
-                    lastPart === 'npu' ||
-                    lastPart === 'pto' ||
-                    lastPart === 'reference'
-                );
-                
-                if (isReadme) {
-                    // README: docs/coding/ -> docs/coding/README_zh/
-                    newHref = newHref.replace(/\/$/, '/README_zh/');
-                } else {
-                    // 普通文件: Tile/ -> Tile_zh/
-                    newHref = newHref.replace(/\/([^\/]+)\/$/, '/$1_zh/');
-                }
-            }
-            
-            console.log('Setting href:', originalText, 'from', href, 'to', newHref);
-            link.setAttribute('href', newHref);
-        }
-    });
-    
-    // 翻译导航栏的大标题（caption-text）
-    const captionTexts = document.querySelectorAll('.caption-text');
-    captionTexts.forEach(caption => {
-        const originalText = caption.textContent.trim();
-        
-        if (!originalText) return;
-        
-        // 保存原始文本
-        if (!caption.hasAttribute('data-original-text')) {
-            caption.setAttribute('data-original-text', originalText);
-        }
-        
-        const origText = caption.getAttribute('data-original-text');
-        if (NAV_TRANSLATIONS[origText]) {
-            // 使用 textContent 而不是 innerHTML，避免破坏 DOM 结构
-            caption.textContent = NAV_TRANSLATIONS[origText];
-        }
-        
-        // 阻止标题的点击事件（标题不应该是可点击的）
-        const parent = caption.closest('p.caption');
-        if (parent && !parent.hasAttribute('data-click-protected')) {
-            parent.setAttribute('data-click-protected', 'true');
-            parent.addEventListener('click', function(e) {
-                // 如果点击的是标题本身（不是子链接），阻止默认行为
-                if (e.target === caption || e.target === parent || e.target.classList.contains('caption-text')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Navigation title click prevented');
-                }
-            }, true); // 使用捕获阶段
-        }
-    });
-    
-    // 翻译站点标题
-    const siteTitle = document.querySelector('.wy-side-nav-search a, .navbar-brand');
-    if (siteTitle) {
-        // 保存原始标题
-        if (!siteTitle.hasAttribute('data-original-title')) {
-            siteTitle.setAttribute('data-original-title', siteTitle.textContent);
-        }
-        
-        const origTitle = siteTitle.getAttribute('data-original-title');
-        if (origTitle && origTitle.includes('PTO Virtual ISA')) {
-            siteTitle.textContent = 'PTO 虚拟 ISA 架构手册';
+
+    /**
+     * Resolve a (possibly relative) href to an absolute pathname with
+     * a trailing slash, matching the keys in lang-map.json.
+     */
+    function resolveToAbsPath(href) {
+        if (!href || href.charAt(0) === '#') return null;
+        try {
+            var abs = new URL(href, window.location.href).pathname;
+            if (abs.charAt(abs.length - 1) !== '/') abs += '/';
+            return abs;
+        } catch (_) {
+            return null;
         }
     }
-}
 
-// 恢复英文导航（内部实现）
-function restoreEnglishNavigationInternal() {
-    // 查找所有导航链接
-    const navLinks = document.querySelectorAll('.wy-menu-vertical a, nav a, .toctree-l1 > a, .toctree-l2 > a');
-    
-    navLinks.forEach(link => {
-        // 恢复原始英文文本
-        const originalText = link.getAttribute('data-original-text');
-        if (originalText) {
-            link.textContent = originalText;
-        }
-        
-        // 恢复原始英文链接
-        const originalHref = link.getAttribute('data-original-href');
-        if (originalHref) {
-            link.setAttribute('href', originalHref);
-        }
-    });
-    
-    // 恢复导航栏的大标题
-    const captionTexts = document.querySelectorAll('.caption-text');
-    captionTexts.forEach(caption => {
-        const originalText = caption.getAttribute('data-original-text');
-        if (originalText) {
-            // 使用 textContent 恢复，保持 DOM 结构
-            caption.textContent = originalText;
-        }
-    });
-    
-    // 恢复站点标题
-    const siteTitle = document.querySelector('.wy-side-nav-search a, .navbar-brand');
-    if (siteTitle) {
-        const originalTitle = siteTitle.getAttribute('data-original-title');
-        if (originalTitle) {
-            siteTitle.textContent = originalTitle;
-        }
-    }
-}
+    // ── link rewriting ────────────────────────────────────────────────────────
 
-// 监控导航链接的变化，防止被其他代码修改
-let linkObservers = []; // 保存所有 observers，以便清理
+    function rewriteNavLinksToZh(enToZh) {
+        var links = document.querySelectorAll(
+            '.wy-menu-vertical a, nav a, .toctree-l1 > a, .toctree-l2 > a'
+        );
+        links.forEach(function (link) {
+            if (!link.hasAttribute('data-original-href')) {
+                link.setAttribute('data-original-href', link.getAttribute('href') || '');
+            }
+            var origHref = link.getAttribute('data-original-href');
+            if (!origHref || origHref.charAt(0) === '#' ||
+                origHref.indexOf('http') === 0) return;
 
-function protectNavigationLinks() {
-    // 清理之前的 observers
-    linkObservers.forEach(observer => observer.disconnect());
-    linkObservers = [];
-    
-    const navLinks = document.querySelectorAll('.wy-menu-vertical a[data-original-href]');
-    
-    console.log('Protecting', navLinks.length, 'navigation links');
-    
-    navLinks.forEach(link => {
-        // 方法 1：使用 MutationObserver 监控 href 属性的变化
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
-                    const currentHref = link.getAttribute('href');
-                    const originalHref = link.getAttribute('data-original-href');
-                    
-                    // 如果当前语言是中文，计算正确的中文链接
-                    const preferredLang = localStorage.getItem('preferred_language') || 'en';
-                    if (preferredLang === 'zh' && originalHref) {
-                        let expectedHref = calculateChineseHref(originalHref, link);
-                        
-                        // 如果 href 被修改为英文链接，立即恢复为中文链接
-                        if (currentHref !== expectedHref && !currentHref.includes('_zh')) {
-                            console.log('Link modified! Restoring:', currentHref, '->', expectedHref);
-                            link.setAttribute('href', expectedHref);
-                        }
-                    }
-                }
-            });
+            var absPath = resolveToAbsPath(origHref);
+            if (!absPath) return;
+
+            var zhHref = enToZh[absPath];
+            if (zhHref) link.setAttribute('href', zhHref);
         });
-        
-        // 开始监控
-        observer.observe(link, {
-            attributes: true,
-            attributeFilter: ['href']
+    }
+
+    function restoreNavLinksToEn() {
+        var links = document.querySelectorAll(
+            '.wy-menu-vertical a, nav a, .toctree-l1 > a, .toctree-l2 > a'
+        );
+        links.forEach(function (link) {
+            var orig = link.getAttribute('data-original-href');
+            if (orig != null) link.setAttribute('href', orig);
         });
-        
-        linkObservers.push(observer);
-        
-        // 方法 2：在点击时拦截并确保链接正确
-        link.addEventListener('click', function(e) {
-            const preferredLang = localStorage.getItem('preferred_language') || 'en';
-            if (preferredLang === 'zh') {
-                const currentHref = this.getAttribute('href');
-                const originalHref = this.getAttribute('data-original-href');
-                
-                if (originalHref) {
-                    const expectedHref = calculateChineseHref(originalHref, this);
-                    
-                    // 如果当前 href 不是中文链接，阻止默认行为并手动跳转
-                    if (currentHref !== expectedHref) {
-                        console.log('Click intercepted! Redirecting from', currentHref, 'to', expectedHref);
+    }
+
+    // ── text translation ──────────────────────────────────────────────────────
+
+    function translateTextLabels() {
+        var links = document.querySelectorAll(
+            '.wy-menu-vertical a, nav a, .toctree-l1 > a, .toctree-l2 > a'
+        );
+        links.forEach(function (link) {
+            var orig = link.textContent.trim();
+            if (!orig) return;
+            if (!link.hasAttribute('data-original-text')) {
+                link.setAttribute('data-original-text', orig);
+            }
+            var key = link.getAttribute('data-original-text');
+            if (NAV_TRANSLATIONS[key]) link.textContent = NAV_TRANSLATIONS[key];
+        });
+
+        var captions = document.querySelectorAll('.caption-text');
+        captions.forEach(function (caption) {
+            var orig = caption.textContent.trim();
+            if (!orig) return;
+            if (!caption.hasAttribute('data-original-text')) {
+                caption.setAttribute('data-original-text', orig);
+            }
+            var key = caption.getAttribute('data-original-text');
+            if (NAV_TRANSLATIONS[key]) caption.textContent = NAV_TRANSLATIONS[key];
+
+            var parent = caption.closest('p.caption');
+            if (parent && !parent.hasAttribute('data-click-protected')) {
+                parent.setAttribute('data-click-protected', 'true');
+                parent.addEventListener('click', function (e) {
+                    if (e.target === caption || e.target === parent ||
+                        e.target.classList.contains('caption-text')) {
                         e.preventDefault();
                         e.stopPropagation();
-                        window.location.href = expectedHref;
                     }
-                }
+                }, true);
             }
-        }, true); // 使用捕获阶段，优先于其他事件处理器
-    });
-}
+        });
 
-// 计算中文链接的辅助函数
-function calculateChineseHref(originalHref, linkElement) {
-    let expectedHref = originalHref;
-    
-    // 转换为中文链接
-    if (expectedHref === '../..' || expectedHref === '../../' || 
-        expectedHref === '../../..' || expectedHref === '../../../' ||
-        expectedHref === '/' || expectedHref === '/index.html' ||
-        expectedHref === '/.' || expectedHref === '/..' || expectedHref === '/../' ||
-        expectedHref === '..' || expectedHref === '..') {
-        expectedHref = '/index_zh/';
-    } else if (expectedHref === './' || expectedHref === '.') {
-        expectedHref = './README_zh/';
-    } else if (expectedHref === '../' || expectedHref === '..') {
-        // 父目录：需要根据上下文判断
-        const currentPath = window.location.pathname;
-        const origText = linkElement ? linkElement.getAttribute('data-original-text') : '';
-        
-        // 提取当前目录路径（去掉 README_zh/ 或 index_zh/）
-        let currentDir = currentPath;
-        if (currentPath.endsWith('/README_zh/')) {
-            currentDir = currentPath.replace(/\/README_zh\/$/, '/');
-        } else if (currentPath.endsWith('/index_zh/')) {
-            currentDir = currentPath.replace(/\/index_zh\/$/, '/');
+        var siteTitle = document.querySelector('.wy-side-nav-search a, .navbar-brand');
+        if (siteTitle) {
+            if (!siteTitle.hasAttribute('data-original-title')) {
+                siteTitle.setAttribute('data-original-title', siteTitle.textContent);
+            }
+            if ((siteTitle.getAttribute('data-original-title') || '').indexOf('PTO Virtual ISA') !== -1) {
+                siteTitle.textContent = 'PTO \u865a\u62df ISA \u67b6\u6784\u624b\u518c';
+            }
         }
-        
-        // 自引用的条件：../ 指向的目录就是当前目录（去掉 README_zh 后）
-        const isCurrentDirSelfReference = (currentPath.includes('/README_zh/') || currentPath.includes('/index_zh/')) && 
-            origText && (
-                origText.toLowerCase() === 'overview' ||
-                origText.toLowerCase() === '概述' ||
-                origText.toLowerCase().includes('index') ||
-                origText.toLowerCase().includes('索引')
-            );
-        
-        if (isCurrentDirSelfReference) {
-            // 自引用，使用当前页面的绝对路径
-            expectedHref = currentPath;
-        } else {
-            // 真正的父目录引用
-            expectedHref = '../README_zh/';
-        }
-    } else if (expectedHref.endsWith('/manual/') || expectedHref === 'manual/') {
-        expectedHref = expectedHref.replace(/manual\/$/, 'manual/index_zh/');
-    } else if (expectedHref.endsWith('/')) {
-        const pathParts = expectedHref.split('/').filter(p => p && p !== '..');
-        const lastPart = pathParts[pathParts.length - 1];
-        
-        const isReadme = (
-            ['coding', 'isa', 'ir', 'grammar', 'machine', 'kernels', 'tests', 'docs', 'scripts', 'demos', 'include', 'cmake', 'assembly'].includes(lastPart) ||
-            lastPart === 'tutorials' ||
-            lastPart === 'script' || lastPart === 'package' || lastPart === 'custom' ||
-            lastPart === 'baseline' || lastPart === 'add' || lastPart === 'gemm_basic' ||
-            lastPart === 'flash_atten' || lastPart === 'gemm_performance' ||
-            lastPart === 'a2a3' || lastPart === 'a5' || lastPart === 'kirin9030' ||
-            lastPart === 'npu' || lastPart === 'pto' || lastPart === 'reference'
+    }
+
+    function restoreTextLabels() {
+        var links = document.querySelectorAll(
+            '.wy-menu-vertical a, nav a, .toctree-l1 > a, .toctree-l2 > a'
         );
-        
-        if (isReadme) {
-            expectedHref = expectedHref.replace(/\/$/, '/README_zh/');
-        } else {
-            expectedHref = expectedHref.replace(/\/([^\/]+)\/$/, '/$1_zh/');
+        links.forEach(function (link) {
+            var orig = link.getAttribute('data-original-text');
+            if (orig) link.textContent = orig;
+        });
+
+        var captions = document.querySelectorAll('.caption-text');
+        captions.forEach(function (caption) {
+            var orig = caption.getAttribute('data-original-text');
+            if (orig) caption.textContent = orig;
+        });
+
+        var siteTitle = document.querySelector('.wy-side-nav-search a, .navbar-brand');
+        if (siteTitle) {
+            var orig = siteTitle.getAttribute('data-original-title');
+            if (orig) siteTitle.textContent = orig;
         }
     }
-    
-    return expectedHref;
-}
 
-// 停止保护（切换回英文时）
-function stopProtectingLinks() {
-    linkObservers.forEach(observer => observer.disconnect());
-    linkObservers = [];
-}
+    // ── auto-apply on ZH pages ────────────────────────────────────────────────
 
-// 导出函数供语言切换器使用
-window.translateNavigation = function(targetLang) {
-    translateNavigationInternal(targetLang);
-    if (targetLang === 'zh') {
-        // 延迟一点启动保护，确保翻译完成
-        setTimeout(protectNavigationLinks, 100);
+    /**
+     * On a Chinese page, rewrite nav links immediately using the cached map
+     * so every sidebar link points to the correct ZH page.
+     */
+    function autoApplyOnZhPage() {
+        if (getCurrentLanguage() !== 'zh') return;
+        var loader = window.loadLangMap ? window.loadLangMap() : Promise.resolve(null);
+        loader.then(function (map) {
+            if (!map) return;
+            translateTextLabels();
+            rewriteNavLinksToZh(map.en_to_zh);
+            // Re-apply after a short delay to catch any links rendered late by the theme.
+            setTimeout(function () { rewriteNavLinksToZh(map.en_to_zh); }, 300);
+        });
     }
-};
 
-window.restoreEnglishNavigation = function() {
-    stopProtectingLinks();
-    restoreEnglishNavigationInternal();
-};
+    function init() {
+        // Auto-apply on ZH pages: rewrite nav links and translate labels.
+        autoApplyOnZhPage();
+    }
 
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // ── public API ────────────────────────────────────────────────────────────
+
+    window.translateNavigation = function (targetLang) {
+        if (targetLang !== 'zh') return;
+        var loader = window.loadLangMap ? window.loadLangMap() : Promise.resolve(null);
+        loader.then(function (map) {
+            translateTextLabels();
+            if (map) rewriteNavLinksToZh(map.en_to_zh);
+        });
+    };
+
+    window.restoreEnglishNavigation = function () {
+        restoreTextLabels();
+        restoreNavLinksToEn();
+    };
+
+})();
+ 

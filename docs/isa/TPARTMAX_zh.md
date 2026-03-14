@@ -10,14 +10,14 @@
 
 ## 数学语义
 
-对每个元素 `(i, j)` 在目标有效区域中：
+对目标有效区域内的每个元素 `(i, j)`：
 
 $$
 \mathrm{dst}_{i,j} =
-\b\begin{cases}
-\max(\mathrm{src0}_{i,j}, \mathrm{src1}_{i,j}) & \text{如果两个输入在 } (i,j) \text{ 处有定义} \text{ 处都有定义} \\
-\mathrm{src0}_{i,j} & \text{如果只有 src0 在 } (i,j) \text{ 处有定义} \text{ 处都有定义} \\
-\mathrm{src1}_{i,j} & \text{如果只有 src1 在 } (i,j) \text{ 处有定义}
+\begin{cases}
+\max(\mathrm{src0}_{i,j}, \mathrm{src1}_{i,j}) & \text{若两个输入在 } (i,j) \text{ 处均有定义} \\\\
+\mathrm{src0}_{i,j} & \text{若仅 src0 在 } (i,j) \text{ 处有定义} \\\\
+\mathrm{src1}_{i,j} & \text{若仅 src1 在 } (i,j) \text{ 处有定义}
 \end{cases}
 $$
 
@@ -55,14 +55,14 @@ PTO_INST RecordEvent TPARTMAX(TileDataDst& dst, TileDataSrc0& src0, TileDataSrc1
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `dst/src0/src1` element types 必须是 identical,且必须是以下之一： `int32_t`, `int16_t`, `half`, `float`.
-  - All three tiles 必须是 行主序 (`isRowMajor`）。
-  - 运行时： if `dst.GetValidRow() == 0`或`dst.GetValidCol() == 0`, the op returns early.
-  - 运行时： the implementation requires at least one input's valid region to match `dst`'s valid region,且the onther's valid region not greater than `dst`'s valid region (otherwise it asserts).
+  - `dst`/`src0`/`src1` 元素类型必须相同，且必须是以下之一：`int32_t`、`int16_t`、`half`、`float`。
+  - 三个 Tile 都必须是行主序（`isRowMajor`）。
+  - 运行时：若 `dst.GetValidRow() == 0` 或 `dst.GetValidCol() == 0`，操作提前返回。
+  - 运行时：实现要求至少一个输入的有效区域与 `dst` 的有效区域匹配，另一个输入的有效区域不大于 `dst` 的有效区域（否则断言失败）。
 - **实现检查 (A5)**:
-  - `dst/src0/src1` element types 必须是 identical且必须是以下之一： `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `bfloat16_t`, `float`.
-  - 运行时： if any of `src0/src1/dst` has a zero valid region, the op returns early.
-  - Requires `src0`且`src1` valid region to be `<= dst` valid region in 都dimensions; other patterns are not supported (target-defined behavior).
+  - `dst`/`src0`/`src1` 元素类型必须相同，且必须是以下之一：`int8_t`、`uint8_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`bfloat16_t`、`float`。
+  - 运行时：若 `src0`/`src1`/`dst` 中任意一个的有效区域为零，操作提前返回。
+  - 要求 `src0` 和 `src1` 的有效区域在两个维度上均不超过 `dst` 的有效区域；其他模式不受支持（由目标定义行为）。
 
 ## 示例
 
@@ -123,4 +123,3 @@ void example_manual() {
 # IR Level 2 (DPS)
 pto.tpartmax ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
-

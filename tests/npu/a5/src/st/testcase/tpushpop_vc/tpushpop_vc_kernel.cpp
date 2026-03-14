@@ -13,6 +13,8 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 using namespace pto;
 
+#define VEC_CORES 2
+
 #ifdef __DAV_CUBE__
 constexpr bool DAV_CUBE = true;
 #else
@@ -35,28 +37,28 @@ AICORE constexpr inline T CeilAlign(T num_1, T num_2)
 }
 
 template <typename QuantT, typename InT, typename OutT, int TOTAL_M, int TOTAL_K, int N, int CASE_TILE_K>
-__global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ OutT *out, __gm__ InT *srcA,
-                                           __gm__ QuantT *quantB, __gm__ OutT *scale, __gm__ OutT *offset,
-                                           __gm__ OutT *fifoMem)
+__global__ AICORE void runTPushPopVCMatmul(__gm__ OutT *out, __gm__ InT *srcA, __gm__ QuantT *quantB,
+                                           __gm__ OutT *scale, __gm__ OutT *offset)
 {
-    set_ffts_base_addr((uint64_t)ffts_addr);
     constexpr uint32_t TILE_K = CASE_TILE_K;
-    constexpr uint32_t HALF_TILE_K = TILE_K / 2;
+    constexpr uint32_t HALF_TILE_K = TILE_K / VEC_CORES;
     constexpr uint32_t TILE_N = N;
     constexpr uint32_t NUM_K_TILES = TOTAL_K / CASE_TILE_K;
 
     constexpr uint16_t FLAG_ID = 0;
     constexpr uint8_t FIFO_DEPTH = 2;
     constexpr uint8_t FIFO_PERIOD = 1;
-    // fifo base used for TPOP of cube side (bMatTile)
-    constexpr uint32_t localFiFoBase = 0x20000;
 
     using VecTileProd = Tile<TileType::Vec, OutT, HALF_TILE_K, TILE_N, BLayout::RowMajor, HALF_TILE_K, TILE_N>;
+    using VecTileNZ =
+        Tile<TileType::Vec, OutT, HALF_TILE_K, TILE_N, BLayout::ColMajor, HALF_TILE_K, TILE_N, SLayout::RowMajor, 512>;
     using MatTileCons =
         Tile<TileType::Mat, OutT, TILE_K, TILE_N, BLayout::ColMajor, TILE_K, TILE_N, SLayout::RowMajor, 512>;
 
-    using MatPipe = TPipe<FLAG_ID, FIFOType::GM_FIFO, FIFO_DEPTH, FIFO_PERIOD, VecTileProd, MatTileCons>;
-    MatPipe mPipe(fifoMem, localFiFoBase);
+    using MatPipe = TPipe<FLAG_ID, FIFOType::MAT_FIFO, FIFO_DEPTH, FIFO_PERIOD, VecTileNZ, MatTileCons>;
+
+    MatTileCons matFifoTile;
+    MatPipe mPipe((uint32_t)0x10000);
 
     constexpr uint32_t blockAlign = C0_SIZE_BYTE / sizeof(InT);
     constexpr uint32_t ALIGNED_M = CeilAlign<uint32_t>(TOTAL_M, 16);
@@ -83,10 +85,12 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ Ou
     if constexpr (DAV_VEC) {
         QuantTile quantTile;
         VecTileProd dequantTile;
+        VecTileNZ dequantTileNZ;
         ScaleTile scaleTile(HALF_TILE_K, 1);
         OffsetTile offsetTile(HALF_TILE_K, 1);
         TASSIGN(quantTile, 0x0);
         TASSIGN(dequantTile, 0x10000);
+        TASSIGN(dequantTileNZ, 0x18000);
         TASSIGN(scaleTile, 0x20000);
         TASSIGN(offsetTile, 0x28000);
 
@@ -100,7 +104,6 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ Ou
             GlobalTensor<OutT, pto::Shape<1, 1, 1, HALF_TILE_K, 1>, pto::Stride<TOTAL_K, TOTAL_K, HALF_TILE_K, 1, 1>>;
 
         uint32_t subBlockIdx = get_subblockid();
-        size_t entryOffsetVal = subBlockIdx * HALF_TILE_K * TILE_N * sizeof(OutT);
 
         for (int k_tile = 0; k_tile < NUM_K_TILES; k_tile++) {
             GlobalQuantB globalQuantB(quantB + k_tile * TILE_K * TILE_N + subBlockIdx * HALF_TILE_K * TILE_N);
@@ -119,14 +122,14 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ Ou
             wait_flag(PIPE_MTE3, PIPE_V, EVENT_ID1);
 
             TDEQUANT(dequantTile, quantTile, scaleTile, offsetTile);
+            TMOV(dequantTileNZ, dequantTile);
 
             set_flag(PIPE_V, PIPE_MTE2, EVENT_ID1);
 
             set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
             wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
 
-            mPipe.prod.setEntryOffset(entryOffsetVal);
-            TPUSH(dequantTile, mPipe);
+            TPUSH(dequantTileNZ, mPipe);
             set_flag(PIPE_MTE3, PIPE_V, EVENT_ID1);
         }
 
@@ -138,7 +141,6 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ Ou
 
     if constexpr (DAV_CUBE) {
         TileMatA aMatTile;
-        PopTile bMatTile;
         TASSIGN(aMatTile, 0x0);
 
         LeftTile aTile;
@@ -147,8 +149,6 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ Ou
         TASSIGN(aTile, 0x0);
         TASSIGN(bTile, 0x0);
         TASSIGN(accTile, 0x0);
-
-        typename MatPipe::Consumer cons;
 
         set_flag(PIPE_MTE1, PIPE_MTE2, EVENT_ID1);
         set_flag(PIPE_M, PIPE_MTE1, EVENT_ID1);
@@ -159,8 +159,7 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ Ou
             wait_flag(PIPE_MTE1, PIPE_MTE2, EVENT_ID1);
 
             TLOAD(aMatTile, globalA);
-
-            TPOP(bMatTile, mPipe);
+            TPOP(matFifoTile, mPipe);
 
             set_flag(PIPE_MTE2, PIPE_MTE1, EVENT_ID0);
             wait_flag(PIPE_MTE2, PIPE_MTE1, EVENT_ID0);
@@ -168,7 +167,8 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ Ou
             wait_flag(PIPE_M, PIPE_MTE1, EVENT_ID1);
 
             TMOV(aTile, aMatTile);
-            TMOV(bTile, bMatTile);
+            TMOV(bTile, matFifoTile);
+            TFREE(mPipe);
 
             set_flag(PIPE_MTE1, PIPE_M, EVENT_ID0);
             wait_flag(PIPE_MTE1, PIPE_M, EVENT_ID0);
@@ -198,51 +198,44 @@ __global__ AICORE void runTPushPopVCMatmul(__gm__ uint64_t *ffts_addr, __gm__ Ou
 }
 
 template <int32_t tilingKey>
-void LaunchTPushPopVCMatmul(uint8_t *ffts, uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale,
-                            uint8_t *offset, uint8_t *fifoMem, void *stream)
+void LaunchTPushPopVCMatmul(uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale, uint8_t *offset, void *stream)
 {
     if constexpr (tilingKey == 1) {
         runTPushPopVCMatmul<int8_t, float, float, 16, 64, 32, 64><<<1, nullptr, stream>>>(
-            reinterpret_cast<uint64_t *>(ffts), reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA),
-            reinterpret_cast<int8_t *>(quantB), reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset),
-            reinterpret_cast<float *>(fifoMem));
+            reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA), reinterpret_cast<int8_t *>(quantB),
+            reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset));
     } else if constexpr (tilingKey == 2) {
         runTPushPopVCMatmul<int8_t, float, float, 16, 128, 32, 64><<<1, nullptr, stream>>>(
-            reinterpret_cast<uint64_t *>(ffts), reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA),
-            reinterpret_cast<int8_t *>(quantB), reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset),
-            reinterpret_cast<float *>(fifoMem));
+            reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA), reinterpret_cast<int8_t *>(quantB),
+            reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset));
     } else if constexpr (tilingKey == 3) {
         runTPushPopVCMatmul<int8_t, float, float, 16, 256, 32, 64><<<1, nullptr, stream>>>(
-            reinterpret_cast<uint64_t *>(ffts), reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA),
-            reinterpret_cast<int8_t *>(quantB), reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset),
-            reinterpret_cast<float *>(fifoMem));
+            reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA), reinterpret_cast<int8_t *>(quantB),
+            reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset));
     } else if constexpr (tilingKey == 4) {
         runTPushPopVCMatmul<int16_t, float, float, 16, 64, 32, 64><<<1, nullptr, stream>>>(
-            reinterpret_cast<uint64_t *>(ffts), reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA),
-            reinterpret_cast<int16_t *>(quantB), reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset),
-            reinterpret_cast<float *>(fifoMem));
+            reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA), reinterpret_cast<int16_t *>(quantB),
+            reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset));
     } else if constexpr (tilingKey == 5) {
         runTPushPopVCMatmul<int16_t, float, float, 16, 128, 32, 64><<<1, nullptr, stream>>>(
-            reinterpret_cast<uint64_t *>(ffts), reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA),
-            reinterpret_cast<int16_t *>(quantB), reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset),
-            reinterpret_cast<float *>(fifoMem));
+            reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA), reinterpret_cast<int16_t *>(quantB),
+            reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset));
     } else if constexpr (tilingKey == 6) {
         runTPushPopVCMatmul<int16_t, float, float, 16, 256, 32, 64><<<1, nullptr, stream>>>(
-            reinterpret_cast<uint64_t *>(ffts), reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA),
-            reinterpret_cast<int16_t *>(quantB), reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset),
-            reinterpret_cast<float *>(fifoMem));
+            reinterpret_cast<float *>(out), reinterpret_cast<float *>(srcA), reinterpret_cast<int16_t *>(quantB),
+            reinterpret_cast<float *>(scale), reinterpret_cast<float *>(offset));
     }
 }
 
-template void LaunchTPushPopVCMatmul<1>(uint8_t *ffts, uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale,
-                                        uint8_t *offset, uint8_t *fifoMem, void *stream);
-template void LaunchTPushPopVCMatmul<2>(uint8_t *ffts, uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale,
-                                        uint8_t *offset, uint8_t *fifoMem, void *stream);
-template void LaunchTPushPopVCMatmul<3>(uint8_t *ffts, uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale,
-                                        uint8_t *offset, uint8_t *fifoMem, void *stream);
-template void LaunchTPushPopVCMatmul<4>(uint8_t *ffts, uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale,
-                                        uint8_t *offset, uint8_t *fifoMem, void *stream);
-template void LaunchTPushPopVCMatmul<5>(uint8_t *ffts, uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale,
-                                        uint8_t *offset, uint8_t *fifoMem, void *stream);
-template void LaunchTPushPopVCMatmul<6>(uint8_t *ffts, uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale,
-                                        uint8_t *offset, uint8_t *fifoMem, void *stream);
+template void LaunchTPushPopVCMatmul<1>(uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale, uint8_t *offset,
+                                        void *stream);
+template void LaunchTPushPopVCMatmul<2>(uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale, uint8_t *offset,
+                                        void *stream);
+template void LaunchTPushPopVCMatmul<3>(uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale, uint8_t *offset,
+                                        void *stream);
+template void LaunchTPushPopVCMatmul<4>(uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale, uint8_t *offset,
+                                        void *stream);
+template void LaunchTPushPopVCMatmul<5>(uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale, uint8_t *offset,
+                                        void *stream);
+template void LaunchTPushPopVCMatmul<6>(uint8_t *out, uint8_t *srcA, uint8_t *quantB, uint8_t *scale, uint8_t *offset,
+                                        void *stream);

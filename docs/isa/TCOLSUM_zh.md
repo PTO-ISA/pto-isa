@@ -10,11 +10,11 @@
 
 ## 数学语义
 
-Let `R = src.GetValidRow()` and `C = src.GetValidCol()`. For `0 <= j < C`:
+设 `R = src.GetValidRow()`，`C = src.GetValidCol()`。对 `0 <= j < C`：
 
 $$ \mathrm{dst}_{0,j} = \sum_{i=0}^{R-1} \mathrm{src}_{i,j} $$
 
-`isBinary` selects the implementation path (binary-tree accumulation vs. sequential accumulation).
+`isBinary` 选择实现路径（二叉树累加 vs. 顺序累加）。
 
 ## 汇编语法
 
@@ -25,7 +25,7 @@ PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 ```text
 %dst = tcolsum %src {isBinary = false} : !pto.tile<...> -> !pto.tile<...>
 ```
-Lowering may introduce internal scratch tiles; the C++ intrinsic requires an explicit `tmp` operand.
+降低时可能引入内部临时 Tile；C++ 内建接口需要显式传入 `tmp` 操作数。
 
 ### AS Level 1（SSA）
 
@@ -55,14 +55,14 @@ PTO_INST RecordEvent TCOLSUM(TileDataOut& dst, TileDataIn& src, TileDataTmp& tmp
 
 实现检查 (NPU):
 
-- Tile 位置: `dst`, `src`, `tmp` 必须是 `TileType::Vec`.
-- Tile 布局: 所有tiles 必须是 ND 分形（`isRowMajor`且`SLayout::NoneBox`）。
-- 数据类型一致性:
-  - A2A3: `src.DType` 必须是 one of `half`, `float`, `int16_t`, `int32_t`,且`dst.DType == tmp.DType == src.DType`.
+- Tile 位置：`dst`、`src`、`tmp` 必须是 `TileType::Vec`。
+- Tile 布局：所有 Tile 必须是 ND 分形（`isRowMajor` 且 `SLayout::NoneBox`）。
+- 数据类型一致性：
+  - A2A3：`src.DType` 必须是 `half`、`float`、`int16_t`、`int32_t` 之一，且 `dst.DType == tmp.DType == src.DType`。
   - A5：`TColReduceCheck` 要求 `dst.DType == src.DType`；确切支持的 `src.DType` 集合由目标定义（参见 `include/pto/npu/a5/TColReduceOps.hpp`）。
-- 运行期有效区域检查:
-  - A2A3: `src.GetValidCol() == dst.GetValidCol()`; returns early if `src.GetValidRow() == 0`或`src.GetValidCol() == 0`.
-  - A5: `srcValidRow`且`srcValidCol` 必须是 non-zero; `srcValidCol == dstValidCol` is asserted by `TColReduceCheck`.
+- 运行期有效区域检查：
+  - A2A3：`src.GetValidCol() == dst.GetValidCol()`；若 `src.GetValidRow() == 0` 或 `src.GetValidCol() == 0` 则提前返回。
+  - A5：`srcValidRow` 和 `srcValidCol` 必须非零；`TColReduceCheck` 断言 `srcValidCol == dstValidCol`。
 
 ## 示例
 

@@ -401,14 +401,3 @@ python scripts/test_compatibility.py \
 # 查看测试报告
 cat compatibility_report.txt
 ```
-
----
-
-## 参考资源
-
-- [发布说明](../../CHANGELOG.md)
-- [API 文档](../api/README_zh.md)
-- [迁移脚本](../../scripts/migrate_v0_to_v1.py)
-- [兼容性测试](../../tests/compatibility/README_zh.md)
-- [常见问题](../faq_zh.md)
-

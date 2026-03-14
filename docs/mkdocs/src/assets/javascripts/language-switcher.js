@@ -8,297 +8,186 @@
 // See LICENSE in the root of the software repository for the full text of the License.
 // --------------------------------------------------------------------------------
 
-// Simple language switcher without i18n plugin
-(function() {
+/**
+ * Language switcher — static-map edition.
+ *
+ * At build time gen_pages.py emits /lang-map.json which contains the complete
+ * en⇔zh URL mapping for every page in the nav.  This module fetches that map
+ * once (cached in sessionStorage), then switches pages with a direct lookup —
+ * no heuristics, no per-page fetch, no MutationObserver overhead.
+ */
+(function () {
     'use strict';
 
-    // LocalStorage 键
-    const LANG_PREFERENCE_KEY = 'preferred_language';
-    
-    // 获取用户偏好语言
+    const LANG_KEY = 'preferred_language';
+    const MAP_CACHE_KEY = 'lang_map_cache_v2';
+    const LANG_MAP_URL = '/lang-map.json';
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
     function getPreferredLanguage() {
-        return localStorage.getItem(LANG_PREFERENCE_KEY) || 'en';
+        return localStorage.getItem(LANG_KEY) || 'en';
     }
-    
-    // 设置用户偏好语言
+
     function setPreferredLanguage(lang) {
-        localStorage.setItem(LANG_PREFERENCE_KEY, lang);
+        localStorage.setItem(LANG_KEY, lang);
     }
-    
-    // 检测当前页面语言
+
     function getCurrentLanguage() {
-        const path = window.location.pathname;
-        if (path.includes('_zh/') || path.endsWith('_zh.html') || path.includes('_zh/index.html')) {
-            return 'zh';
-        }
-        return 'en';
+        const p = window.location.pathname;
+        return (p.includes('_zh/') || p.endsWith('_zh.html')) ? 'zh' : 'en';
     }
-    
-    // 获取切换后的 URL
-    function getAlternateUrl(targetLang) {
-        let currentPath = window.location.pathname;
-        const currentLang = getCurrentLanguage();
-        
-        if (currentLang === targetLang) {
-            return currentPath;
-        }
-        
+
+    // ── map loading (fetch once, cache in sessionStorage) ────────────────────
+
+    let _mapPromise = null;
+
+    function loadLangMap() {
+        if (_mapPromise) return _mapPromise;
+
+        // Try sessionStorage first to avoid repeated fetches within a session.
+        try {
+            const cached = sessionStorage.getItem(MAP_CACHE_KEY);
+            if (cached) {
+                const map = JSON.parse(cached);
+                _mapPromise = Promise.resolve(map);
+                return _mapPromise;
+            }
+        } catch (_) { /* ignore */ }
+
+        _mapPromise = fetch(LANG_MAP_URL)
+            .then(r => {
+                if (!r.ok) throw new Error('lang-map.json not found');
+                return r.json();
+            })
+            .then(map => {
+                try { sessionStorage.setItem(MAP_CACHE_KEY, JSON.stringify(map)); } catch (_) { }
+                return map;
+            })
+            .catch(err => {
+                console.warn('[lang-switcher] Could not load lang-map.json:', err);
+                _mapPromise = null;
+                return null;
+            });
+
+        return _mapPromise;
+    }
+
+    // Expose for chinese-navigation.js
+    window.loadLangMap = loadLangMap;
+
+    // ── URL lookup ───────────────────────────────────────────────────────────
+
+    function getAlternateUrl(map, targetLang) {
+        if (!map) return null;
+        const cur = window.location.pathname;
         if (targetLang === 'zh') {
-            // 切换到中文
-            // / → /index_zh/
-            // /manual/ → /manual/index_zh/
-            // /kernels/ → /kernels/README_zh/
-            // /docs/ → /docs/README_zh/
-            // /manual/01-overview/ → /manual/01-overview_zh/
-            
-            // 特殊处理：根目录首页
-            if (currentPath === '/' || currentPath === '/index.html') {
-                return '/index_zh/';
-            }
-            
-            // 移除末尾的斜杠
-            if (currentPath.endsWith('/')) {
-                currentPath = currentPath.slice(0, -1);
-            }
-            
-            // 特殊处理：manual 目录的 index
-            if (currentPath === '/manual' || currentPath === '/manual/index.html') {
-                return '/manual/index_zh/';
-            }
-            
-            // 检查是否是 README 页面（通过检查路径模式）
-            // 常见的 README 目录：docs, kernels, tests, demos, include, scripts 等
-            const readmeDirs = [
-                'docs', 'kernels', 'tests', 'demos', 'include', 'scripts', 
-                'machine', 'isa', 'ir', 'coding', 'grammar', 'cmake', 'assembly',
-                'manual/a2a3', 'manual/a5', 'baseline', 'torch_jit',
-                'custom', 'package', 'npu', 'a2a3', 'a5', 'kirin9030',
-                'pto', 'flash_atten', 'gemm_performance', 'topk',
-                'matmul_mxfp4_performance', 'matmul_mxfp8_performance',
-                'add', 'gemm_basic', 'script'
-            ];
-            
-            // 检查路径是否以这些目录结尾（表示是 README）
-            const parts = currentPath.split('/').filter(p => p);
-            const lastPart = parts[parts.length - 1];
-            
-            // 如果最后一部分匹配 README 目录，添加 README_zh
-            if (readmeDirs.includes(lastPart)) {
-                return currentPath + '/README_zh/';
-            }
-            
-            // 检查是否是多级目录的 README（如 kernels/manual/a2a3/gemm_performance）
-            const lastTwoParts = parts.slice(-2).join('/');
-            const lastThreeParts = parts.slice(-3).join('/');
-            const lastFourParts = parts.slice(-4).join('/');
-            
-            if (readmeDirs.includes(lastTwoParts) || 
-                readmeDirs.includes(lastThreeParts) ||
-                readmeDirs.includes(lastFourParts)) {
-                return currentPath + '/README_zh/';
-            }
-            
-            // 普通页面
-            return currentPath + '_zh/';
+            return map.en_to_zh[cur] || null;
         } else {
-            // 切换到英文
-            // /index_zh/ → /
-            // /manual/index_zh/ → /manual/
-            // /kernels/README_zh/ → /kernels/
-            // /manual/01-overview_zh/ → /manual/01-overview/
-            
-            if (currentPath === '/index_zh/' || currentPath === '/index_zh/index.html') {
-                return '/';
-            }
-            
-            if (currentPath === '/manual/index_zh/' || currentPath === '/manual/index_zh/index.html') {
-                return '/manual/';
-            }
-            
-            return currentPath.replace(/\/README_zh\/$/, '/').replace(/\/index_zh\/$/, '/').replace(/_zh\/$/, '/');
+            return map.zh_to_en[cur] || null;
         }
     }
-    
-    // 创建语言切换器 UI
-    function createLanguageSwitcher() {
-        const preferredLang = getPreferredLanguage();
-        
+
+    // ── UI ───────────────────────────────────────────────────────────────────
+
+    function createSwitcher(preferredLang) {
         const container = document.createElement('div');
         container.id = 'language-switcher';
-        container.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 5px 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            font-family: sans-serif;
-            font-size: 14px;
-        `;
-        
-        const languages = [
-            { code: 'en', name: 'English', flag: '🇬🇧' },
-            { code: 'zh', name: '中文', flag: '🇨🇳' }
+        container.style.cssText = [
+            'position:fixed', 'top:10px', 'right:10px', 'z-index:1000',
+            'background:#fff', 'border:1px solid #ccc', 'border-radius:4px',
+            'padding:5px 10px', 'box-shadow:0 2px 4px rgba(0,0,0,.1)',
+            'font-family:sans-serif', 'font-size:14px',
+        ].join(';');
+
+        const langs = [
+            { code: 'en', label: '\uD83C\uDDEC\uD83C\uDDE7 English' },
+            { code: 'zh', label: '\uD83C\uDDE8\uD83C\uDDF3 \u4E2D\u6587' },
         ];
-        
-        languages.forEach((lang, index) => {
-            if (index > 0) {
-                const separator = document.createElement('span');
-                separator.textContent = ' | ';
-                separator.style.color = '#999';
-                container.appendChild(separator);
+
+        langs.forEach((lang, i) => {
+            if (i > 0) {
+                const sep = document.createElement('span');
+                sep.textContent = ' | ';
+                sep.style.color = '#999';
+                container.appendChild(sep);
             }
-            
-            const link = document.createElement('a');
-            link.href = '#';
-            link.textContent = `${lang.flag} ${lang.name}`;
-            link.style.cssText = `
-                text-decoration: none;
-                color: ${preferredLang === lang.code ? '#2980b9' : '#333'};
-                font-weight: ${preferredLang === lang.code ? 'bold' : 'normal'};
-                cursor: pointer;
-            `;
-            
-            link.addEventListener('click', function(e) {
+
+            const a = document.createElement('a');
+            a.href = '#';
+            a.textContent = lang.label;
+            a.dataset.langCode = lang.code;
+            a.style.cssText = [
+                'text-decoration:none',
+                'cursor:pointer',
+                `color:${preferredLang === lang.code ? '#2980b9' : '#333'}`,
+                `font-weight:${preferredLang === lang.code ? 'bold' : 'normal'}`,
+            ].join(';');
+
+            a.addEventListener('click', function (e) {
                 e.preventDefault();
-                
-                // 保存语言偏好
-                setPreferredLanguage(lang.code);
-                
-                // 更新 UI
-                languages.forEach(l => {
-                    const links = container.querySelectorAll('a');
-                    links.forEach(link => {
-                        if (link.textContent.includes(l.name)) {
-                            link.style.color = l.code === lang.code ? '#2980b9' : '#333';
-                            link.style.fontWeight = l.code === lang.code ? 'bold' : 'normal';
-                        }
-                    });
+                const targetLang = lang.code;
+                setPreferredLanguage(targetLang);
+
+                // Update switcher appearance immediately.
+                container.querySelectorAll('a').forEach(el => {
+                    const active = el.dataset.langCode === targetLang;
+                    el.style.color = active ? '#2980b9' : '#333';
+                    el.style.fontWeight = active ? 'bold' : 'normal';
                 });
-                
-                // 立即翻译导航栏
-                if (lang.code === 'zh') {
-                    if (typeof window.translateNavigation === 'function') {
-                        window.translateNavigation('zh');
-                    }
-                } else {
-                    if (typeof window.restoreEnglishNavigation === 'function') {
-                        window.restoreEnglishNavigation();
-                    }
+
+                // Translate nav labels (text only, no link rewrite needed).
+                if (targetLang === 'zh' && typeof window.translateNavigation === 'function') {
+                    window.translateNavigation('zh');
+                } else if (targetLang === 'en' && typeof window.restoreEnglishNavigation === 'function') {
+                    window.restoreEnglishNavigation();
                 }
-                
-                // 尝试跳转到对应语言版本
-                const targetUrl = getAlternateUrl(lang.code);
-                if (targetUrl !== window.location.pathname) {
-                    // 直接跳转，不检查页面是否存在
-                    console.log('Switching to:', targetUrl);
-                    window.location.href = targetUrl;
-                }
-                // 不再显示横幅提示
+
+                // Navigate to the alternate page via map lookup.
+                loadLangMap().then(map => {
+                    const url = getAlternateUrl(map, targetLang);
+                    if (url && url !== window.location.pathname) {
+                        window.location.href = url;
+                    }
+                    // If not found in map, stay on current page (no broken redirect).
+                });
             });
-            
-            link.addEventListener('mouseenter', function() {
-                if (preferredLang !== lang.code) {
+
+            a.addEventListener('mouseenter', function () {
+                if (this.dataset.langCode !== getPreferredLanguage()) {
                     this.style.color = '#2980b9';
                 }
             });
-            
-            link.addEventListener('mouseleave', function() {
-                if (preferredLang !== lang.code) {
+            a.addEventListener('mouseleave', function () {
+                if (this.dataset.langCode !== getPreferredLanguage()) {
                     this.style.color = '#333';
                 }
             });
-            
-            container.appendChild(link);
+
+            container.appendChild(a);
         });
-        
+
         document.body.appendChild(container);
     }
-    
-    // 显示中文横幅（当前在中文页面）
-    function showChineseBanner() {
-        removeChineseBanner();
-        
-        const banner = document.createElement('div');
-        banner.id = 'chinese-banner';
-        banner.style.cssText = `
-            background: #e8f4f8;
-            border-bottom: 2px solid #2980b9;
-            padding: 10px 20px;
-            text-align: center;
-            font-family: sans-serif;
-            font-size: 14px;
-            color: #2c3e50;
-        `;
-        banner.textContent = '🇨🇳 您正在浏览中文版本';
-        
-        document.body.insertBefore(banner, document.body.firstChild);
-    }
-    
-    // 显示"暂无中文版本"横幅
-    function showNoChineseVersionBanner() {
-        removeChineseBanner();
-        
-        const banner = document.createElement('div');
-        banner.id = 'chinese-banner';
-        banner.style.cssText = `
-            background: #fff3cd;
-            border-bottom: 2px solid #ffc107;
-            padding: 10px 20px;
-            text-align: center;
-            font-family: sans-serif;
-            font-size: 14px;
-            color: #856404;
-        `;
-        banner.innerHTML = '⚠️ 此页面暂无中文版本，显示英文内容 | <a href="#" style="color: #856404; text-decoration: underline;">切换回英文</a>';
-        
-        banner.querySelector('a').addEventListener('click', function(e) {
-            e.preventDefault();
-            setPreferredLanguage('en');
-            removeChineseBanner();
-            restoreNavigation();
-            location.reload();
-        });
-        
-        document.body.insertBefore(banner, document.body.firstChild);
-    }
-    
-    // 移除横幅
-    function removeChineseBanner() {
-        const banner = document.getElementById('chinese-banner');
-        if (banner) {
-            banner.remove();
-        }
-    }
-    
-    // 初始化
+
+    // ── init ─────────────────────────────────────────────────────────────────
+
     function init() {
-        createLanguageSwitcher();
-        
-        const preferredLang = getPreferredLanguage();
-        const currentLang = getCurrentLanguage();
-        
-        console.log('Initializing language switcher...');
-        console.log('Preferred language:', preferredLang);
-        console.log('Current page language:', currentLang);
-        
-        // 如果用户偏好中文，翻译导航栏
-        if (preferredLang === 'zh') {
-            if (typeof window.translateNavigation === 'function') {
-                window.translateNavigation('zh');
-            }
+        const preferred = getPreferredLanguage();
+        createSwitcher(preferred);
+
+        // Kick off map pre-fetch so it is cached before the user clicks.
+        loadLangMap();
+
+        // Translate nav labels if user prefers Chinese.
+        if (preferred === 'zh' && typeof window.translateNavigation === 'function') {
+            window.translateNavigation('zh');
         }
-        // 不再显示任何横幅提示
     }
-    
-    // 页面加载完成后初始化
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
 })();
-

@@ -10,11 +10,11 @@
 
 ## 数学语义
 
-For a 2D tile, over the effective transpose domain:
+对于二维 Tile，在有效转置域上：
 
 $$ \mathrm{dst}_{i,j} = \mathrm{src}_{j,i} $$
 
-Exact shape/layout and the transpose domain depend on the target (see Constraints).
+确切的形状/布局及转置域取决于目标硬件（参见约束）。
 
 ## 汇编语法
 
@@ -25,7 +25,7 @@ PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 ```text
 %dst = ttrans %src : !pto.tile<...> -> !pto.tile<...>
 ```
-Lowering may introduce internal scratch tiles; the C++ intrinsic requires an explicit `tmp` operand.
+降低时可能引入内部临时 Tile；C++ 内建接口需要显式传入 `tmp` 操作数。
 
 ### AS Level 1（SSA）
 
@@ -51,24 +51,24 @@ PTO_INST RecordEvent TTRANS(TileDataDst& dst, TileDataSrc& src, TileDataTmp& tmp
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`.
-  - Source layout 必须是 行主序 (`TileDataSrc::isRowMajor`）。
-  - Element size 必须是 `1`, `2`,或`4` 字节.
-  - Supported element types are restricted per element width:
-    - 4 字节: `uint32_t`, `int32_t`, `float`
-    - 2 字节: `uint16_t`, `int16_t`, `half`, `bfloat16_t`
-    - 1 byte: `uint8_t`, `int8_t`
-  - The transpose size is taken from `src.GetValidRow()` / `src.GetValidCol()`.
+  - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`。
+  - 源布局必须是行主序（`TileDataSrc::isRowMajor`）。
+  - 元素大小必须是 `1`、`2` 或 `4` 字节。
+  - 支持的元素类型按元素宽度限制如下：
+    - 4 字节：`uint32_t`、`int32_t`、`float`
+    - 2 字节：`uint16_t`、`int16_t`、`half`、`bfloat16_t`
+    - 1 字节：`uint8_t`、`int8_t`
+  - 转置大小取自 `src.GetValidRow()` / `src.GetValidCol()`。
 - **实现检查 (A5)**:
-  - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`.
-  - 32-byte alignment constraints are enforced on the major dimension of 都input且output (行主序 checks `Cols * sizeof(T) % 32 == 0`, col-major checks `Rows * sizeof(T) % 32 == 0`）。
-  - Supported element types are restricted per element width:
-    - 4 字节: `uint32_t`, `int32_t`, `float`
-    - 2 字节: `uint16_t`, `int16_t`, `half`, `bfloat16_t`
-    - 1 byte: `uint8_t`, `int8_t`
-  - The implementation operates over the static tile shape (`TileDataSrc::Rows/Cols`)且does not consult `GetValidRow/GetValidCol`.
-- **Temporary tile**:
-  - The C++ API requires `tmp`, but some implementations may not use it.
+  - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`。
+  - 对输入和输出的主维度强制执行 32 字节对齐约束（行主序检查 `Cols * sizeof(T) % 32 == 0`，列主序检查 `Rows * sizeof(T) % 32 == 0`）。
+  - 支持的元素类型按元素宽度限制如下：
+    - 4 字节：`uint32_t`、`int32_t`、`float`
+    - 2 字节：`uint16_t`、`int16_t`、`half`、`bfloat16_t`
+    - 1 字节：`uint8_t`、`int8_t`
+  - 实现在静态 Tile 形状（`TileDataSrc::Rows/Cols`）上运算，不参考 `GetValidRow/GetValidCol`。
+- **临时 Tile**:
+  - C++ API 需要 `tmp`，但某些实现可能不使用它。
 
 ## 示例
 

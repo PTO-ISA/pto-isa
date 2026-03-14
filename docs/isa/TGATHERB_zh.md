@@ -10,11 +10,11 @@
 
 ## 数学语义
 
-对每个元素 在有效区域内：
+对有效区域内的每个元素：
 
 $$ \mathrm{dst}_{i,j} = *\left(\mathrm{srcBase} + \mathrm{offset}_{i,j}\right) $$
 
-Exact bounds behavior is implementation-defined.
+精确的边界行为由实现定义。
 
 ## 汇编语法
 

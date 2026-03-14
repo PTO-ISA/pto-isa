@@ -31,16 +31,19 @@ __global__ AICORE void runTSEL(__gm__ T __out__ *out, __gm__ uint8_t __in__ *mas
 
     using MaskTile =
         Tile<TileType::Vec, uint8_t, Rows, PTO_CEIL(PTO_DIV_ROUNDUP(Cols, 8), 32), BLayout::RowMajor, -1, -1>;
+    using TmpTile = Tile<TileType::Vec, uint8_t, 1, 32, BLayout::RowMajor, -1, -1>;
+
     TileData src0Tile(ValidRows, ValidCols);
     TileData src1Tile(ValidRows, ValidCols);
     TileData dstTile(ValidRows, ValidCols);
-
+    TmpTile tmpTile(1, 32);
     MaskTile maskTile(ValidRows, PTO_CEIL(PTO_DIV_ROUNDUP(ValidCols, 8), 32));
 
     TASSIGN(src0Tile, 0x0);
     TASSIGN(src1Tile, Rows * Cols * sizeof(T));
     TASSIGN(dstTile, 2 * Rows * Cols * sizeof(T));
     TASSIGN(maskTile, 3 * Rows * Cols * sizeof(T));
+    TASSIGN(tmpTile, 4 * Rows * Cols * sizeof(T));
 
     GlobalData src0Global(src0);
     GlobalData src1Global(src1);
@@ -52,7 +55,7 @@ __global__ AICORE void runTSEL(__gm__ T __out__ *out, __gm__ uint8_t __in__ *mas
     TLOAD(maskTile, maskGlobal);
     set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
     wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-    TSEL<TileData, MaskTile>(dstTile, maskTile, src0Tile, src1Tile);
+    TSEL(dstTile, maskTile, src0Tile, src1Tile, tmpTile);
     set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
     wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
     TSTORE(dstGlobal, dstTile);

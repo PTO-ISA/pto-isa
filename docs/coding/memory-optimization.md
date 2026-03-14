@@ -1,409 +1,266 @@
 # Memory Optimization
 
-This document provides memory optimization techniques for PTO operator development, helping developers fully utilize on-chip memory and reduce memory access overhead.
+This document covers memory optimization techniques for PTO kernels. For the abstract on-chip memory model see [`docs/machine/abstract-machine.md`](../machine/abstract-machine.md); for example-driven tuning see [`opt.md`](opt.md).
 
 ## Contents
 
-- [1. Memory Hierarchy](#1-memory-hierarchy)
-- [2. L1 Memory Optimization](#2-l1-memory-optimization)
-- [3. L0 Memory Optimization](#3-l0-memory-optimization)
-- [4. Memory Alignment](#4-memory-alignment)
-- [5. Memory Reuse Strategies](#5-memory-reuse-strategies)
-- [6. Memory Bandwidth Optimization](#6-memory-bandwidth-optimization)
+- [1. On-Chip Storage Model](#1-on-chip-storage-model)
+- [2. Tile Sizing and Capacity](#2-tile-sizing-and-capacity)
+- [3. Data Reuse](#3-data-reuse)
+- [4. Layout and Alignment](#4-layout-and-alignment)
+- [5. Reducing GM Traffic](#5-reducing-gm-traffic)
+- [6. Double Buffering](#6-double-buffering)
+- [7. Valid Region and Padding](#7-valid-region-and-padding)
+- [8. Checklist](#8-checklist)
 
 ---
 
-## 1. Memory Hierarchy
+## 1. On-Chip Storage Model
 
-### 1.1 Ascend Memory Architecture
+PTO exposes on-chip storage through tile types. Each `TileType` maps to a storage class:
+
+| Tile type | Storage | Typical use |
+|-----------|---------|-------------|
+| `TileType::Vec` | Vector buffer (UB) | Elementwise ops, reductions |
+| `TileType::Mat` | Matrix staging (L1-like) | TLOAD target, GEMM staging |
+| `TileType::Left/Right` | Matrix operand regs (L0A/L0B) | TMATMUL inputs |
+| `TileType::Acc` | Accumulator regs (L0C) | TMATMUL output |
+
+Data flows along a fixed path:
 
 ```
-Global Memory (GM)
-    ↓ MTE2 (DMA)
-L1 Cache (~512KB - 1MB/core)
-    ↓ MTE1
-L0 Cache (register level)
-    ↓
-Compute Units (CUBE/VECTOR)
+GM --TLOAD--> Mat --TMOV/TEXTRACT--> Left/Right --TMATMUL--> Acc --TSTORE--> GM
 ```
 
-**Access Latency Comparison**:
-
-| Memory Level | Latency | Bandwidth |
-|--------------|---------|-----------|
-| L0 | ~1 cycle | Highest |
-| L1 | ~10 cycles | High |
-| GM | ~100+ cycles | Limited |
-
-**Optimization Principles**:
-- Complete computation in L0 as much as possible
-- Cache frequently accessed data in L1
-- Reduce GM access count
+Vector ops (`TADD`, `TEXP`, `TROWSUM`, etc.) work directly on `Vec` tiles.
+Conversion between `Mat` and `Vec` uses `TMOV` or `TEXTRACT`.
 
 ---
 
-## 2. L1 Memory Optimization
+## 2. Tile Sizing and Capacity
 
-### 2.1 L1 Capacity Planning
+### Estimate footprint before declaring tiles
 
-**Platform Capacity**:
-- A2/A3: ~512 KB/core
-- A5: ~1 MB/core
-
-**Capacity Allocation Example (GEMM)**:
 ```cpp
-// A2/A3 platform
-constexpr int L1_CAPACITY = 512 * 1024;  // 512KB
-
-// Double buffer A Tile: 2 × 128×64×2 = 32KB
-constexpr int A_BUFFER_SIZE = 2 * 128 * 64 * sizeof(half);
-
-// Double buffer B Tile: 2 × 64×256×2 = 64KB
-constexpr int B_BUFFER_SIZE = 2 * 64 * 256 * sizeof(half);
-
-// Accumulator: 128×256×4 = 128KB
-constexpr int ACC_BUFFER_SIZE = 128 * 256 * sizeof(float);
-
-// Total: 32 + 64 + 128 = 224KB < 512KB ✓
+constexpr int TM = 128, TK = 64, TN = 256;
+// Mat staging (double-buffered)
+constexpr size_t staging = 2*(TM*TK + TK*TN)*sizeof(half);  // 2*(16+32) KB = 96 KB
+// Accumulator
+constexpr size_t accum   = TM * TN * sizeof(float);          // 128 KB
+// Total: 224 KB -- must fit within target on-chip limit
 ```
 
-### 2.2 Avoid L1 Overflow
+If the total exceeds the limit: reduce tile dimensions, drop to single buffering, or split the accumulator range.
 
-**Check Method**:
+### Alignment rules (enforced by `static_assert`)
+
+- Row-major tile: `Cols * sizeof(Element)` must be a multiple of 32 bytes.
+- Col-major tile: `Rows * sizeof(Element)` must be a multiple of 32 bytes.
+- Boxed tiles (`TileLeft`, `TileRight`, `TileAcc`): shape must match fractal base-tile size (`fractalABSize=512`, `fractalCSize=1024`).
+
+Common `TileLeft`/`TileRight` base shapes for `fractalABSize=512`:
+
+| Element | Base rows×cols |
+|---------|---------------|
+| `fp32`  | 16×8 |
+| `fp16`  | 16×16 |
+| `int8`  | 16×32 |
+
+---
+
+## 3. Data Reuse
+
+### K-dimension blocking (GEMM)
+
+Load each A/B panel once, accumulate across the full K loop:
+
 ```cpp
-// Compile-time check
-static_assert(TOTAL_L1_USAGE < L1_CAPACITY, 
-              "L1 memory overflow!");
+TileAcc<float, TM, TN> acc;
+TFILL(acc, 0.0f);
 
-// Runtime check (debug mode)
-#ifdef DEBUG
-  size_t total_usage = calculate_l1_usage();
-  assert(total_usage < L1_CAPACITY);
-#endif
-```
+for (int k = 0; k < K; k += TK) {
+    Tile<TileType::Mat, half, TM, TK> a_mat;
+    Tile<TileType::Mat, half, TK, TN> b_mat;
+    TLOAD(a_mat, gA_view);    // 1 GM access per TM×TK block
+    TLOAD(b_mat, gB_view);
 
-**Overflow Consequences**:
-- Performance drops dramatically (10-100×)
-- Frequent L1 ↔ GM paging
-- Pipeline stalls
+    TileLeft<half, TM, TK>   a_left;
+    TileRight<half, TK, TN>  b_right;
+    TMOV(a_left, a_mat);
+    TMOV(b_right, b_mat);
 
-**Solutions**:
-```cpp
-// Solution 1: Reduce Tile size
-// Before: 
-using TileT = Tile<TileType::Vec, float, 32, 512>;  // 64KB
-
-// After:
-using TileT = Tile<TileType::Vec, float, 16, 256>;  // 16KB
-
-// Solution 2: Reduce buffer count
-// Change from triple buffering to double buffering
-```
-
-### 2.3 L1 Data Reuse
-
-**Strategy 1: K-dimension Blocking**
-```cpp
-// GEMM example: Reuse A and B
-for (int k = 0; k < K; k += TILE_K) {
-  // Load to L1 once
-  TLOAD(tileA_L1, A[m:m+M, k:k+TILE_K]);
-  TLOAD(tileB_L1, B[k:k+TILE_K, n:n+N]);
-  
-  // Reuse multiple times in L1
-  for (int sub_k = 0; sub_k < TILE_K; sub_k += SUB_K) {
-    TEXTRACT(tileA_L0, tileA_L1[sub_k:sub_k+SUB_K]);
-    TEXTRACT(tileB_L0, tileB_L1[sub_k:sub_k+SUB_K]);
-    TMATMUL(acc, tileA_L0, tileB_L0);
-  }
+    TMATMUL_ACC(acc, a_left, b_right);  // acc stays on-chip
 }
+TSTORE(gC_view, acc);   // 1 GM write at the end
 ```
 
-**Strategy 2: Cache Constant Data**
+### Cache row statistics (Softmax)
+
 ```cpp
-// Softmax example: Cache max and sum
-TLOAD(input_L1, input);
-TROWMAX(max_val, input_L1);  // Compute once, cache in L1
-TROWEXPANDSUB(shifted, input_L1, max_val);  // Reuse max_val
-TEXP(exp_vals, shifted);
-TROWSUM(sum_val, exp_vals);  // Compute once, cache in L1
-TROWEXPANDDIV(output, exp_vals, sum_val);  // Reuse sum_val
+Tile<TileType::Vec, float, R, C> input, shifted, exp_v, output;
+Tile<TileType::Vec, float, R, 1>  row_max, row_sum;
+
+TLOAD(input, gInput);
+TROWMAX(row_max, input);             // computed once, stays on-chip
+TROWEXPANDSUB(shifted, input, row_max);
+TEXP(exp_v, shifted);
+TROWSUM(row_sum, exp_v);             // computed once, stays on-chip
+TROWEXPANDDIV(output, exp_v, row_sum);
+TSTORE(gOutput, output);
+```
+
+Storing and reloading `row_max`/`row_sum` would roughly triple GM traffic for the statistics.
+
+---
+
+## 4. Layout and Alignment
+
+**Match layout to the consuming instruction** to avoid implicit conversions.
+
+- Load `Mat` tiles with `BLayout::RowMajor` when GM data is row-major.
+- Use `Layout::NZ` on `GlobalTensor` for GEMM inputs to eliminate the `TMOV` stage on supported targets.
+- Use `TTRANS` only when source and target layouts genuinely differ.
+
+`TileLeft` / `TileRight` / `TileAcc` aliases automatically select the correct `SLayout` and `SFractalSize`:
+
+```cpp
+TileLeft<half, 128, 64>   a_left;   // outer col-major + inner row-major
+TileRight<half, 64, 256>  b_right;  // outer row-major + inner col-major
+TileAcc<float, 128, 256>  acc;
+```
+
+Do not override `SLayout` or `SFractalSize` manually without a specific reason.
+
+---
+
+## 5. Reducing GM Traffic
+
+### Operator fusion
+
+Fuse consecutive operations to eliminate intermediate GM stores/reloads:
+
+```cpp
+// Unfused: 4 GM round-trips
+TLOAD(a, gInput); TADD(b, a, s); TSTORE(gTmp, b);
+TLOAD(c, gTmp);   TMUL(d, c, s2); TSTORE(gOut, d);
+
+// Fused: 2 GM round-trips
+TLOAD(a, gInput);
+TADD(b, a, s);    // b stays on-chip
+TMUL(d, b, s2);
+TSTORE(gOut, d);
+```
+
+### Contiguous access
+
+Prefer row-major traversal; strided column access reduces burst efficiency.
+If column access is unavoidable, load a row-major block then `TTRANS` on-chip.
+
+### TPREFETCH
+
+Issue non-blocking hints to overlap data movement with compute:
+
+```cpp
+if (k + TK < K) { TPREFETCH(gA_next); TPREFETCH(gB_next); }
+TMATMUL_ACC(acc, a_left, b_right);  // overlaps with prefetch
 ```
 
 ---
 
-## 3. L0 Memory Optimization
+## 6. Double Buffering
 
-### 3.1 L0 Capacity Management
+Alternate between two staging tile sets to overlap the memory and compute pipelines:
 
-**L0 Types**:
-- Vector L0 (UB): Vector registers
-- Matrix L0A/L0B: Matrix operand registers
-- Matrix L0C: Accumulator registers
-
-**Capacity Limits**:
-- Typically tens of KB
-- Requires precise management
-
-### 3.2 Register Allocation
-
-**Manual Allocation (Manual Mode)**:
 ```cpp
-// Use TASSIGN to bind addresses
-constexpr int ADDR_A = 0;
-constexpr int ADDR_B = 32 * 1024;  // 32KB offset
-constexpr int ADDR_C = 64 * 1024;  // 64KB offset
+Tile<TileType::Mat, half, TM, TK> a_mat[2];
+Tile<TileType::Mat, half, TK, TN> b_mat[2];
+TileLeft<half, TM, TK>            a_left[2];
+TileRight<half, TK, TN>           b_right[2];
 
-TileLeft tileA;
-TileRight tileB;
-TileAcc tileC;
+Event<Op::TLOAD, Op::TMOV>    ev_load[2];
+Event<Op::TMOV,  Op::TMATMUL> ev_mov[2];
 
-TASSIGN(tileA, ADDR_A);
-TASSIGN(tileB, ADDR_B);
-TASSIGN(tileC, ADDR_C);
-```
+// Warm-up
+ev_load[0] = TLOAD(a_mat[0], gA_view_0);
+ev_load[0] = TLOAD(b_mat[0], gB_view_0);
 
-**Automatic Allocation (Auto Mode)**:
-```cpp
-// Compiler manages automatically
-TileLeft tileA;
-TileRight tileB;
-TileAcc tileC;
-// No TASSIGN needed
-```
-
-### 3.3 Register Reuse
-
-**Strategy 1: Temporal Reuse**
-```cpp
-// Reuse same register in different stages
-TileVec temp;
-
-// Stage 1: Use for intermediate result
-TADD(temp, a, b);
-TSTORE(output1, temp);
-
-// Stage 2: Reuse for other data
-TMUL(temp, c, d);
-TSTORE(output2, temp);
-```
-
----
-
-## 4. Memory Alignment
-
-### 4.1 Alignment Requirements
-
-**Basic Alignment**:
-- Row-major: `Cols × sizeof(T)` aligned to 32 bytes
-- Column-major: `Rows × sizeof(T)` aligned to 32 bytes
-
-**Example**:
-```cpp
-// Correct: Aligned to 32 bytes
-using TileT1 = Tile<TileType::Vec, float, 16, 8>;
-// 16 × 8 × 4 = 512 bytes (multiple of 32) ✓
-
-// Wrong: Not aligned
-using TileT2 = Tile<TileType::Vec, float, 16, 7>;
-// 16 × 7 × 4 = 448 bytes (not multiple of 32) ✗
-```
-
-### 4.2 Padding Techniques
-
-**Method 1: Compile-time Padding**
-```cpp
-// Original size: Not aligned
-constexpr int ORIG_COLS = 127;
-
-// Pad to alignment
-constexpr int PADDED_COLS = ((ORIG_COLS + 7) / 8) * 8;  // 128
-
-using TileT = Tile<TileType::Vec, float, 16, PADDED_COLS>;
-```
-
-**Method 2: Runtime Padding**
-```cpp
-// Use valid region to handle non-aligned data
-using TileT = Tile<TileType::Vec, float, 16, 128,
-                   RowMajor, 16, DYNAMIC>;  // Dynamic column count
-
-TileT tile(actual_cols);  // actual_cols can be 127
-```
-
----
-
-## 5. Memory Reuse Strategies
-
-### 5.1 Data Reuse Patterns
-
-**Pattern 1: Temporal Reuse**
-```cpp
-// Same data used multiple times at different times
-TLOAD(tile, data);
-for (int i = 0; i < N; i++) {
-  TCOMPUTE(result[i], tile, other[i]);  // Reuse tile
-}
-```
-
-**Pattern 2: Spatial Reuse**
-```cpp
-// Adjacent data loaded together, used separately
-TLOAD(tile_block, data[0:BLOCK_SIZE]);
-for (int i = 0; i < BLOCK_SIZE; i++) {
-  TEXTRACT(tile_i, tile_block, i);
-  TCOMPUTE(result[i], tile_i);
-}
-```
-
-### 5.2 GEMM Reuse Strategy
-
-**Three-level Reuse**:
-```cpp
-// M×K×N GEMM
-for (int m = 0; m < M; m += TILE_M) {
-  for (int n = 0; n < N; n += TILE_N) {
-    // Accumulator reuse: Entire K loop
-    TileAcc acc;
-    TFILL(acc, 0);
-    
-    for (int k = 0; k < K; k += TILE_K) {
-      // A reuse: N direction
-      TLOAD(tileA, A[m:m+TILE_M, k:k+TILE_K]);
-      
-      // B reuse: M direction
-      TLOAD(tileB, B[k:k+TILE_K, n:n+TILE_N]);
-      
-      TMATMUL_ACC(acc, tileA, tileB);
+for (int k = 0, ping = 0; k < K; k += TK, ping ^= 1) {
+    int pong = ping ^ 1;
+    // Load next (pong) while computing current (ping)
+    if (k + TK < K) {
+        ev_load[pong] = TLOAD(a_mat[pong], gA_view_next);
+        ev_load[pong] = TLOAD(b_mat[pong], gB_view_next);
     }
-    
-    TSTORE(C[m:m+TILE_M, n:n+TILE_N], acc);
-  }
+    ev_mov[ping]  = TMOV(a_left[ping],  a_mat[ping],  ev_load[ping]);
+    ev_mov[ping]  = TMOV(b_right[ping], b_mat[ping],  ev_load[ping]);
+    TMATMUL_ACC(acc, a_left[ping], b_right[ping], ev_mov[ping]);
 }
+TSTORE(gC_view, acc);
 ```
 
-**Reuse Analysis**:
-- Each element of A is reused N/TILE_N times
-- Each element of B is reused M/TILE_M times
-- Accumulator is reused K/TILE_K times
+Steady-state throughput approaches `max(T_load, T_compute)` instead of `T_load + T_compute`.
+
+For the event model see [`Event.md`](Event.md).
 
 ---
 
-## 6. Memory Bandwidth Optimization
+## 7. Valid Region and Padding
 
-### 6.1 Reduce Memory Access
+When dimensions are not multiples of tile sizes, use the valid-region rather than allocating multiple tile sizes:
 
-**Strategy 1: Operator Fusion**
 ```cpp
-// Before fusion: 3 GM accesses
-TLOAD(a, input1);
-TADD(b, a, scalar);
-TSTORE(output1, b);
+// Static valid region
+using TileT = pto::Tile<pto::TileType::Vec, float, 128, 256,
+                        pto::BLayout::RowMajor, 100, 200>;
 
-TLOAD(c, output1);  // Redundant access
-TMUL(d, c, scalar2);
-TSTORE(output2, d);
+// Dynamic valid region
+using TileD = pto::Tile<pto::TileType::Vec, float, 128, 256,
+                        pto::BLayout::RowMajor,
+                        pto::DYNAMIC, pto::DYNAMIC>;
+TileD t(actual_rows, actual_cols);
 
-// After fusion: 2 GM accesses
-TLOAD(a, input1);
-TADD(b, a, scalar);
-TMUL(d, b, scalar2);  // Use b directly, no store and reload
-TSTORE(output2, d);
+// Pad capacity to alignment; use valid region for actual extent
+constexpr int PADDED = ((127*4+31)/32)*32/4;  // 127 > 128 cols
+using TileP = pto::Tile<pto::TileType::Vec, float, 16, PADDED,
+                        pto::BLayout::RowMajor, 16, 127>;
 ```
 
-**Strategy 2: Compute-intensive Design**
-```cpp
-// Increase arithmetic intensity = FLOPs / Bytes
-// Goal: More computation per byte of data
+---
 
-// Bad: Low arithmetic intensity
-for (int i = 0; i < N; i++) {
-  TLOAD(tile, data[i]);     // 1 load
-  TADD(result, tile, 1);    // 1 compute
-  TSTORE(output[i], result); // 1 store
-}
-// Arithmetic intensity = 1 FLOP / (2 × tile_size bytes)
+## 8. Checklist
 
-// Good: High arithmetic intensity
-TLOAD(tile, data);           // 1 load
-for (int i = 0; i < 100; i++) {
-  TADD(tile, tile, 1);       // 100 computes
-}
-TSTORE(output, tile);        // 1 store
-// Arithmetic intensity = 100 FLOPs / (2 × tile_size bytes)
-```
+**Capacity**
+- [ ] Total tile footprint (staging + operands + accumulator × buffer count) fits on-chip.
+- [ ] For double buffering, staging tile count × 2 before checking.
 
-### 6.2 Contiguous Access Pattern
+**Alignment**
+- [ ] Let `static_assert` in `pto::Tile` catch violations at compile time.
+- [ ] Use `TileLeft` / `TileRight` / `TileAcc` aliases for correct fractal layout.
 
-**Row-major Optimization**:
-```cpp
-// Good: Contiguous access
-for (int i = 0; i < M; i++) {
-  TLOAD(tile, A[i, :]);  // Row contiguous
-  TCOMPUTE(result, tile);
-}
+**Data reuse**
+- [ ] `TileAcc` stays on-chip for the full K loop; write back once.
+- [ ] Row/column statistics (`TROWMAX`, `TROWSUM`) cached in `Vec` tiles.
+- [ ] No unnecessary TSTORE/TLOAD pairs within a kernel.
 
-// Bad: Strided access
-for (int j = 0; j < N; j++) {
-  TLOAD(tile, A[:, j]);  // Column access, may not be contiguous
-  TCOMPUTE(result, tile);
-}
-```
+**GM traffic**
+- [ ] Fuse consecutive elementwise ops into one kernel.
+- [ ] Row-major GM access; if column access needed, load block then `TTRANS`.
+- [ ] `TPREFETCH` used to overlap data movement with compute.
 
-**Solution**:
-```cpp
-// Solution 1: Transpose data
-TTRANS(A_T, A);
-for (int j = 0; j < N; j++) {
-  TLOAD(tile, A_T[j, :]);  // Now contiguous
-  TCOMPUTE(result, tile);
-}
-
-// Solution 2: Use column-major layout
-using TileT = Tile<TileType::Vec, float, M, N, ColMajor>;
-```
-
-### 6.3 Prefetch Optimization
-
-**Software Prefetch**:
-```cpp
-// Prefetch next batch of data
-for (int i = 0; i < N; i++) {
-  // Process current data
-  TCOMPUTE(result[i], tile[i]);
-  
-  // Prefetch next batch
-  if (i + 1 < N) {
-    TPREFETCH(tile[i+1], data[i+1]);
-  }
-}
-```
-
-**Double Buffering Prefetch**:
-```cpp
-// Preload first batch
-TLOAD(tile[0], data[0]);
-
-for (int i = 0; i < N; i++) {
-  int curr = i % 2;
-  int next = (i + 1) % 2;
-  
-  // Process current
-  TCOMPUTE(result[i], tile[curr]);
-  
-  // Load next batch simultaneously
-  if (i + 1 < N) {
-    TLOAD(tile[next], data[i+1]);
-  }
-}
-```
+**Synchronization**
+- [ ] `Event<SrcOp, DstOp>` for fine-grained ordering; no global `TSYNC` in the steady-state loop.
+- [ ] Each consumer waits only on its specific producer event.
 
 ---
 
 ## References
 
-- [Performance Optimization Guide](opt.md)
+- [Abstract Machine Model](../machine/abstract-machine.md)
+- [Tile Programming Model](Tile.md)
+- [GlobalTensor Programming Model](GlobalTensor.md)
+- [Events and Synchronization](Event.md)
+- [PTO Optimization Guide](opt.md)
 - [Pipeline and Parallel Execution](pipeline-parallel.md)
-- [Performance Best Practices](performance-best-practices.md)
-- [GEMM Optimization Case](../../kernels/manual/a2a3/gemm_performance/README.md)
-
+- [GEMM Tutorial](tutorials/gemm.md)
+- [GEMM Performance Kernel](../../kernels/manual/a2a3/gemm_performance/README.md)
+- [Flash Attention Kernel](../../kernels/manual/common/flash_atten/README.md)

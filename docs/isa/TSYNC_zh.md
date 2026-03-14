@@ -8,16 +8,14 @@
 
 同步 PTO 执行（等待事件或插入每操作流水线屏障）。
 
-Synchronize PTO execution:
+- `TSYNC(events...)` 等待一组显式事件令牌。
+- `TSYNC<Op>()` 为单个向量操作类插入流水线屏障。
 
-- `TSYNC(events...)` waits on a set of explicit event tokens.
-- `TSYNC<Op>()` inserts a pipeline barrier for a single vector op class.
-
-Many intrinsics in `include/pto/common/pto_instr.hpp` call `TSYNC(events...)` internally before issuing the instruction.
+`include/pto/common/pto_instr.hpp` 中的许多内建函数在发射指令前会在内部调用 `TSYNC(events...)`。
 
 ## 数学语义
 
-Not applicable.
+不适用。
 
 ## 汇编语法
 
@@ -70,10 +68,10 @@ PTO_INST void TSYNC(WaitEvents&... events);
 
 ## 约束
 
-- **实现检查 (`TSYNC<Op>()`)**:
-  - `TSYNC_IMPL<Op>()` 仅supports vector-pipeline ops (`static_assert(pipe == PIPE_V)` in `include/pto/common/event.hpp`).
-- **`TSYNC(events...)` semantics**:
-  - `TSYNC(events...)` calls `WaitAllEvents(events...)`, which invokes `events.Wait()` on each event token.
+- **实现检查（`TSYNC<Op>()`）**:
+  - `TSYNC_IMPL<Op>()` 仅支持向量流水线操作（`include/pto/common/event.hpp` 中通过 `static_assert(pipe == PIPE_V)` 强制执行）。
+- **`TSYNC(events...)` 语义**:
+  - `TSYNC(events...)` 调用 `WaitAllEvents(events...)`，后者对每个事件令牌调用 `events.Wait()`。
 
 ## 示例
 
