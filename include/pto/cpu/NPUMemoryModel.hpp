@@ -57,7 +57,7 @@ inline constexpr ArchMemorySizes kA2A3MemorySizes = {
 
 inline constexpr ArchMemorySizes kA5MemorySizes = {
     256 * 1024, // UB:  256 KB
-    256 * 1024, // L1:  256 KB
+    512 * 1024, // L1:  512 KB
     64 * 1024,  // L0A: 64 KB (placeholder - verify actual A5 spec)
     64 * 1024,  // L0B: 64 KB
     256 * 1024  // L0C: 256 KB
