@@ -5,77 +5,113 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="${REPO_DIR}/logs"
 mkdir -p "${LOG_DIR}"
 
-# One sync at a time (lock outside repo to keep working tree clean)
 mkdir -p "${HOME}/.cache/pto-isa"
 LOCK_FILE="${HOME}/.cache/pto-isa/sync_cann_to_github_main.lock"
 exec 9>"${LOCK_FILE}"
 if ! flock -n 9; then
-  echo "[$(date -Is)] Another sync is running; exiting." >&2
+  echo "[$(date -Is)] Another sync is running; exiting."
   exit 0
 fi
+
+log() {
+  echo "[$(date -Is)] $*"
+}
+
+die() {
+  log "ERROR: $*"
+  exit 1
+}
+
+require_remote() {
+  local name="$1"
+  git remote get-url "$name" >/dev/null 2>&1 || die "remote '$name' not found"
+}
 
 cd "${REPO_DIR}"
 
-# Safety checks
 if [[ -n "$(git status --porcelain=v1)" ]]; then
-  echo "[$(date -Is)] ERROR: Working tree not clean. Aborting." >&2
   git status --porcelain=v1 >&2
-  exit 2
+  die "working tree not clean; refusing to sync"
 fi
 
 for r in cann origin; do
-  if ! git remote get-url "${r}" >/dev/null 2>&1; then
-    echo "[$(date -Is)] ERROR: remote '${r}' not found." >&2
-    exit 3
-  fi
+  require_remote "$r"
 done
 
-echo "[$(date -Is)] Fetching remotes..."
+ORIGIN_URL="$(git remote get-url origin)"
+CANN_URL="$(git remote get-url cann)"
+log "origin=${ORIGIN_URL}"
+log "cann=${CANN_URL}"
+
+case "${ORIGIN_URL}" in
+  *github.com:PTO-ISA/pto-isa.git|*github.com/PTO-ISA/pto-isa.git) ;;
+  *) die "origin must point at GitHub PTO-ISA/pto-isa.git for direct org sync; got: ${ORIGIN_URL}" ;;
+esac
+
+case "${CANN_URL}" in
+  *gitcode.com:cann/pto-isa.git|*gitcode.com/cann/pto-isa.git) ;;
+  *) die "cann must point at gitcode cann/pto-isa.git; got: ${CANN_URL}" ;;
+esac
+
+log "fetching remotes"
 git fetch cann --prune
 git fetch origin --prune
 
-if [[ "$(git rev-parse --abbrev-ref HEAD)" != "main" ]]; then
-  git checkout main
+if git show-ref --verify --quiet refs/heads/main; then
+  CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+  if [[ "${CURRENT_BRANCH}" != "main" ]]; then
+    log "checking out main"
+    git checkout main
+  fi
+else
+  die "local branch 'main' does not exist"
 fi
 
-# Ensure local main follows origin/main
 if git show-ref --verify --quiet refs/remotes/origin/main; then
-  echo "[$(date -Is)] Updating local main from origin/main (ff-only)..."
-  git merge --ff-only origin/main || {
-    echo "[$(date -Is)] ERROR: Cannot fast-forward main to origin/main. Aborting." >&2
-    exit 4
-  }
+  log "fast-forwarding local main to origin/main"
+  git merge --ff-only origin/main || die "cannot fast-forward local main to origin/main"
+else
+  die "origin/main not found after fetch"
 fi
 
 if ! git show-ref --verify --quiet refs/remotes/cann/master; then
-  echo "[$(date -Is)] ERROR: cann/master not found after fetch." >&2
-  exit 5
+  die "cann/master not found after fetch"
 fi
 
 HEAD_SHA="$(git rev-parse HEAD)"
+ORIGIN_SHA="$(git rev-parse origin/main)"
 CANN_SHA="$(git rev-parse cann/master)"
+BASE="$(git merge-base HEAD cann/master || true)"
+
+log "main=${HEAD_SHA}"
+log "origin/main=${ORIGIN_SHA}"
+log "cann/master=${CANN_SHA}"
+
+if [[ "${HEAD_SHA}" != "${ORIGIN_SHA}" ]]; then
+  die "local main diverged from origin/main after ff-only step"
+fi
 
 if [[ "${HEAD_SHA}" == "${CANN_SHA}" ]]; then
-  echo "[$(date -Is)] main already matches cann/master. Nothing to do."
+  log "main already matches cann/master; nothing to do"
   exit 0
 fi
 
-BASE="$(git merge-base HEAD cann/master || true)"
-if [[ -n "${BASE}" && "${BASE}" == "${CANN_SHA}" ]]; then
-  echo "[$(date -Is)] cann/master is behind main. Nothing to merge."
+if [[ -n "${BASE}" && "${BASE}" == "${HEAD_SHA}" ]]; then
+  log "cann/master is ahead of main; attempting ff-only update"
+  git merge --ff-only cann/master || die "expected fast-forward from main to cann/master, but ff-only failed"
+elif [[ -n "${BASE}" && "${BASE}" == "${CANN_SHA}" ]]; then
+  log "cann/master is behind main; nothing to merge"
   exit 0
+else
+  MSG="sync: merge cann/master into main ($(date +%Y-%m-%d))"
+  log "histories diverged; creating merge commit to preserve both histories"
+  git merge --no-ff --no-edit -m "${MSG}" cann/master || {
+    git merge --abort || true
+    die "merge conflict while merging cann/master into main"
+  }
 fi
 
-MSG="sync: merge cann/master into main ($(date +%Y-%m-%d))"
-
-echo "[$(date -Is)] Merging cann/master (${CANN_SHA}) into main (${HEAD_SHA})..."
-if ! git merge --no-ff --no-edit -m "${MSG}" cann/master; then
-  echo "[$(date -Is)] ERROR: Merge conflict. Aborting merge." >&2
-  git merge --abort || true
-  exit 6
-fi
-
-echo "[$(date -Is)] Pushing to origin main..."
-git push origin main
-
-echo "[$(date -Is)] DONE. main is now at $(git rev-parse HEAD)."
+NEW_SHA="$(git rev-parse HEAD)"
+log "pushing ${NEW_SHA} to origin main"
+git push origin HEAD:main
+log "DONE. main is now at ${NEW_SHA}"
