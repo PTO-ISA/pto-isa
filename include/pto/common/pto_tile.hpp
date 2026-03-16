@@ -1213,7 +1213,7 @@ private:
 template <TileType Loc_, typename Element_, const int Rows_, const int Cols_,
           const BLayout BFractal_ = BLayout::RowMajor, const int RowValid_ = Rows_, const int ColValid_ = Cols_,
           const SLayout SFractal_ = SLayout::NoneBox, const int SFractalSize_ = TileConfig::fractalABSize,
-          const PadValue PadVal_ = PadValue::Null, const CompactMode Compact_ = CompactMode::Null>
+          auto PadVal_ = PadValue::Null, const CompactMode Compact_ = CompactMode::Null>
 struct Tile {
 public:
     using DType = Element_;
@@ -1260,7 +1260,7 @@ public:
     static constexpr bool isRowMajor = BFractal_ == BLayout::RowMajor;
 
     static constexpr int SFractalSize = SFractalSize_;
-    static constexpr PadValue PadVal = PadVal_;
+    static constexpr auto PadVal = PadVal_;
     static constexpr CompactMode Compact = Compact_;
 
     __tf__ AICORE void SetValue(const uint32_t offset, const DType val)

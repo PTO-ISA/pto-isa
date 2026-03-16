@@ -11,6 +11,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #ifndef TFILLPAD_HPP
 #define TFILLPAD_HPP
 #include <pto/common/pto_tile.hpp>
+#include <bit>
 #include "pto/cpu/tile_offsets.hpp"
 #include "pto/cpu/parallel.hpp"
 
@@ -20,19 +21,35 @@ template <typename TileDataDst, typename TileDataSrc>
 void TFillPad(typename TileDataDst::TileDType dst, typename TileDataSrc::TileDType src, unsigned validDstRow,
               unsigned validDstCol, unsigned validSrcRow, unsigned validSrcCol)
 {
-    typename TileDataDst::DType padVal = 0;
+    using DType = typename TileDataDst::DType;
+    DType padVal = 0;
 
-    constexpr auto PadVal_ = TileDataDst::PadVal;
-    if constexpr (std::numeric_limits<typename TileDataDst::DType>::has_infinity) {
+    constexpr PadValue PadVal_ = TileDataDst::PadVal;
+
+    // Handle custom pad values (PadCustom<-1.0f>, etc.)
+    if constexpr (isCustomPadValue(PadVal_)) {
+        constexpr uint32_t bits = getCustomPadBits(PadVal_);
+        if constexpr (std::is_same_v<DType, float>) {
+            padVal = std::bit_cast<float>(bits);
+        } else if constexpr (sizeof(DType) == 2) {
+            padVal = std::bit_cast<DType>(static_cast<uint16_t>(bits));
+        } else if constexpr (sizeof(DType) == 1) {
+            padVal = static_cast<DType>(bits & 0xFF);
+        } else {
+            padVal = std::bit_cast<DType>(bits);
+        }
+    } else if constexpr (std::numeric_limits<DType>::has_infinity) {
+        // Standard PadValue with infinity support
         if constexpr (PadVal_ == PadValue::Max)
-            padVal = std::numeric_limits<typename TileDataDst::DType>::infinity();
+            padVal = std::numeric_limits<DType>::infinity();
         else if constexpr (PadVal_ == PadValue::Min)
-            padVal = -std::numeric_limits<typename TileDataDst::DType>::infinity();
+            padVal = -std::numeric_limits<DType>::infinity();
     } else {
+        // Standard PadValue without infinity
         if constexpr (PadVal_ == PadValue::Max)
-            padVal = std::numeric_limits<typename TileDataDst::DType>::max();
+            padVal = std::numeric_limits<DType>::max();
         else if constexpr (PadVal_ == PadValue::Min)
-            padVal = std::numeric_limits<typename TileDataDst::DType>::min();
+            padVal = std::numeric_limits<DType>::min();
     }
 
     cpu::parallel_for_1d(

@@ -201,3 +201,8 @@ TEST_F(TFILLPADTest, case_s8_GT_259_7_VT_260_64_BLK1_PADMIN_PADMAX_EXPAND)
 {
     tfillpad_test<9, int8_t, 1>();
 }
+// Test case 10: Custom pad value PadCustom<-1.0f>
+TEST_F(TFILLPADTest, case_float_GT_128_64_VT_128_128_PADCUSTOM_NEG1)
+{
+    tfillpad_test<10, float, 1>();
+}
