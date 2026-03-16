@@ -59,11 +59,11 @@ __tf__ AICORE inline void TSort32Impl(typename DstTileData::TileDType __out__ ds
 
 template <typename T, typename IdxT, unsigned dstStride, unsigned srcStride>
 PTO_INTERNAL void LargeTmpBufferImpl(__ubuf__ T *dstPtr, __ubuf__ T *srcPtr, __ubuf__ IdxT *idxPtr, __ubuf__ T *tmpPtr,
-                                     unsigned validRow, unsigned repeatNumPerRow, unsigned idxStride,
+                                     unsigned validRow, unsigned validCol, unsigned repeatNumPerRow, unsigned idxStride,
                                      unsigned srcTailPerRow, unsigned srcTailRepeatNum)
 {
     T minVal = -(0.0 / 0.0);
-    auto loopNum = PTO_DIV_ROUNDUP((repeatNumPerRow + 1), REPEAT_MAX);
+    auto loopNum = PTO_DIV_ROUNDUP(repeatNumPerRow, REPEAT_MAX);
     constexpr uint32_t typeCoef = (sizeof(T) == sizeof(float)) ? FLOAT_DST_STRIDE_COEF : HALF_DST_STRIDE_COEF;
     for (int32_t i = 0; i < validRow; i++) {
         for (int32_t j = 0; j < loopNum; j++) {
@@ -115,8 +115,8 @@ template <typename DstTileData, typename SrcTileData, typename IdxTileData, type
           unsigned srcStride>
 __tf__ AICORE void TSort32Impl(typename DstTileData::TileDType __out__ dst, typename SrcTileData::TileDType __in__ src,
                                typename IdxTileData::TileDType __in__ idx, typename TmpTileData::TileDType __in__ tmp,
-                               unsigned validRow, unsigned repeatNumPerRow, unsigned idxStride,
-                               unsigned srcShapeBytesPerRow, unsigned srcTailPerRow, unsigned srcTailRepeatNum)
+                               unsigned validRow, unsigned validCol, unsigned repeatNumPerRow, unsigned idxStride,
+                               unsigned srcTailPerRow, unsigned srcTailRepeatNum)
 {
     using T = typename DstTileData::DType;
     using IdxT = typename IdxTileData::DType;
@@ -126,7 +126,8 @@ __tf__ AICORE void TSort32Impl(typename DstTileData::TileDType __out__ dst, type
     __ubuf__ T *tmpPtr = (__ubuf__ T *)__cce_get_tile_ptr(tmp);
 
     T minVal = -(0.0 / 0.0);
-    if (srcShapeBytesPerRow / sizeof(T) <= MAX_UB_TMP) {
+    uint32_t srcShapeBytesPerRow = validCol * sizeof(T);
+    if (srcShapeBytesPerRow <= MAX_UB_TMP) {
         uint16_t lenBurst = PTO_DIV_ROUNDUP(srcShapeBytesPerRow, BLOCK_SIZE);
         for (int32_t i = 0; i < validRow; i++) {
             copy_ubuf_to_ubuf(tmpPtr, srcPtr + i * srcStride, 0, 1, lenBurst, 0, 0);
@@ -143,7 +144,7 @@ __tf__ AICORE void TSort32Impl(typename DstTileData::TileDType __out__ dst, type
                 pnot(preg_tail, preg_tail_inv, preg_all);
                 vector_align ld_align_reg, st_align_reg;
                 __ubuf__ T *tmpPtr_lastRepeatPerRow =
-                    tmpPtr + PTO_CEIL(srcStride, BLOCK_SIZE) - BLOCK_SIZE; // pad the last 32 elements
+                    tmpPtr + PTO_CEIL(validCol, BLOCK_SIZE) - BLOCK_SIZE; // pad the last 32 elements
                 __ubuf__ T *tmpDstPtr = tmpPtr_lastRepeatPerRow;
                 // only load and pad the last unaligned 32 elements per row, No need for post-update
                 vlds(vreg_padded, tmpPtr_lastRepeatPerRow, 0, NORM);
@@ -152,11 +153,11 @@ __tf__ AICORE void TSort32Impl(typename DstTileData::TileDType __out__ dst, type
             }
 
             // sort for tmp and out to dst
-            vbitsort(dstPtr + i * dstStride, tmpPtr, idxPtr + i * idxStride, repeatNumPerRow + 1);
+            vbitsort(dstPtr + i * dstStride, tmpPtr, idxPtr + i * idxStride, repeatNumPerRow);
         }
     } else {
-        LargeTmpBufferImpl<T, IdxT, dstStride, srcStride>(dstPtr, srcPtr, idxPtr, tmpPtr, validRow, repeatNumPerRow,
-                                                          idxStride, srcTailPerRow, srcTailRepeatNum);
+        LargeTmpBufferImpl<T, IdxT, dstStride, srcStride>(dstPtr, srcPtr, idxPtr, tmpPtr, validRow, validCol,
+                                                          repeatNumPerRow, idxStride, srcTailPerRow, srcTailRepeatNum);
     }
 }
 
@@ -195,12 +196,13 @@ AICORE inline void TSORT32_IMPL(DstTileData &dst, SrcTileData &src, IdxTileData 
 {
     CheckStatic<DstTileData, SrcTileData, IdxTileData>();
     unsigned validRow = dst.GetValidRow();
-    unsigned repeatNumPerRow = src.GetValidCol() / 32;
+    unsigned validCol = src.GetValidCol();
+    unsigned repeatNumPerRow = PTO_DIV_ROUNDUP(validCol, 32);
 
     constexpr unsigned byteSize = sizeof(typename DstTileData::DType);
-    constexpr unsigned dstStride = PTO_CEIL(DstTileData::RowStride * byteSize, BLOCK_SIZE) / byteSize;
-    constexpr unsigned srcStride = PTO_CEIL(SrcTileData::RowStride * byteSize, BLOCK_SIZE) / byteSize;
-    constexpr unsigned tmpIdxStride = PTO_CEIL(IdxTileData::RowStride * 4, BLOCK_SIZE) / 4;
+    constexpr unsigned dstStride = PTO_CEIL(DstTileData::Cols * byteSize, BLOCK_SIZE) / byteSize;
+    constexpr unsigned srcStride = PTO_CEIL(SrcTileData::Cols * byteSize, BLOCK_SIZE) / byteSize;
+    constexpr unsigned tmpIdxStride = PTO_CEIL(IdxTileData::Cols * 4, BLOCK_SIZE) / 4;
 
     unsigned idxStride = idx.GetValidRow() == 1 ? 0 : tmpIdxStride;
 
@@ -208,11 +210,10 @@ AICORE inline void TSORT32_IMPL(DstTileData &dst, SrcTileData &src, IdxTileData 
         TSort32Impl<DstTileData, SrcTileData, IdxTileData, dstStride, srcStride>(dst.data(), src.data(), idx.data(),
                                                                                  validRow, repeatNumPerRow, idxStride);
     } else {
-        unsigned srcShapeBytesPerRow = src.GetValidCol() * byteSize;
-        unsigned srcTailPerRow = src.GetValidCol() % 32;
-        unsigned srcTailRepeatNum = PTO_DIV_ROUNDUP(src.GetValidCol(), BLOCK_SIZE) % REPEAT_MAX;
+        unsigned srcTailPerRow = validCol % 32;                                         // 4164%32 = 4
+        unsigned srcTailRepeatNum = PTO_DIV_ROUNDUP(validCol, BLOCK_SIZE) % REPEAT_MAX; // 131
         TSort32Impl<DstTileData, SrcTileData, IdxTileData, TmpTileData, dstStride, srcStride>(
-            dst.data(), src.data(), idx.data(), tmp.data(), validRow, repeatNumPerRow, idxStride, srcShapeBytesPerRow,
+            dst.data(), src.data(), idx.data(), tmp.data(), validRow, validCol, repeatNumPerRow, idxStride,
             srcTailPerRow, srcTailRepeatNum);
     }
 }
