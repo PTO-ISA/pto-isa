@@ -13,6 +13,7 @@
 import os
 
 import numpy as np
+
 np.random.seed(19)
 
 
@@ -117,12 +118,53 @@ def gen_golden_data(param: TGatherParamsBase):
             res = x1_gm[:, 3::4]
         elif pattern == P1111:
             res = x1_gm[:, :]
-        
+
         golden = res.flatten()
 
         golden.tofile("./golden.bin")
         x1_gm.tofile("./x1_gm.bin")
-        os.chdir(original_dir) 
+        os.chdir(original_dir)
+    else:
+        if param.cmpmode == 0:
+            assert param.kvalue > 50, (
+                "k-value is not supposed to be too small to make sure golden will not exceed src data"
+            )
+        src_type = param.src_type
+        dst_type = param.dst_type
+        src_row = param.src_row
+        src_col = param.src_col
+        dst_row = param.src_row
+        dst_col = param.k
+        kvalue = param.kvalue
+        i_offset = param.i_offset
+        cmpmode = param.cmpmode
+        src_data = np.random.randint(0, 100, [src_row, src_col]).astype(src_type)
+        golden = np.zeros((dst_row, dst_col)).astype(dst_type)
+        if cmpmode == 0:
+            for i in range(src_row):
+                k = 0
+                for j in range(src_col):
+                    idx = i * src_col + j
+                    if src_data[i, j] > kvalue:
+                        golden[i, k] = idx
+                        k = k + 1
+        elif cmpmode == 1:
+            for i in range(src_row):
+                k = 0
+                for j in range(src_col):
+                    idx = i * src_col + j
+                    if src_data[i, j] == kvalue:
+                        golden[i, k] = idx
+                        k = k + 1
+        else:
+            assert False, "not implemented"
+
+        src_data1 = np.array(kvalue).astype(src_type)
+
+        src_data.tofile("./src.bin")
+        src_data1.tofile("./src1.bin")
+        golden.tofile("./golden.bin")
+        os.chdir(original_dir)
 
 
 class TGatherParamsNorm(TGatherParamsBase):
@@ -135,14 +177,26 @@ class TGatherParamsNorm(TGatherParamsBase):
         self.src1_row = src1_row
         self.src1_col = src1_col
 
-if __name__ == "__main__":
 
+class TGatherParamsCmp(TGatherParamsBase):
+    def __init__(self, name, src_type, dst_type, src_row, src_col, kvalue, i_offset, k, cmpmode=0):
+        super().__init__(name)
+        self.src_type = src_type
+        self.dst_type = dst_type
+        self.src_row = src_row
+        self.src_col = src_col
+        self.kvalue = kvalue
+        self.i_offset = i_offset
+        self.k = k
+        self.cmpmode = cmpmode  # 0 for gt, 1 for eq
+
+
+if __name__ == "__main__":
     case_params_list = [
         TGatherParamsNorm("TGATHERTest.case1_float", np.float32, np.int32, 32, 1024, 16, 64),
         TGatherParamsNorm("TGATHERTest.case2_int32", np.int32, np.int32, 32, 512, 16, 256),
         TGatherParamsNorm("TGATHERTest.case3_half", np.half, np.int16, 16, 1024, 16, 128),
         TGatherParamsNorm("TGATHERTest.case4_int16", np.int16, np.int16, 32, 256, 32, 64),
-
         ParamMasked("TGATHERTest.case1_float_P0101", np.float32, np.float32, FLOAT_P0101_ROW, FLOAT_P0101_COL, P0101),
         ParamMasked("TGATHERTest.case1_float_P1010", np.float32, np.float32, FLOAT_P1010_ROW, FLOAT_P1010_COL, P1010),
         ParamMasked("TGATHERTest.case1_float_P0001", np.float32, np.float32, FLOAT_P0001_ROW, FLOAT_P0001_COL, P0001),
@@ -151,7 +205,6 @@ if __name__ == "__main__":
         ParamMasked("TGATHERTest.case1_float_P1000", np.float32, np.float32, FLOAT_P1000_ROW, FLOAT_P1000_COL, P1000),
         ParamMasked("TGATHERTest.case1_float_P1111", np.float32, np.float32, FLOAT_P1111_ROW, FLOAT_P1111_COL, P1111),
         ParamMasked("TGATHERTest.case1_float_int_P1010", np.float32, np.int32, FLOAT_P1010_ROW, FLOAT_P1010_COL, P1010),
-
         ParamMasked("TGATHERTest.case1_half_P0101", np.half, np.half, HALF_P0101_ROW, HALF_P0101_COL, P0101),
         ParamMasked("TGATHERTest.case1_half_P1010", np.half, np.half, HALF_P1010_ROW, HALF_P1010_COL, P1010),
         ParamMasked("TGATHERTest.case1_half_P0001", np.half, np.half, HALF_P0001_ROW, HALF_P0001_COL, P0001),
@@ -159,7 +212,6 @@ if __name__ == "__main__":
         ParamMasked("TGATHERTest.case1_half_P0100", np.half, np.half, HALF_P0100_ROW, HALF_P0100_COL, P0100),
         ParamMasked("TGATHERTest.case1_half_P1000", np.half, np.half, HALF_P1000_ROW, HALF_P1000_COL, P1000),
         ParamMasked("TGATHERTest.case1_half_P1111", np.half, np.half, HALF_P1111_ROW, HALF_P1111_COL, P1111),
-
         ParamMasked("TGATHERTest.case1_U16_P0101", np.uint16, np.uint16, HALF_P0101_ROW, HALF_P0101_COL, P0101),
         ParamMasked("TGATHERTest.case1_U16_P1010", np.uint16, np.uint16, HALF_P1010_ROW, HALF_P1010_COL, P1010),
         ParamMasked("TGATHERTest.case1_I16_P0001", np.int16, np.int16, HALF_P0001_ROW, HALF_P0001_COL, P0001),
@@ -167,7 +219,6 @@ if __name__ == "__main__":
         ParamMasked("TGATHERTest.case1_U32_P0100", np.uint32, np.uint32, FLOAT_P0100_ROW, FLOAT_P0100_COL, P0100),
         ParamMasked("TGATHERTest.case1_I32_P1000", np.int32, np.int32, FLOAT_P1000_ROW, FLOAT_P1000_COL, P1000),
         ParamMasked("TGATHERTest.case1_I32_P1111", np.int32, np.int32, FLOAT_P1111_ROW, FLOAT_P1111_COL, P1111),
-
         ParamMasked("TGATHERTest.case1_b8_P0101", np.int8, np.int8, HALF_P0101_ROW, HALF_P0101_COL, P0101),
         ParamMasked("TGATHERTest.case1_b8_P1010", np.uint8, np.uint8, HALF_P1010_ROW, HALF_P1010_COL, P1010),
         ParamMasked("TGATHERTest.case1_b8_P0001", np.int8, np.int8, HALF_P0001_ROW, HALF_P0001_COL, P0001),
@@ -175,6 +226,13 @@ if __name__ == "__main__":
         ParamMasked("TGATHERTest.case1_b8_P0100", np.int8, np.int8, HALF_P0100_ROW, HALF_P0100_COL, P0100),
         ParamMasked("TGATHERTest.case1_b8_P1000", np.uint8, np.uint8, HALF_P1000_ROW, HALF_P1000_COL, P1000),
         ParamMasked("TGATHERTest.case1_b8_P1111", np.int8, np.int8, HALF_P1111_ROW, HALF_P1111_COL, P1111),
+        TGatherParamsCmp("TGATHERTest.case1_float_topk", np.float32, np.uint32, 16, 64, 80, 0, 32, 0),
+        TGatherParamsCmp("TGATHERTest.case2_u32_topk", np.uint32, np.uint32, 8, 128, 80, 0, 64, 0),
+        TGatherParamsCmp("TGATHERTest.case3_float_topk", np.float32, np.uint32, 4, 256, 30, 0, 64, 1),
+        TGatherParamsCmp("TGATHERTest.case4_s16_topk", np.int16, np.uint32, 16, 128, 90, 0, 32, 0),
+        TGatherParamsCmp("TGATHERTest.case5_s16_topk", np.int16, np.uint32, 4, 64, 20, 0, 32, 1),
+        TGatherParamsCmp("TGATHERTest.case6_half_topk", np.half, np.uint32, 2, 256, 90, 0, 32, 0),
+        TGatherParamsCmp("TGATHERTest.case7_half_topk", np.half, np.uint32, 8, 128, 40, 0, 32, 1),
     ]
 
     for _, case in enumerate(case_params_list):
