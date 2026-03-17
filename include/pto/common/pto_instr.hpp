@@ -167,6 +167,14 @@ PTO_INST RecordEvent TCMP(TileDataDst &dst, TileDataSrc &src0, TileDataSrc &src1
     return {};
 }
 
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
+PTO_INST RecordEvent TCONCAT(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MAP_INSTR_IMPL(TCONCAT, dst, src0, src1);
+    return {};
+}
+
 template <typename TileData, typename GlobalData, typename... WaitEvents>
 PTO_INST RecordEvent TSTORE(GlobalData &dst, TileData &src, WaitEvents &... events)
 {
