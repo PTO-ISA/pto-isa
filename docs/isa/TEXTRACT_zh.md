@@ -52,14 +52,14 @@ PTO_INST RecordEvent TEXTRACT(DstTileData& dst, SrcTileData& src, uint16_t index
 
 - **实现检查 (A2A3)**:
   - `DstTileData::DType` 必须等于 `SrcTileData::DType` 且必须是以下之一：`int8_t`、`half`、`bfloat16_t`、`float`。
-  - 源分形必须满足：`(SFractal == ColMajor && isRowMajor)` 或 `(SFractal == RowMajor && !isRowMajor)`。
+  - 源分形必须满足：`(SFractal == ColMajor && isRowMajor)` 或 `(SFractal == RowMajor && !isRowMajor)`，GEMV场景中，目标为Left时，源分形满足`(SrcTileData::Rows == 1 && SrcTileData::isRowMajor)`
   - 运行时边界检查：
     - `indexRow + DstTileData::Rows <= SrcTileData::Rows`
     - `indexCol + DstTileData::Cols <= SrcTileData::Cols`
   - 目标必须是 `TileType::Left` 或 `TileType::Right`，具有目标支持的分形配置。
 - **实现检查 (A5)**:
   - `DstTileData::DType` 必须等于 `SrcTileData::DType` 且必须是以下之一：`int8_t`、`hifloat8_t`、`float8_e5m2_t`、`float8_e4m3_t`、`half`、`bfloat16_t`、`float`、`float4_e2m1x2_t`、`float4_e1m2x2_t`、`float8_e8m0_t`。
-  - 源分形必须满足：对于 Left/Right 为 `(SFractal == ColMajor && isRowMajor)` 或 `(SFractal == RowMajor && !isRowMajor)`，对于 ScaleLeft 为 `(SFractal == RowMajor && isRowMajor)`，对于 ScaleRight 为 `(SFractal == ColMajor && !isRowMajor)`。
+  - 源分形必须满足：对于 Left/Right 为 `(SFractal == ColMajor && isRowMajor)` 或 `(SFractal == RowMajor && !isRowMajor)`，GEMV场景中，目标为Left时，源分形满足`(SrcTileData::Rows == 1 && SrcTileData::isRowMajor)`；对于 ScaleLeft 为 `(SFractal == RowMajor && isRowMajor)`，对于 ScaleRight 为 `(SFractal == ColMajor && !isRowMajor)`。
   - 目标支持 `Mat -> Left/Right/Scale`，也支持特定 tile 位置的 `Vec -> Mat`（此目标的 `TEXTRACT_IMPL` 中不强制执行显式运行时边界断言）。
 
 ## 示例

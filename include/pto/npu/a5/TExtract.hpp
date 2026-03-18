@@ -440,7 +440,7 @@ AICORE void TExtractToLeft(DstTileData &dst, SrcTileData &src, uint16_t indexRow
 {
     static_assert((SrcTileData::SFractal == SLayout::ColMajor && SrcTileData::isRowMajor) ||
                       (SrcTileData::SFractal == SLayout::RowMajor && !SrcTileData::isRowMajor) ||
-                      SrcTileData::isRowMajor,
+                      (SrcTileData::Rows == 1 && SrcTileData::isRowMajor),
                   "TExtract: SrcTile Invalid Fractal");
     static_assert(DstTileData::SFractal == SLayout::RowMajor && !DstTileData::isRowMajor,
                   "TExtract: DstTile Invalid Fractal");

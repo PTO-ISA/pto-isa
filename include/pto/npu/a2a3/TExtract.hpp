@@ -481,15 +481,15 @@ PTO_INTERNAL void CheckTExtract()
     static_assert(std::is_same<DstType, int8_t>::value || std::is_same<DstType, half>::value ||
                       std::is_same<DstType, bfloat16_t>::value || std::is_same<DstType, float>::value,
                   "TExtract: Invalid data type.");
-    static_assert((SrcTileData::SFractal == SLayout::ColMajor && SrcTileData::isRowMajor) ||
-                      (SrcTileData::SFractal == SLayout::RowMajor && !SrcTileData::isRowMajor) ||
-                      SrcTileData::isRowMajor,
-                  "TExtract: SrcTile Invalid Fractal.");
 }
 
 template <typename DstTileData, typename SrcTileData>
 AICORE void TExtractToLeft(DstTileData &dst, SrcTileData &src, uint16_t indexRow, uint16_t indexCol)
 {
+    static_assert((SrcTileData::SFractal == SLayout::ColMajor && SrcTileData::isRowMajor) ||
+                      (SrcTileData::SFractal == SLayout::RowMajor && !SrcTileData::isRowMajor) ||
+                      (SrcTileData::Rows == 1 && SrcTileData::isRowMajor),
+                  "TExtract: SrcTile Invalid Fractal");
     static_assert(DstTileData::SFractal == SLayout::RowMajor && DstTileData::isRowMajor,
                   "TExtract: LeftTile Invalid Fractal.");
     if constexpr (SrcTileData::Rows == 1 && SrcTileData::isRowMajor) {
@@ -514,6 +514,9 @@ AICORE void TExtractToLeft(DstTileData &dst, SrcTileData &src, uint16_t indexRow
 template <typename DstTileData, typename SrcTileData>
 AICORE void TExtractToRight(DstTileData &dst, SrcTileData &src, uint16_t indexRow, uint16_t indexCol)
 {
+    static_assert((SrcTileData::SFractal == SLayout::ColMajor && SrcTileData::isRowMajor) ||
+                      (SrcTileData::SFractal == SLayout::RowMajor && !SrcTileData::isRowMajor),
+                  "TExtract: SrcTile Invalid Fractal");
     static_assert(DstTileData::SFractal == SLayout::ColMajor && DstTileData::isRowMajor,
                   "TExtract: RightTile Invalid Fractal.");
     if constexpr (DstTileData::SFractal == SrcTileData::SFractal) {

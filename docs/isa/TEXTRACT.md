@@ -52,14 +52,14 @@ PTO_INST RecordEvent TEXTRACT(DstTileData& dst, SrcTileData& src, uint16_t index
 
 - **Implementation checks (A2A3)**:
   - `DstTileData::DType` must equal `SrcTileData::DType` and must be one of: `int8_t`, `half`, `bfloat16_t`, `float`.
-  - Source fractal must satisfy: `(SFractal == ColMajor && isRowMajor)` or `(SFractal == RowMajor && !isRowMajor)`.
+  - Source fractal must satisfy: `(SFractal == ColMajor && isRowMajor)` or `(SFractal == RowMajor && !isRowMajor)`. In GEMV scenarios, the source fractal satisfies `(SrcTileData::Rows == 1 && SrcTileData::isRowMajor)` for Left.
   - Runtime bounds checks:
     - `indexRow + DstTileData::Rows <= SrcTileData::Rows`
     - `indexCol + DstTileData::Cols <= SrcTileData::Cols`
   - Destination must be `TileType::Left` or `TileType::Right` with a target-supported fractal configuration.
 - **Implementation checks (A5)**:
   - `DstTileData::DType` must equal `SrcTileData::DType` and must be one of: `int8_t`, `hifloat8_t`, `float8_e5m2_t`, `float8_e4m3_t`, `half`, `bfloat16_t`, `float`, `float4_e2m1x2_t`, `float4_e1m2x2_t`, `float8_e8m0_t`.
-  - Source fractal must satisfy: `(SFractal == ColMajor && isRowMajor)` or `(SFractal == RowMajor && !isRowMajor)` for Left/Right, `(SFractal == RowMajor && isRowMajor)` for ScaleLeft, `(SFractal == ColMajor && !isRowMajor)` for ScaleRight.
+  - Source fractal must satisfy: `(SFractal == ColMajor && isRowMajor)` or `(SFractal == RowMajor && !isRowMajor)` for Left/Right,  In GEMV scenarios, the source fractal satisfies `(SrcTileData::Rows == 1 && SrcTileData::isRowMajor)` for Left. `(SFractal == RowMajor && isRowMajor)` for ScaleLeft, `(SFractal == ColMajor && !isRowMajor)` for ScaleRight.
   - Destination supports `Mat -> Left/Right/Scale` and also supports `Vec -> Mat` for specific tile locations (no explicit runtime bounds assertions are enforced in `TEXTRACT_IMPL` on this target).
 
 ## Examples
