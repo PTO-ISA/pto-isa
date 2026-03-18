@@ -22,7 +22,8 @@ namespace pto {
 template <typename T>
 struct IndexConcat {
     static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "Fix: Unsupported DType size for index vector.");
-    using Scalar = std::conditional_t<sizeof(T) == 4, int32_t, std::conditional_t<sizeof(T) == 2, int16_t, int8_t>>;
+    using Scalar = std::conditional_t<sizeof(T) == sizeof(int32_t), int32_t,
+                                      std::conditional_t<sizeof(T) == sizeof(int16_t), int16_t, int8_t>>;
     using type = RegTensor<Scalar>;
 };
 
