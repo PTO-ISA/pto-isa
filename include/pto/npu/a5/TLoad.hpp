@@ -396,9 +396,11 @@ PTO_INTERNAL void TLoadCubeND2ND(__cbuf__ typename TileData::DType *dst, typenam
     uint64_t loop2DstStride = GetByteSize<typename TileData::DType>(dstStride1);
     uint64_t loop1DstStride = GetByteSize<typename TileData::DType>(dstStride2);
 
-    set_loop2_stride_outtol1(loop2DstStride << 40 | loop2SrcStride);
-    set_loop1_stride_outtol1(loop1DstStride << 40 | loop1SrcStride);
-    set_loop_size_outtol1(loop2 << 21 | loop1);
+    if (loop1 != 1 || loop2 != 1) {
+        set_loop2_stride_outtol1(loop2DstStride << 40 | loop2SrcStride);
+        set_loop1_stride_outtol1(loop1DstStride << 40 | loop1SrcStride);
+        set_loop_size_outtol1(loop2 << 21 | loop1);
+    }
     if constexpr (std::is_same<typename TileData::DType, float4_e1m2x2_t>::value ||
                   std::is_same<typename TileData::DType, float4_e2m1x2_t>::value) {
         dstStride0 = dstStride0 >> 1; // fp4 dstAddr offset need divide 2 as use b8 to move
@@ -410,6 +412,9 @@ PTO_INTERNAL void TLoadCubeND2ND(__cbuf__ typename TileData::DType *dst, typenam
         dstAddrP = dst + dstAddr0;
         srcAddrP = src + srcAddr0;
         TLoadCubeInstr<TileData, GlobalData>(dstAddrP, srcAddrP, nBurst, lenBurst, gmStride, dstStride, padCount);
+    }
+    if (loop1 != 1 || loop2 != 1) {
+        set_loop_size_outtol1(1 << 21 | 1); // resume to normal mode
     }
 }
 
@@ -449,15 +454,20 @@ PTO_INTERNAL void TLoadCubeDN2DN(__cbuf__ typename TileData::DType *dst, typenam
     uint64_t loop2DstStride = GetByteSize<typename TileData::DType>(dstStride1);
     uint64_t loop1DstStride = GetByteSize<typename TileData::DType>(dstStride2);
 
-    set_loop2_stride_outtol1(loop2DstStride << 40 | loop2SrcStride);
-    set_loop1_stride_outtol1(loop1DstStride << 40 | loop1SrcStride);
-    set_loop_size_outtol1(loop2 << 21 | loop1);
+    if (loop1 != 1 || loop2 != 1) {
+        set_loop2_stride_outtol1(loop2DstStride << 40 | loop2SrcStride);
+        set_loop1_stride_outtol1(loop1DstStride << 40 | loop1SrcStride);
+        set_loop_size_outtol1(loop2 << 21 | loop1);
+    }
     for (uint32_t i = 0; i < gShape0; i++) {
         int64_t dstAddr0 = i * dstStride0;
         int64_t srcAddr0 = i * gStride0;
         dstAddrP = dst + dstAddr0;
         srcAddrP = src + srcAddr0;
         TLoadCubeInstr<TileData, GlobalData>(dstAddrP, srcAddrP, nBurst, lenBurst, gmStride, dstStride, padCount);
+    }
+    if (loop1 != 1 || loop2 != 1) {
+        set_loop_size_outtol1(1 << 21 | 1); // resume to normal mode
     }
 }
 
