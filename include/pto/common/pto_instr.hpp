@@ -1584,6 +1584,15 @@ PTO_INST RecordEvent TPACK(TileDataDst &dst, TileDataSrc &src, WaitEvents &... e
     return {};
 }
 
+template <bool MSBorLSB = true, typename TileDataDst, typename TileDataSrc, typename TileDataIdx,
+          typename... WaitEvents>
+PTO_INST RecordEvent THISTOGRAM(TileDataDst &dst, TileDataSrc &src, TileDataIdx &idx, WaitEvents &... events)
+{
+    TSYNC(events...);
+    THISTOGRAM_IMPL<MSBorLSB>(dst, src, idx);
+    return {};
+}
+
 template <auto quant_type, typename TileDataOut, typename TileDataSrc, typename TileDataExp, typename TileDataMax,
           typename... WaitEvents>
 PTO_INST RecordEvent TQUANT(TileDataOut &dst, TileDataSrc &src, TileDataExp *exp, TileDataMax *max,

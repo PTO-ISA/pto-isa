@@ -333,6 +333,7 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/$RUN_MODE -r $RUN_TYPE -v a5 -t tpack -g TPACKTEST.case_fp32_fp8_128x128
     python3 tests/script/$RUN_MODE -r $RUN_TYPE -v a5 -t tpack -g TPACKTEST.case_fp16_fp8_128x128
     python3 tests/script/$RUN_MODE -r $RUN_TYPE -v a5 -t tconcat -g TCONCATTest.case_half_16x128_16x64_16x64_16x63_16x64
+    python3 tests/script/$RUN_MODE -r $RUN_TYPE -v a5 -t thistogram -g THISTOGRAMTest.case_8x128_LSB_k104
 
   elif [ "$ENABLE_ALL" = "true" ]; then            # 所有用例
     python3 tests/script/build_st.py -r $RUN_TYPE -v a5 -t all
@@ -434,6 +435,7 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/$RUN_MODE -r $RUN_TYPE -v a5 -t tdequant
     python3 tests/script/$RUN_MODE -r $RUN_TYPE -v a5 -t tconcat
     python3 tests/script/$RUN_MODE -r $RUN_TYPE -v a5 -t tpack
+    python3 tests/script/$RUN_MODE -r $RUN_TYPE -v a5 -t thistogram
   fi
 fi
 
