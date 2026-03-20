@@ -225,60 +225,6 @@ __tf__ PTO_INTERNAL void TFillPad(typename TileDataDst::TileDType __out__ dst,
     set_vector_mask(-1, -1);
 } // end of tf
 
-template <typename TileDataDst, typename TileDataSrc, bool inplace>
-PTO_INTERNAL void TFILLPAD_GENERIC_IMPL(TileDataDst &dst, TileDataSrc &src)
-{
-    constexpr unsigned blockSizeElem = BLOCK_BYTE_SIZE / sizeof(typename TileDataSrc::DType);
-    constexpr unsigned dstStride = TileDataDst::RowStride;
-    constexpr unsigned srcStride = TileDataSrc::RowStride;
-    uint64_t validDstRow = dst.GetValidRow();
-    uint64_t validDstCol = dst.GetValidCol();
-    uint64_t validSrcRow = src.GetValidRow();
-    uint64_t validSrcCol = src.GetValidCol();
-
-    using T = typename TileDataSrc::DType;
-    using U = typename TileDataDst::DType;
-    static_assert(TileDataDst::PadVal != PadValue::Null, "Fix: TFillPad dst vecTile pad value must not be Null!");
-    static_assert(sizeof(T) == sizeof(U), "Fix: TFillPad src and dst data type is different!");
-    static_assert(sizeof(T) == 4 || sizeof(T) == 2 || sizeof(T) == 1, "Fix: TFillPad has invalid data type.");
-
-    if (validDstRow == 0 || validDstCol == 0) {
-        return;
-    }
-    if constexpr (!inplace) {
-        TFillPad_CopyData<TileDataDst, TileDataSrc>(dst.data(), src.data(), validDstRow, validDstCol, validSrcRow,
-                                                    validSrcCol);
-    }
-    TFillPad<TileDataDst, TileDataSrc>(dst.data(), src.data(), validDstRow, validDstCol, validSrcRow, validSrcCol);
-}
-
-template <typename TileDataDst, typename TileDataSrc>
-PTO_INTERNAL void TFILLPAD_IMPL(TileDataDst &dst, TileDataSrc &src)
-{
-    static_assert(TileDataDst::Cols == TileDataSrc::Cols && TileDataDst::Rows == TileDataSrc::Rows,
-                  "Fix: TFillPad Dst/Src vecTile Rows/Cols must be the same.");
-
-    TFILLPAD_GENERIC_IMPL<TileDataDst, TileDataSrc, false>(dst, src);
-}
-
-template <typename TileDataDst, typename TileDataSrc>
-PTO_INTERNAL void TFILLPAD_INPLACE_IMPL(TileDataDst &dst, TileDataSrc &src)
-{
-    static_assert(TileDataDst::Cols == TileDataSrc::Cols && TileDataDst::Rows == TileDataSrc::Rows,
-                  "Fix: TFillPad Dst vecTile Rows/Cols must be greater or equal to src vecTile.");
-
-    TFILLPAD_GENERIC_IMPL<TileDataDst, TileDataSrc, true>(dst, src);
-}
-
-template <typename TileDataDst, typename TileDataSrc>
-PTO_INTERNAL void TFILLPAD_EXPAND_IMPL(TileDataDst &dst, TileDataSrc &src)
-{
-    static_assert(TileDataDst::Cols >= TileDataSrc::Cols && TileDataDst::Rows >= TileDataSrc::Rows,
-                  "Fix: TFillPad Dst/Src vecTile Rows/Cols must be the same.");
-
-    TFILLPAD_GENERIC_IMPL<TileDataDst, TileDataSrc, false>(dst, src);
-}
-
 template <typename TileData>
 __tf__ PTO_INTERNAL void TFillPad(typename TileData::TileDType __out__ dst, uint32_t dstValidRow, uint32_t dstValidCol)
 {
@@ -309,20 +255,70 @@ __tf__ PTO_INTERNAL void TFillPad(typename TileData::TileDType __out__ dst, uint
 #endif
 }
 
+template <typename TileDataDst, typename TileDataSrc, bool inplace>
+PTO_INTERNAL void TFILLPAD_GENERIC_IMPL(TileDataDst &dst, TileDataSrc &src)
+{
+    constexpr unsigned blockSizeElem = BLOCK_BYTE_SIZE / sizeof(typename TileDataSrc::DType);
+    constexpr unsigned srcStride = TileDataSrc::RowStride;
+    constexpr unsigned dstStride = TileDataDst::RowStride;
+    uint64_t validSrcRow = src.GetValidRow();
+    uint64_t validSrcCol = src.GetValidCol();
+    uint64_t validDstRow = dst.GetValidRow();
+    uint64_t validDstCol = dst.GetValidCol();
+
+    using U = typename TileDataDst::DType;
+    using T = typename TileDataSrc::DType;
+    static_assert(sizeof(T) == sizeof(U), "Fix: TFillPad src and dst data type is different!");
+    static_assert(sizeof(T) == 4 || sizeof(T) == 2 || sizeof(T) == 1, "Fix: TFillPad has invalid data type.");
+    static_assert(TileDataDst::PadVal != PadValue::Null, "Fix: TFillPad dst vecTile pad value must not be Null!");
+
+    if (validDstRow == 0 || validDstCol == 0) {
+        return;
+    }
+    if constexpr (!inplace) {
+        TFillPad_CopyData<TileDataDst, TileDataSrc>(dst.data(), src.data(), validDstRow, validDstCol, validSrcRow,
+                                                    validSrcCol);
+    }
+    TFillPad<TileDataDst, TileDataSrc>(dst.data(), src.data(), validDstRow, validDstCol, validSrcRow, validSrcCol);
+} // end of TFILLPAD_GENERIC
+
+template <typename TileDataDst, typename TileDataSrc>
+PTO_INTERNAL void TFILLPAD_INPLACE_IMPL(TileDataDst &dst, TileDataSrc &src)
+{
+    static_assert(TileDataDst::Cols == TileDataSrc::Cols && TileDataDst::Rows == TileDataSrc::Rows,
+                  "Fix: TFillPad Dst vecTile Rows/Cols must be greater or equal to src vecTile.");
+    TFILLPAD_GENERIC_IMPL<TileDataDst, TileDataSrc, true>(dst, src);
+} // end of TFILLPAD_INPLACE
+
+template <typename TileDataDst, typename TileDataSrc>
+PTO_INTERNAL void TFILLPAD_IMPL(TileDataDst &dst, TileDataSrc &src)
+{
+    static_assert(TileDataDst::Cols == TileDataSrc::Cols && TileDataDst::Rows == TileDataSrc::Rows,
+                  "Fix: TFillPad Dst/Src vecTile Rows/Cols must be the same.");
+    TFILLPAD_GENERIC_IMPL<TileDataDst, TileDataSrc, false>(dst, src);
+} // end of TFILLPAD
+
+template <typename TileDataDst, typename TileDataSrc>
+PTO_INTERNAL void TFILLPAD_EXPAND_IMPL(TileDataDst &dst, TileDataSrc &src)
+{
+    static_assert(TileDataDst::Cols >= TileDataSrc::Cols && TileDataDst::Rows >= TileDataSrc::Rows,
+                  "Fix: TFillPad Dst/Src vecTile Rows/Cols must be the same.");
+    TFILLPAD_GENERIC_IMPL<TileDataDst, TileDataSrc, false>(dst, src);
+} // end of TFILLPAD_EXPAND
+
 template <typename TileData, PadValue PadVal = PadValue::Zero>
 PTO_INTERNAL void TFILLPAD_IMPL(TileData &dst, TileData &src)
 {
-    static_assert(!TileData::isRowMajor && (TileData::SFractal == SLayout::RowMajor),
-                  "Fix: TFillPad Dst matTile now only support NZ layout.");
     static_assert(TileData::PadVal == PadValue::Zero || TileData::PadVal == PadValue::Null,
                   "Fix: TFillPad dst matTile pad value only support Zero or Null!");
+    static_assert(!TileData::isRowMajor && (TileData::SFractal == SLayout::RowMajor),
+                  "Fix: TFillPad Dst matTile now only support NZ layout.");
     using T = typename TileData::DType;
     static_assert(sizeof(T) == 4 || sizeof(T) == 2 || sizeof(T) == 1, "Fix: TFillPad type must be b4/b8/b16/b32.");
-
-    uint32_t validDstRow = dst.GetValidRow();
     uint32_t validDstCol = dst.GetValidCol();
+    uint32_t validDstRow = dst.GetValidRow();
     TFillPad<TileData>(dst.data(), validDstRow, validDstCol);
-}
+} // end of TFILLPAD
 
 } // namespace pto
 #endif
