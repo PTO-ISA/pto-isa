@@ -132,7 +132,7 @@ void example_manual() {
 
 ```text
 tsync %e0, %e1 : !pto.event<...>, !pto.event<...>
-# IR Level 2 (DPS)
+# AS Level 2 (DPS)
 pto.record_event[src_op, dst_op, eventID]
 ```
 

@@ -150,7 +150,7 @@ pto.tstore %src, %mem : (!pto.tile<...>, !pto.partition_tensor_view<MxNxdtype>) 
 
 ```text
 tstore %t1, %sv_out[%c0, %c0]
-# IR Level 2 (DPS)
+# AS Level 2 (DPS)
 pto.tstore ins(%src : !pto.tile_buf<...>) outs(%mem : !pto.partition_tensor_view<MxNxdtype>)
 ```
 
