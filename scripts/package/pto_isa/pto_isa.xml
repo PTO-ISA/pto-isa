@@ -28,6 +28,7 @@
         <file value="comm" install_mod="550" entity="true"/>
         <file value="npu" install_mod="550" entity="true"/>
         <file value="cpu" install_mod="550" entity="true"/>
+        <file value="costmodel" install_mod="550" entity="true"/>
         <file value="pto-inst.hpp" install_mod="550" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="share/info/pto_isa/include/pto/npu" install_path="$(TARGET_ENV)/include/pto/npu" install_type="all">
