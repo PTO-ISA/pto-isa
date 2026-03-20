@@ -198,6 +198,10 @@ Windows 特定选项（如需要）：
 - Ascend NPU 驱动和固件（用于硬件执行）
 - CANN toolkit >= 8.5.0
 
+> **注意：** 请确保bisheng -v显示的GCC版本与gcc -v显示的GCC版本兼容或一致。
+>
+> 如果不同，您可以在bisheng -v所示的gcc路径下，安装与gcc -v所显示版本一致的gcc，或将默认的gcc替换为与bisheng -v显示一致的版本。
+
 **GoogleTest（单元测试所需）：**
 
 下载 [GoogleTest 1.14.0](https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz) 并安装：

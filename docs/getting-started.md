@@ -198,6 +198,10 @@ This section is for users who need to run on Ascend NPU hardware or simulator. I
 - Ascend NPU driver and firmware (for hardware execution)
 - CANN toolkit >= 8.5.0
 
+> **Note:** Please make sure that the GCC version shown by bisheng -v is compatible with or matches the version shown by gcc -v.
+>
+> If they are dififerent, you can install a version of GCC that matches the version shown by gcc -v at the gcc path indicated by bisheng -v,or replace the default gcc with the version that matches what bisheng -v shows.
+
 **GoogleTest (required for unit tests):**
 
 Download [GoogleTest 1.14.0](https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz) and install:
