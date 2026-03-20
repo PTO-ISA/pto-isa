@@ -33,35 +33,26 @@ struct ColExpandExpdifOp {
     }
 };
 
-template <typename TileData, typename TileDataSrc, unsigned elementsPerRepeat, unsigned blockSizeElem,
-          unsigned rowStride>
-__tf__ AICORE void TColExpandExpdif(typename TileData::TileDType __out__ dst, typename TileData::TileDType __in__ src0,
-                                    typename TileDataSrc::TileDType __in__ src1, unsigned validRow, unsigned validCol)
+template <typename T>
+struct ColExpandExpdifOp2 {
+    PTO_INTERNAL static void ColExpandBinaryInstr(RegTensor<T> &reg_dst, RegTensor<T> &reg_src0, RegTensor<T> &reg_src1,
+                                                  MaskReg &preg)
+    {
+        if constexpr (std::is_same_v<T, half>) {
+            vsub(reg_dst, reg_src1, reg_src0, preg, MODE_ZEROING);
+            vexp(reg_dst, reg_dst, preg, MODE_ZEROING);
+        } else {
+            vexpdif(reg_dst, reg_src1, reg_src0, preg, PART_ODD);
+        }
+    }
+};
+
+template <typename TileData, typename TileDataSrc0, typename TileDataSrc1>
+PTO_INTERNAL void TCOLEXPANDEXPDIF_IMPL(TileData &dst, TileDataSrc0 &src0, TileDataSrc1 &src1)
 {
     using T = typename TileData::DType;
-    __ubuf__ T *dstPtr = (__ubuf__ T *)__cce_get_tile_ptr(dst);
-    __ubuf__ T *src0Ptr = (__ubuf__ T *)__cce_get_tile_ptr(src0);
-    __ubuf__ T *src1Ptr = (__ubuf__ T *)__cce_get_tile_ptr(src1);
-
-    ColExpandBinaryInstr<ColExpandExpdifOp<T>, TileData, TileDataSrc, elementsPerRepeat, blockSizeElem, rowStride>(
-        dstPtr, src0Ptr, src1Ptr, validRow, validCol);
-}
-
-template <typename TileData, typename TileDataSrc>
-PTO_INTERNAL void TCOLEXPANDEXPDIF_IMPL(TileData &dst, TileData &src0, TileDataSrc &src1)
-{
-    static_assert(
-        std::is_same<typename TileData::DType, float>::value || std::is_same<typename TileData::DType, half>::value,
-        "Fix: TCOLEXPANDEXPDIF Invalid data type.");
-    static_assert(TileData::isRowMajor, "Fix: TCOLEXPANDEXPDIF not supported Layout type");
-    constexpr unsigned blockSizeElem = BLOCK_BYTE_SIZE / sizeof(typename TileData::DType);
-    constexpr unsigned elementsPerRepeat = REPEAT_BYTE / sizeof(typename TileData::DType);
-    constexpr unsigned rowStride = TileData::RowStride;
-    unsigned validRow = dst.GetValidRow();
-    unsigned validCol = dst.GetValidCol();
-
-    TColExpandExpdif<TileData, TileDataSrc, elementsPerRepeat, blockSizeElem, rowStride>(
-        dst.data(), src0.data(), src1.data(), validRow, validCol);
+    TCOLEXPANDOP_IMPL<ColExpandExpdifOp<T>, ColExpandExpdifOp2<T>, TileData, TileDataSrc0, TileDataSrc1>(dst, src0,
+                                                                                                         src1);
 }
 } // namespace pto
 #endif

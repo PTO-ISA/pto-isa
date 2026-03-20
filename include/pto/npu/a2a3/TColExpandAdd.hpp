@@ -30,23 +30,11 @@ struct ColExpandAddOp {
         vadd(dst, src0, src1, repeats, 1, 1, 1, dstRepeatStride, src0RepeatStride, 0);
     }
 };
-
-template <typename TileData, typename TileDataSrc>
-PTO_INTERNAL void TCOLEXPANDADD_IMPL(TileData &dst, TileData &src0, TileDataSrc &src1)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1>
+PTO_INTERNAL void TCOLEXPANDADD_IMPL(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1)
 {
-    using T = typename TileData::DType;
-    static_assert(
-        std::is_same<typename TileData::DType, float>::value || std::is_same<typename TileData::DType, half>::value,
-        "Fix: TCOLEXPANDADD Invalid data type.");
-    static_assert(TileData::isRowMajor, "Fix: TCOLEXPANDADD not supported Layout type");
-    constexpr unsigned blockSizeElem = BLOCK_BYTE_SIZE / sizeof(typename TileData::DType);
-    constexpr unsigned elementsPerRepeat = REPEAT_BYTE / sizeof(typename TileData::DType);
-    constexpr unsigned rowStride = TileData::RowStride;
-    unsigned validRow = dst.GetValidRow();
-    unsigned validCol = dst.GetValidCol();
-
-    ColExpandBinaryInstr<ColExpandAddOp<T>, TileData, TileDataSrc, elementsPerRepeat, blockSizeElem, rowStride>(
-        dst.data(), src0.data(), src1.data(), validRow, validCol);
+    using T = typename TileDataDst::DType;
+    TCOLEXPANDOP_IMPL<ColExpandAddOp<T>, ColExpandAddOp<T>, TileDataDst, TileDataSrc0, TileDataSrc1>(dst, src0, src1);
 }
 } // namespace pto
 #endif

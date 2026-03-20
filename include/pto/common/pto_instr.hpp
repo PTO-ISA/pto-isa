@@ -1465,56 +1465,56 @@ PTO_INST RecordEvent TNEG(TileDataDst &dst, TileDataSrc &src, WaitEvents &... ev
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc1, typename... WaitEvents>
-PTO_INST RecordEvent TCOLEXPANDDIV(TileDataDst &dst, TileDataDst &src0, TileDataSrc1 &src1, WaitEvents &... events)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
+PTO_INST RecordEvent TCOLEXPANDDIV(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TCOLEXPANDDIV, dst, src0, src1);
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc1, typename... WaitEvents>
-PTO_INST RecordEvent TCOLEXPANDMUL(TileDataDst &dst, TileDataDst &src0, TileDataSrc1 &src1, WaitEvents &... events)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
+PTO_INST RecordEvent TCOLEXPANDMUL(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TCOLEXPANDMUL, dst, src0, src1);
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc1, typename... WaitEvents>
-PTO_INST RecordEvent TCOLEXPANDADD(TileDataDst &dst, TileDataDst &src0, TileDataSrc1 &src1, WaitEvents &... events)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
+PTO_INST RecordEvent TCOLEXPANDADD(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TCOLEXPANDADD, dst, src0, src1);
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc1, typename... WaitEvents>
-PTO_INST RecordEvent TCOLEXPANDMAX(TileDataDst &dst, TileDataDst &src0, TileDataSrc1 &src1, WaitEvents &... events)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
+PTO_INST RecordEvent TCOLEXPANDMAX(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TCOLEXPANDMAX, dst, src0, src1);
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc1, typename... WaitEvents>
-PTO_INST RecordEvent TCOLEXPANDMIN(TileDataDst &dst, TileDataDst &src0, TileDataSrc1 &src1, WaitEvents &... events)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
+PTO_INST RecordEvent TCOLEXPANDMIN(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TCOLEXPANDMIN, dst, src0, src1);
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc1, typename... WaitEvents>
-PTO_INST RecordEvent TCOLEXPANDSUB(TileDataDst &dst, TileDataDst &src0, TileDataSrc1 &src1, WaitEvents &... events)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
+PTO_INST RecordEvent TCOLEXPANDSUB(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TCOLEXPANDSUB, dst, src0, src1);
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc1, typename... WaitEvents>
-PTO_INST RecordEvent TCOLEXPANDEXPDIF(TileDataDst &dst, TileDataDst &src0, TileDataSrc1 &src1, WaitEvents &... events)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
+PTO_INST RecordEvent TCOLEXPANDEXPDIF(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TCOLEXPANDEXPDIF, dst, src0, src1);

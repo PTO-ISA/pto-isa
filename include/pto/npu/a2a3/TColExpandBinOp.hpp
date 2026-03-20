@@ -75,5 +75,33 @@ __tf__ PTO_INTERNAL void ColExpandBinaryInstr(typename TileData::TileDType __out
     }
 }
 
+template <typename Op, typename Op2, typename TileData, typename TileDataSrc0, typename TileDataSrc1>
+PTO_INTERNAL void TCOLEXPANDOP_IMPL(TileData &dst, TileDataSrc0 &src0, TileDataSrc1 &src1)
+{
+    using T = typename TileData::DType;
+    static_assert(
+        std::is_same<typename TileData::DType, float>::value || std::is_same<typename TileData::DType, half>::value,
+        "Fix: TCOLEXPANDOP Invalid data type.");
+    static_assert(TileData::isRowMajor, "Fix: TCOLEXPANDOP not supported Layout type");
+    constexpr unsigned blockSizeElem = BLOCK_BYTE_SIZE / sizeof(typename TileData::DType);
+    constexpr unsigned elementsPerRepeat = REPEAT_BYTE / sizeof(typename TileData::DType);
+    constexpr unsigned rowStride = TileData::RowStride;
+    unsigned src0ValidRow = src0.GetValidRow();
+    unsigned src0ValidCol = src0.GetValidCol();
+    unsigned src1ValidRow = src1.GetValidRow();
+    unsigned src1ValidCol = src1.GetValidCol();
+    unsigned validRow = dst.GetValidRow();
+    unsigned validCol = dst.GetValidCol();
+    bool src1eqdst = (validRow == src1ValidRow) && (validCol == src1ValidCol);
+    bool src0eqdst = (validRow == src0ValidRow) && (validCol == src0ValidCol);
+
+    if (src0eqdst) {
+        ColExpandBinaryInstr<Op, TileData, TileDataSrc1, elementsPerRepeat, blockSizeElem, rowStride>(
+            dst.data(), src0.data(), src1.data(), validRow, validCol);
+    } else {
+        ColExpandBinaryInstr<Op2, TileData, TileDataSrc0, elementsPerRepeat, blockSizeElem, rowStride>(
+            dst.data(), src1.data(), src0.data(), validRow, validCol);
+    }
+}
 } // namespace pto
 #endif
