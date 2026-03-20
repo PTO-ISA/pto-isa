@@ -39,36 +39,33 @@ AICORE constexpr typename TileData::DType getPadValue()
     return 0;
 }
 
-template <typename GlobalData, typename TileData, std::enable_if_t<TileData::isRowMajor, int> = 0>
+template <typename GlobalData, typename TileData>
 __tf__ PTO_INLINE void LoadPlainMatrix(typename GlobalData::DType __out__ *dst, typename TileData::TileDType __in__ src,
                                        int gShape3, int gShape4, int gStride3, int gStride4, int validRow, int validCol,
                                        size_t idx3)
 {
-    size_t offsetDstBase = idx3 * gShape3 * TileData::Cols;
-    cpu::parallel_for_1d(0, static_cast<std::size_t>(gShape3), static_cast<std::size_t>(gShape3) * gShape4,
-                         [&](std::size_t r) {
-                             const std::size_t dstBase = offsetDstBase + r * TileData::Cols;
-                             const std::size_t srcBase = r * static_cast<std::size_t>(gStride3);
-                             PTO_CPU_VECTORIZE_LOOP
-                             for (std::size_t c = 0; c < static_cast<std::size_t>(gShape4); c++) {
-                                 dst[dstBase + c] = src[srcBase + c * static_cast<std::size_t>(gStride4)];
-                             }
-                         });
-}
-template <typename GlobalData, typename TileData, std::enable_if_t<!TileData::isRowMajor, int> = 0>
-__tf__ PTO_INLINE void LoadPlainMatrix(typename GlobalData::DType __out__ *dst, typename TileData::TileDType __in__ src,
-                                       int gShape3, int gShape4, int gStride3, int gStride4, int validRow, int validCol,
-                                       size_t idx3)
-{
-    size_t offsetDstBase = idx3 * gShape4 * TileData::Rows;
-    cpu::parallel_for_1d(0, static_cast<std::size_t>(gShape4), static_cast<std::size_t>(gShape3) * gShape4,
-                         [&](std::size_t c) {
-                             const std::size_t dstBase = offsetDstBase + c * TileData::Rows;
-                             const std::size_t srcStride4 = static_cast<std::size_t>(gStride4);
-                             for (std::size_t r = 0; r < static_cast<std::size_t>(gShape3); r++) {
-                                 dst[dstBase + r] = src[r * static_cast<std::size_t>(gStride3) + c * srcStride4];
-                             }
-                         });
+    size_t offsetDstBase, shape, shapeBase, strideBase, stride;
+    if constexpr (TileData::isRowMajor) {
+        offsetDstBase = idx3 * gShape3 * TileData::Cols;
+        shape = static_cast<std::size_t>(gShape4);
+        stride = static_cast<std::size_t>(gStride4);
+        shapeBase = static_cast<std::size_t>(gShape3);
+        strideBase = static_cast<std::size_t>(gStride3);
+    } else {
+        offsetDstBase = idx3 * gShape4 * TileData::Rows;
+        shape = static_cast<std::size_t>(gShape3);
+        stride = static_cast<std::size_t>(gStride3);
+        shapeBase = static_cast<std::size_t>(gShape4);
+        strideBase = static_cast<std::size_t>(gStride4);
+    }
+    cpu::parallel_for_1d(0, shapeBase, static_cast<std::size_t>(gShape3) * gShape4, [&](std::size_t r) {
+        const std::size_t dstBase = offsetDstBase + r * (TileData::isRowMajor ? TileData::Cols : TileData::Rows);
+        const std::size_t srcBase = r * strideBase;
+        PTO_CPU_VECTORIZE_LOOP
+        for (std::size_t c = 0; c < shape; c++) {
+            dst[dstBase + c] = src[srcBase + c * stride];
+        }
+    });
 }
 
 template <typename GlobalData, typename TileData>
@@ -94,7 +91,7 @@ __tf__ PTO_INLINE void LoadPlain(typename GlobalData::DType __out__ *dst, typena
     }
 }
 
-template <typename GlobalData, typename TileData, std::enable_if_t<TileData::isRowMajor, int> = 0>
+template <typename GlobalData, typename TileData>
 __tf__ PTO_INLINE void LoadSubfractalMatrix(typename GlobalData::DType __out__ *dst,
                                             typename TileData::TileDType __in__ src, int gShape3, int gShape4,
                                             int gStride3, int gStride4, int validRow, int validCol)
@@ -107,34 +104,16 @@ __tf__ PTO_INLINE void LoadSubfractalMatrix(typename GlobalData::DType __out__ *
             for (size_t r = 0; r < static_cast<std::size_t>(gShape3); r++) {
                 size_t subTileR = r / TileData::InnerRows;
                 size_t innerR = r % TileData::InnerRows;
-
-                size_t tile_idx = subTileR * TileData::Cols * TileData::InnerRows + subTileC * TileData::InnerNumel +
-                                  innerC * TileData::InnerRows + innerR;
+                size_t tile_idx;
+                if constexpr (TileData::isRowMajor) {
+                    tile_idx = subTileR * TileData::Cols * TileData::InnerRows + subTileC * TileData::InnerNumel +
+                               innerC * TileData::InnerRows + innerR;
+                } else {
+                    tile_idx = subTileC * TileData::Rows * TileData::InnerCols + subTileR * TileData::InnerNumel +
+                               innerR * TileData::InnerCols + innerC;
+                }
 
                 size_t gd_idx = r * static_cast<std::size_t>(gStride3) + c * static_cast<std::size_t>(gStride4);
-                dst[tile_idx] = src[gd_idx];
-            }
-        });
-}
-
-template <typename GlobalData, typename TileData, std::enable_if_t<!TileData::isRowMajor, int> = 0>
-__tf__ PTO_INLINE void LoadSubfractalMatrix(typename GlobalData::DType __out__ *dst,
-                                            typename TileData::TileDType __in__ src, int gShape3, int gShape4,
-                                            int gStride3, int gStride4, int validRow, int validCol)
-{
-    // Nz layout
-    cpu::parallel_for_1d(
-        0, static_cast<std::size_t>(gShape4), static_cast<std::size_t>(gShape3) * gShape4, [&](std::size_t c) {
-            size_t subTileC = c / TileData::InnerCols;
-            size_t innerC = c % TileData::InnerCols;
-            for (size_t r = 0; r < static_cast<std::size_t>(gShape3); r++) {
-                size_t subTileR = r / TileData::InnerRows;
-                size_t innerR = r % TileData::InnerRows;
-
-                size_t tile_idx = subTileC * TileData::Rows * TileData::InnerCols + subTileR * TileData::InnerNumel +
-                                  innerR * TileData::InnerCols + innerC;
-                size_t gd_idx = r * static_cast<std::size_t>(gStride3) + c * static_cast<std::size_t>(gStride4);
-
                 dst[tile_idx] = src[gd_idx];
             }
         });
