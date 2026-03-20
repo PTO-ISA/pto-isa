@@ -25,6 +25,7 @@ enum class Op : uint16_t
     VECTOR,
     TADD,
     TADDS,
+    TAXPY,
     TSUB,
     TMUL,
     TMULS,
