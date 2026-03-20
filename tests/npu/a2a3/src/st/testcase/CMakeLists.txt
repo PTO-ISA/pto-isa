@@ -164,6 +164,7 @@ tdivs
 tmuls
 tneg
 tadds
+taxpy
 tgatherb
 tci
 tcolmax

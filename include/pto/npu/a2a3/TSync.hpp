@@ -31,6 +31,7 @@ constexpr pipe_t opPipeList[] = {
     PIPE_V /* VECTOR */,
     PIPE_V /* TADD */,
     PIPE_V /* TADDS */,
+    PIPE_V /* TAXPY */,
     PIPE_V /* TSUB */,
     PIPE_V /* TMUL */,
     PIPE_V /* TMULS */,

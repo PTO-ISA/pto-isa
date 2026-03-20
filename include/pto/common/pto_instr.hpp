@@ -1274,6 +1274,15 @@ PTO_INST RecordEvent TADDS(TileDataDst &dst, TileDataSrc &src0, typename TileDat
 }
 
 template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
+PTO_INST RecordEvent TAXPY(TileDataDst &dst, TileDataSrc &src0, typename TileDataSrc::DType scalar,
+                           WaitEvents &... events)
+{
+    TSYNC(events...);
+    MAP_INSTR_IMPL(TAXPY, dst, src0, scalar);
+    return {};
+}
+
+template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
 PTO_INST RecordEvent TSUBS(TileDataDst &dst, TileDataSrc &src0, typename TileDataSrc::DType scalar,
                            WaitEvents &... events)
 {

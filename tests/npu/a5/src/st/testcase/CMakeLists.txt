@@ -194,6 +194,7 @@ set(ALL_TESTCASES
     tdivs
     tmuls
     tadds
+    taxpy
     tgatherb
     tpartmin
     tpartmax
