@@ -54,6 +54,8 @@ template <typename TileData, typename GlobalData, typename FpTileData, AtomicTyp
 PTO_INST RecordEvent TSTORE_FP(GlobalData& dst, TileData& src, FpTileData& fp, WaitEvents&... events);
 ```
 
+在当前 A2/A3 与 A5 后端上，`preQuantScalar` 与 `TSTORE_FP` 量化存储重载仅对 `TileType::Acc` 合法；它们不提供原生的 Vec Tile 量化存储契约。
+
 ## 约束
 
 - **实现检查 (A2A3)**:
@@ -64,6 +66,7 @@ PTO_INST RecordEvent TSTORE_FP(GlobalData& dst, TileData& src, FpTileData& fp, W
     - `sizeof(TileData::DType) == sizeof(GlobalData::DType)`。
     - 布局必须匹配 ND/DN/NZ（或特殊情况：`TileData::Rows == 1` 或 `TileData::Cols == 1`）。
     - 对于 `int64_t/uint64_t`，仅支持 ND->ND 或 DN->DN。
+    - A2/A3 不暴露原生的 Vec 量化存储路径。当前端需要执行 `vec -> GM` 的类型转换或量化时，必须先生成转换后的 Vec Tile（例如通过 `TCVT`），再发射同类型的 `TSTORE`。
   - 对于 `TileType::Acc`（包括量化/原子变体）：
     - 目标布局必须是 ND 或 NZ。
     - 源数据类型必须是 `int32_t` 或 `float`。
@@ -153,4 +156,3 @@ tstore %t1, %sv_out[%c0, %c0]
 # IR Level 2 (DPS)
 pto.tstore ins(%src : !pto.tile_buf<...>) outs(%mem : !pto.partition_tensor_view<MxNxdtype>)
 ```
-

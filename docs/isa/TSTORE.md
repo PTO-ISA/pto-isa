@@ -54,6 +54,8 @@ template <typename TileData, typename GlobalData, typename FpTileData, AtomicTyp
 PTO_INST RecordEvent TSTORE_FP(GlobalData& dst, TileData& src, FpTileData& fp, WaitEvents&... events);
 ```
 
+The `preQuantScalar` and `TSTORE_FP` quantized-store overloads are only legal for `TileType::Acc` on current A2/A3 and A5 backends. They do not provide a native vec-tile quantized store contract.
+
 ## Constraints
 
 - **Implementation checks (A2A3)**:
@@ -64,6 +66,7 @@ PTO_INST RecordEvent TSTORE_FP(GlobalData& dst, TileData& src, FpTileData& fp, W
     - `sizeof(TileData::DType) == sizeof(GlobalData::DType)`.
     - Layouts must match ND/DN/NZ (or a special case where `TileData::Rows == 1` or `TileData::Cols == 1`).
     - For `int64_t/uint64_t`, only ND->ND or DN->DN are supported.
+    - A2/A3 does not expose a native vec quantized-store path. Frontends that need `vec -> GM` dtype conversion or quantization MUST first materialize the converted vec tile (for example via `TCVT`) and then issue a same-dtype `TSTORE`.
   - For `TileType::Acc` (including quantized/atomic variants):
     - Destination layout must be ND or NZ.
     - Source dtype must be `int32_t` or `float`.
@@ -153,4 +156,3 @@ tstore %t1, %sv_out[%c0, %c0]
 # IR Level 2 (DPS)
 pto.tstore ins(%src : !pto.tile_buf<...>) outs(%mem : !pto.partition_tensor_view<MxNxdtype>)
 ```
-
