@@ -412,7 +412,7 @@ __tf__ PTO_INTERNAL void TTransConvNC1HWC02C1HWNC0(typename TileData::TileDType 
 }
 
 template <typename TileDataDst, typename TileDataSrc, typename TileDataTmp>
-PTO_INTERNAL void CheckConvTile()
+PTO_INTERNAL void CheckConvTile(TileDataDst &dst, TileDataSrc &src, TileDataTmp &tmp)
 {
 #ifdef _DEBUG
     using T = typename TileDataSrc::DType;
@@ -463,7 +463,7 @@ PTO_INTERNAL void TTRANS_IMPL(TileDataDst &dst, TileDataSrc &src, TileDataTmp &t
     static_assert(sizeof(T) == sizeof(U), "Fix: TTRANS has inconsistent input and output data types.");
     if constexpr (is_conv_tile_v<TileDataSrc>) {
         constexpr unsigned blockSizeElem = BLOCK_BYTE_SIZE / sizeof(T);
-        CheckConvTile<TileDataDst, TileDataSrc, TileDataTmp>();
+        CheckConvTile<TileDataDst, TileDataSrc, TileDataTmp>(dst, src, tmp);
         if constexpr (TileDataSrc::layout == Layout::NCHW && TileDataDst::layout == Layout::NC1HWC0) {
             unsigned srcN = src.GetShape(GlobalTensorDim::DIM_0);
             unsigned srcC = src.GetShape(GlobalTensorDim::DIM_1);

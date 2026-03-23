@@ -200,7 +200,6 @@ PTO_INTERNAL void TransTailTiles(__ubuf__ T *dstPtr, __ubuf__ T *srcPtr, unsigne
                                  unsigned validCol, unsigned dstStride, unsigned srcStride)
 {
     // we can use constexpr if tmpStride is known in static way
-
     PtoSetWaitFlag<PIPE_V, PIPE_S>();
     for (int i = 0; i < validRow; i++) {
         for (int j = 0; j < validCol; j++) {
@@ -348,11 +347,6 @@ PTO_INTERNAL void TTransRepeatXOperation(__ubuf__ T *dstPtr, __ubuf__ T *srcPtr,
     constexpr unsigned yTileSizeElem = (sizeof(T) == 1) ? Y_ELEM_B8 : Y_ELEM_OTHER;
     // tmpStride should computed in static way
     unsigned tmpStride = (validRow + yTileSizeElem - 1) / yTileSizeElem * yTileSizeElem;
-    if (((dstStride % blockSizeElem) != 0) || ((srcStride % blockSizeElem) != 0)) {
-        TransTailTiles<T, blockSizeElem, yTileSizeElem>(dstPtr, srcPtr, tmpStride, validRow, validCol, dstStride,
-                                                        srcStride);
-        return;
-    }
     // go by subtile column, a.k.a. iter in row direction
     int numSubTileX = validCol / blockSizeElem;
     int numSubTileY = validRow / yTileSizeElem;
@@ -385,6 +379,32 @@ PTO_INTERNAL void TTransRepeatXOperation(__ubuf__ T *dstPtr, __ubuf__ T *srcPtr,
 }
 
 ///////////////////
+
+template <typename T, unsigned blockSizeElem>
+PTO_INTERNAL void ConvNCHW2NC1HWC0Unalign(__ubuf__ T *dst, __ubuf__ T *src, unsigned srcN, unsigned srcC, unsigned srcH,
+                                          unsigned srcW, unsigned dstC0)
+{
+    unsigned srcStride = srcH * srcW;
+    unsigned dstStride = dstC0;
+    unsigned validCol = srcH * srcW;
+    unsigned validRow = dstC0;
+    unsigned dstC1 = (srcC + dstC0 - 1) / dstC0;
+    unsigned nStride = dstC1 * dstC0 * srcH * srcW;
+    unsigned cStride = dstC0 * srcH * srcW;
+    constexpr unsigned yTileSizeElem = (sizeof(T) == 1) ? Y_ELEM_B8 : Y_ELEM_OTHER;
+    // N C1 C0 HW -> N C1 HW C0
+    for (int n = 0; n < srcN; n++) {
+        for (int c = 0; c < dstC1; c++) {
+            __ubuf__ T *srcPtr = src + n * nStride + c * cStride;
+            __ubuf__ T *dstPtr = dst + n * nStride + c * cStride;
+            // tmpStride should computed in static way
+            unsigned tmpStride = (validRow + yTileSizeElem - 1) / yTileSizeElem * yTileSizeElem;
+            TransTailTiles<T, blockSizeElem, yTileSizeElem>(dstPtr, srcPtr, tmpStride, validRow, validCol, dstStride,
+                                                            srcStride);
+        }
+    }
+}
+
 template <typename TileData, unsigned blockSizeElem>
 __tf__ PTO_INTERNAL void TTransConvNCHW2NC1HWC0(typename TileData::TileDType __out__ dst,
                                                 typename TileData::TileDType __in__ src,
@@ -397,6 +417,10 @@ __tf__ PTO_INTERNAL void TTransConvNCHW2NC1HWC0(typename TileData::TileDType __o
     __ubuf__ T *tmpPtr = (__ubuf__ T *)__cce_get_tile_ptr(tmp);
     unsigned srcStride = srcH * srcW;
     unsigned dstStride = dstC0;
+    if (((dstStride % blockSizeElem) != 0) || ((srcStride % blockSizeElem) != 0) || srcStride / blockSizeElem > 255) {
+        ConvNCHW2NC1HWC0Unalign<T, blockSizeElem>(dstPtrOrig, srcPtrOrig, srcN, srcC, srcH, srcW, dstC0);
+        return;
+    }
     unsigned validCol = srcH * srcW;
     unsigned validRow = dstC0;
     unsigned dstC1 = (srcC + dstC0 - 1) / dstC0;
@@ -454,7 +478,7 @@ __tf__ PTO_INTERNAL void TTransConvNC1HWC02C1HWNC0(typename TileData::TileDType 
 }
 
 template <typename TileDataDst, typename TileDataSrc, typename TileDataTmp>
-PTO_INTERNAL void CheckConvTile()
+PTO_INTERNAL void CheckConvTile(TileDataDst &dst, TileDataSrc &src, TileDataTmp &tmp)
 {
 #ifdef _DEBUG
     using T = typename TileDataSrc::DType;
@@ -505,7 +529,7 @@ PTO_INTERNAL void TTRANS_IMPL(TileDataDst &dst, TileDataSrc &src, TileDataTmp &t
     static_assert(sizeof(T) == sizeof(U), "Fix: TTRANS has inconsistent input and output data type.");
     if constexpr (is_conv_tile_v<TileDataSrc>) {
         constexpr unsigned blockSizeElem = BLOCK_BYTE_SIZE / sizeof(T);
-        CheckConvTile<TileDataDst, TileDataSrc, TileDataTmp>();
+        CheckConvTile<TileDataDst, TileDataSrc, TileDataTmp>(dst, src, tmp);
         if constexpr (TileDataSrc::layout == Layout::NC1HWC0 && TileDataDst::layout == Layout::FRACTAL_Z) {
             unsigned srcN = src.GetShape(GlobalTensorDim::DIM_0);
             unsigned srcC1 = src.GetShape(GlobalTensorDim::DIM_1);
