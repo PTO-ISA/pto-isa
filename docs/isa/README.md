@@ -139,5 +139,5 @@ This directory contains the per-instruction reference for the PTO Tile Lib ISA.
 - [TPARTMAX](TPARTMAX.md) - Partial elementwise max with implementation-defined handling of mismatched valid regions.
 - [TPARTMIN](TPARTMIN.md) - Partial elementwise min with implementation-defined handling of mismatched valid regions.
 - [TGATHERB](TGATHERB.md) - Gather elements using byte offsets.
-- [TSCATTER](TSCATTER.md) - Scatter rows of a source tile into a destination tile using per-element row indices.
+- [TSCATTER](TSCATTER.md) - Scatter source elements into a destination tile using per-element flattened destination offsets.
 - [TQUANT](TQUANT.md) - Quantize a tile (e.g. FP32 to FP8) producing exponent/scaling/max outputs.

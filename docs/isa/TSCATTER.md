@@ -7,13 +7,15 @@
 
 ## Introduction
 
-Scatter rows of a source tile into a destination tile using per-element row indices.
+Scatter source elements into a destination tile using per-element flattened destination offsets.
 
 ## Math Interpretation
 
-For each source element `(i, j)`, write:
+For each source element `(i, j)`, let `k = idx[i,j]` and write:
 
-$$ \mathrm{dst}_{\mathrm{idx}_{i,j},\ j} = \mathrm{src}_{i,j} $$
+$$ \mathrm{dst\_flat}_{k} = \mathrm{src}_{i,j} $$
+
+Here `dst_flat` denotes the destination tile viewed as a single linear storage sequence. `TSCATTER` does **not** interpret `idx[i,j]` as a destination row selector. On the standard row-major tile layout, this is equivalent to writing the `k`-th flattened destination element.
 
 If multiple elements map to the same destination location, the final value is implementation-defined (last writer wins in the current implementation).
 
@@ -53,6 +55,7 @@ PTO_INST RecordEvent TSCATTER(TileDataD& dst, TileDataS& src, TileDataI& indexes
   - `TileDataD::Loc`, `TileDataS::Loc`, `TileDataI::Loc` must be `TileType::Vec`.
   - `TileDataD::DType`, `TileDataS::DType` must be one of: `int32_t`, `int16_t`, `int8_t`, `half`, `float32_t`, `uint32_t`, `uint16_t`, `uint8_t`, `bfloat16_t`.
   - `TileDataI::DType` must be one of: `int16_t`, `int32_t`, `uint16_t` or `uint32_t`.
+  - `indexes` values are interpreted as flattened destination element offsets in destination tile storage order.
   - No bounds checks are enforced on `indexes` values.
   - Static valid bounds: `TileDataD::ValidRow <= TileDataD::Rows`, `TileDataD::ValidCol <= TileDataD::Cols`, `TileDataS::ValidRow <= TileDataS::Rows`, `TileDataS::ValidCol <= TileDataS::Cols`, `TileDataI::ValidRow <= TileDataI::Rows`, `TileDataI::ValidCol <= TileDataI::Cols`.
   - `TileDataD::DType` and `TileDataS::DType` must be the same.
@@ -63,6 +66,7 @@ PTO_INST RecordEvent TSCATTER(TileDataD& dst, TileDataS& src, TileDataI& indexes
   - `TileDataD::Loc`, `TileDataS::Loc`, `TileDataI::Loc` must be `TileType::Vec`.
   - `TileDataD::DType`, `TileDataS::DType` must be one of: `int32_t`, `int16_t`, `int8_t`, `half`, `float32_t`, `uint32_t`, `uint16_t`, `uint8_t`, `bfloat16_t`.
   - `TileDataI::DType` must be one of: `int16_t`, `int32_t`, `uint16_t` or `uint32_t`.
+  - `indexes` values are interpreted as flattened destination element offsets in destination tile storage order.
   - No bounds checks are enforced on `indexes` values.
   - Static valid bounds: `TileDataD::ValidRow <= TileDataD::Rows`, `TileDataD::ValidCol <= TileDataD::Cols`, `TileDataS::ValidRow <= TileDataS::Rows`, `TileDataS::ValidCol <= TileDataS::Cols`, `TileDataI::ValidRow <= TileDataI::Rows`, `TileDataI::ValidCol <= TileDataI::Cols`.
   - `TileDataD::DType` and `TileDataS::DType` must be the same.
@@ -133,4 +137,3 @@ void example_manual() {
 # IR Level 2 (DPS)
 pto.tscatter ins(%src, %idx : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
-

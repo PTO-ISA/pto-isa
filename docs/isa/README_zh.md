@@ -139,5 +139,5 @@
 - [TPARTMAX](TPARTMAX_zh.md) - 部分逐元素最大值，对不匹配的有效区域具有实现定义的处理方式。
 - [TPARTMIN](TPARTMIN_zh.md) - 部分逐元素最小值，对不匹配的有效区域具有实现定义的处理方式。
 - [TGATHERB](TGATHERB_zh.md) - 使用字节偏移量收集元素。
-- [TSCATTER](TSCATTER_zh.md) - 使用逐元素行索引将源 Tile 的行散播到目标 Tile 中。
+- [TSCATTER](TSCATTER_zh.md) - 使用逐元素目标扁平偏移，将源 Tile 元素散播到目标 Tile 中。
 - [TQUANT](TQUANT_zh.md) - 量化 Tile（例如 FP32 到 FP8），生成指数/缩放/最大值输出。

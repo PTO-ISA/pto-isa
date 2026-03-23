@@ -6,13 +6,15 @@
 
 ## 简介
 
-使用逐元素行索引将源 Tile 的行散播到目标 Tile 中。
+使用逐元素目标扁平偏移，将源 Tile 元素散播到目标 Tile 中。
 
 ## 数学语义
 
-对每个源元素 `(i, j)`，写入：
+对每个源元素 `(i, j)`，令 `k = idx[i,j]`，并写入：
 
-$$ \mathrm{dst}_{\mathrm{idx}_{i,j},\ j} = \mathrm{src}_{i,j} $$
+$$ \mathrm{dst\_flat}_{k} = \mathrm{src}_{i,j} $$
+
+其中 `dst_flat` 表示将目标 Tile 按其存储顺序展平后得到的一维序列。`TSCATTER` **不会** 将 `idx[i,j]` 解释为目标行号。在标准行主序 Tile 布局下，这等价于写入目标 Tile 展平后的第 `k` 个元素。
 
 若多个元素映射到同一目标位置，最终值由实现定义（当前实现中以最后写入者为准）。
 
@@ -53,6 +55,7 @@ PTO_INST RecordEvent TSCATTER(TileDataD& dst, TileDataS& src, TileDataI& indexes
   - `TileDataD::Loc`、`TileDataS::Loc`、`TileDataI::Loc` 必须是 `TileType::Vec`。
   - `TileDataD::DType`、`TileDataS::DType` 必须是以下之一：`int32_t`、`int16_t`、`int8_t`、`half`、`float32_t`、`uint32_t`、`uint16_t`、`uint8_t`、`bfloat16_t`。
   - `TileDataI::DType` 必须是以下之一：`int16_t`、`int32_t`、`uint16_t` 或 `uint32_t`。
+  - `indexes` 的值按目标 Tile 存储顺序解释为扁平元素偏移。
   - 不对 `indexes` 值执行边界检查。
   - 静态有效边界：`TileDataD::ValidRow <= TileDataD::Rows`、`TileDataD::ValidCol <= TileDataD::Cols`、`TileDataS::ValidRow <= TileDataS::Rows`、`TileDataS::ValidCol <= TileDataS::Cols`、`TileDataI::ValidRow <= TileDataI::Rows`、`TileDataI::ValidCol <= TileDataI::Cols`。
   - `TileDataD::DType` 与 `TileDataS::DType` 必须相同。
@@ -63,6 +66,7 @@ PTO_INST RecordEvent TSCATTER(TileDataD& dst, TileDataS& src, TileDataI& indexes
   - `TileDataD::Loc`、`TileDataS::Loc`、`TileDataI::Loc` 必须是 `TileType::Vec`。
   - `TileDataD::DType`、`TileDataS::DType` 必须是以下之一：`int32_t`、`int16_t`、`int8_t`、`half`、`float32_t`、`uint32_t`、`uint16_t`、`uint8_t`、`bfloat16_t`。
   - `TileDataI::DType` 必须是以下之一：`int16_t`、`int32_t`、`uint16_t` 或 `uint32_t`。
+  - `indexes` 的值按目标 Tile 存储顺序解释为扁平元素偏移。
   - 不对 `indexes` 值执行边界检查。
   - 静态有效边界：`TileDataD::ValidRow <= TileDataD::Rows`、`TileDataD::ValidCol <= TileDataD::Cols`、`TileDataS::ValidRow <= TileDataS::Rows`、`TileDataS::ValidCol <= TileDataS::Cols`、`TileDataI::ValidRow <= TileDataI::Rows`、`TileDataI::ValidCol <= TileDataI::Cols`。
   - `TileDataD::DType` 与 `TileDataS::DType` 必须相同。
