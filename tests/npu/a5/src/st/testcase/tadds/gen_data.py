@@ -53,7 +53,11 @@ if __name__ == "__main__":
         taddsParams("TADDSTest.case3", np.int32, 31, 256, 31, 128),
         taddsParams("TADDSTest.case4", np.int16, 15, 192, 15, 64 * 3),
         taddsParams("TADDSTest.case5", np.float32, 7, 512, 7, 64 * 7),
-        taddsParams("TADDSTest.case6", np.float32, 256, 32, 256, 16)
+        taddsParams("TADDSTest.case6", np.float32, 256, 32, 256, 16),
+        taddsParams("TADDSTest.case7", np.uint32, 256, 32, 256, 16),
+        taddsParams("TADDSTest.case8", np.uint16, 256, 32, 256, 16),
+        taddsParams("TADDSTest.case9", np.int8, 256, 64, 256, 32),
+        taddsParams("TADDSTest.case10", np.uint8, 256, 64, 256, 32),
     ]
 
     for _, case in enumerate(case_params_list):

@@ -53,7 +53,11 @@ if __name__ == "__main__":
         TsubsParams("TSUBSTest.case3", np.int32, 31, 256, 31, 128),
         TsubsParams("TSUBSTest.case4", np.int16, 15, 192, 15, 64 * 3),
         TsubsParams("TSUBSTest.case5", np.float32, 7, 512, 7, 64 * 7),
-        TsubsParams("TSUBSTest.case6", np.float32, 256, 32, 256, 16)
+        TsubsParams("TSUBSTest.case6", np.float32, 256, 32, 256, 16),
+        TsubsParams("TSUBSTest.case7", np.uint32, 256, 32, 256, 16),
+        TsubsParams("TSUBSTest.case8", np.uint16, 256, 32, 256, 16),
+        TsubsParams("TSUBSTest.case9", np.int8, 256, 64, 256, 32),
+        TsubsParams("TSUBSTest.case10", np.uint8, 256, 64, 256, 32),
     ]
 
     for _, case in enumerate(case_params_list):

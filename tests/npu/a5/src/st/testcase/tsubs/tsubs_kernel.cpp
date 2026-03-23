@@ -63,6 +63,22 @@ extern "C" __global__ AICORE void launchTSUBSCase6(__gm__ float *out, __gm__ flo
 {
     runTSubS<float, 256, 32, 256, 256, 16, 16>(out, src, scalar);
 }
+extern "C" __global__ AICORE void launchTSUBSCase7(__gm__ uint32_t *out, __gm__ uint32_t *src, uint32_t scalar)
+{
+    runTSubS<uint32_t, 256, 32, 256, 256, 16, 16>(out, src, scalar);
+}
+extern "C" __global__ AICORE void launchTSUBSCase8(__gm__ uint16_t *out, __gm__ uint16_t *src, uint16_t scalar)
+{
+    runTSubS<uint16_t, 256, 32, 256, 256, 16, 16>(out, src, scalar);
+}
+extern "C" __global__ AICORE void launchTSUBSCase9(__gm__ int8_t *out, __gm__ int8_t *src, int8_t scalar)
+{
+    runTSubS<int8_t, 256, 64, 256, 256, 32, 32>(out, src, scalar);
+}
+extern "C" __global__ AICORE void launchTSUBSCase10(__gm__ uint8_t *out, __gm__ uint8_t *src, uint8_t scalar)
+{
+    runTSubS<uint8_t, 256, 64, 256, 256, 32, 32>(out, src, scalar);
+}
 
 template <uint32_t caseId>
 void launchTSUBSTestCase(void *out, void *src, float scalar, aclrtStream stream)
@@ -92,6 +108,22 @@ void launchTSUBSTestCase(void *out, void *src, float scalar, aclrtStream stream)
             launchTSUBSCase6<<<1, nullptr, stream>>>((float *)out, (float *)src, scalar);
             break;
         }
+        case 7: {
+            launchTSUBSCase7<<<1, nullptr, stream>>>((uint32_t *)out, (uint32_t *)src, scalar);
+            break;
+        }
+        case 8: {
+            launchTSUBSCase8<<<1, nullptr, stream>>>((uint16_t *)out, (uint16_t *)src, scalar);
+            break;
+        }
+        case 9: {
+            launchTSUBSCase9<<<1, nullptr, stream>>>((int8_t *)out, (int8_t *)src, scalar);
+            break;
+        }
+        case 10: {
+            launchTSUBSCase10<<<1, nullptr, stream>>>((uint8_t *)out, (uint8_t *)src, scalar);
+            break;
+        }
         default: {
         }
     }
@@ -103,3 +135,7 @@ template void launchTSUBSTestCase<3>(void *out, void *src, float scalar, aclrtSt
 template void launchTSUBSTestCase<4>(void *out, void *src, float scalar, aclrtStream stream);
 template void launchTSUBSTestCase<5>(void *out, void *src, float scalar, aclrtStream stream);
 template void launchTSUBSTestCase<6>(void *out, void *src, float scalar, aclrtStream stream);
+template void launchTSUBSTestCase<7>(void *out, void *src, float scalar, aclrtStream stream);
+template void launchTSUBSTestCase<8>(void *out, void *src, float scalar, aclrtStream stream);
+template void launchTSUBSTestCase<9>(void *out, void *src, float scalar, aclrtStream stream);
+template void launchTSUBSTestCase<10>(void *out, void *src, float scalar, aclrtStream stream);

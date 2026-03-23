@@ -67,6 +67,22 @@ extern "C" __global__ AICORE void launchTADDSCase6(__gm__ float *out, __gm__ flo
 {
     runTAddS<float, 256, 32, 256, 256, 16, 16>(out, src, scalar);
 }
+extern "C" __global__ AICORE void launchTADDSCase7(__gm__ uint32_t *out, __gm__ uint32_t *src, uint32_t scalar)
+{
+    runTAddS<uint32_t, 256, 32, 256, 256, 16, 16>(out, src, scalar);
+}
+extern "C" __global__ AICORE void launchTADDSCase8(__gm__ uint16_t *out, __gm__ uint16_t *src, uint16_t scalar)
+{
+    runTAddS<uint16_t, 256, 32, 256, 256, 16, 16>(out, src, scalar);
+}
+extern "C" __global__ AICORE void launchTADDSCase9(__gm__ int8_t *out, __gm__ int8_t *src, int8_t scalar)
+{
+    runTAddS<int8_t, 256, 64, 256, 256, 32, 32>(out, src, scalar);
+}
+extern "C" __global__ AICORE void launchTADDSCase10(__gm__ uint8_t *out, __gm__ uint8_t *src, uint8_t scalar)
+{
+    runTAddS<uint8_t, 256, 64, 256, 256, 32, 32>(out, src, scalar);
+}
 
 template <uint32_t caseId>
 void launchTADDSTestCase(void *out, void *src, float scalar, aclrtStream stream)
@@ -96,6 +112,22 @@ void launchTADDSTestCase(void *out, void *src, float scalar, aclrtStream stream)
             launchTADDSCase6<<<1, nullptr, stream>>>((float *)out, (float *)src, scalar);
             break;
         }
+        case 7: {
+            launchTADDSCase7<<<1, nullptr, stream>>>((uint32_t *)out, (uint32_t *)src, scalar);
+            break;
+        }
+        case 8: {
+            launchTADDSCase8<<<1, nullptr, stream>>>((uint16_t *)out, (uint16_t *)src, scalar);
+            break;
+        }
+        case 9: {
+            launchTADDSCase9<<<1, nullptr, stream>>>((int8_t *)out, (int8_t *)src, scalar);
+            break;
+        }
+        case 10: {
+            launchTADDSCase10<<<1, nullptr, stream>>>((uint8_t *)out, (uint8_t *)src, scalar);
+            break;
+        }
         default: {
         }
     }
@@ -107,3 +139,7 @@ template void launchTADDSTestCase<3>(void *out, void *src, float scalar, aclrtSt
 template void launchTADDSTestCase<4>(void *out, void *src, float scalar, aclrtStream stream);
 template void launchTADDSTestCase<5>(void *out, void *src, float scalar, aclrtStream stream);
 template void launchTADDSTestCase<6>(void *out, void *src, float scalar, aclrtStream stream);
+template void launchTADDSTestCase<7>(void *out, void *src, float scalar, aclrtStream stream);
+template void launchTADDSTestCase<8>(void *out, void *src, float scalar, aclrtStream stream);
+template void launchTADDSTestCase<9>(void *out, void *src, float scalar, aclrtStream stream);
+template void launchTADDSTestCase<10>(void *out, void *src, float scalar, aclrtStream stream);

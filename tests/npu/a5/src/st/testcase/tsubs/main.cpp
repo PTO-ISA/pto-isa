@@ -127,3 +127,27 @@ TEST_F(TSUBSTest, case6)
     bool ret = TSubSTestFramework<6, float, 256, 32, 256, 256, 16, 16>();
     EXPECT_TRUE(ret);
 }
+
+TEST_F(TSUBSTest, case7)
+{
+    bool ret = TSubSTestFramework<7, uint32_t, 256, 32, 256, 256, 16, 16>();
+    EXPECT_TRUE(ret);
+}
+
+TEST_F(TSUBSTest, case8)
+{
+    bool ret = TSubSTestFramework<8, uint16_t, 256, 32, 256, 256, 16, 16>();
+    EXPECT_TRUE(ret);
+}
+
+TEST_F(TSUBSTest, case9)
+{
+    bool ret = TSubSTestFramework<9, int8_t, 256, 64, 256, 256, 32, 32>();
+    EXPECT_TRUE(ret);
+}
+
+TEST_F(TSUBSTest, case10)
+{
+    bool ret = TSubSTestFramework<10, uint8_t, 256, 64, 256, 256, 32, 32>();
+    EXPECT_TRUE(ret);
+}

@@ -127,3 +127,27 @@ TEST_F(TADDSTest, case6)
     bool ret = TAddSTestFramework<6, float, 256, 32, 256, 256, 16, 16>();
     EXPECT_TRUE(ret);
 }
+
+TEST_F(TADDSTest, case7)
+{
+    bool ret = TAddSTestFramework<7, uint32_t, 256, 32, 256, 256, 16, 16>();
+    EXPECT_TRUE(ret);
+}
+
+TEST_F(TADDSTest, case8)
+{
+    bool ret = TAddSTestFramework<8, uint16_t, 256, 32, 256, 256, 16, 16>();
+    EXPECT_TRUE(ret);
+}
+
+TEST_F(TADDSTest, case9)
+{
+    bool ret = TAddSTestFramework<9, int8_t, 256, 64, 256, 256, 32, 32>();
+    EXPECT_TRUE(ret);
+}
+
+TEST_F(TADDSTest, case10)
+{
+    bool ret = TAddSTestFramework<10, uint8_t, 256, 64, 256, 256, 32, 32>();
+    EXPECT_TRUE(ret);
+}
