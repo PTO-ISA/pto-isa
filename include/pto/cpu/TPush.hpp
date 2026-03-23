@@ -11,6 +11,8 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #ifndef TPUSH_HPP
 #define TPUSH_HPP
 
+#include <condition_variable>
+#include <mutex>
 #include <pto/common/fifo.hpp>
 #include <pto/cpu/TStore.hpp>
 #include <pto/cpu/TLoad.hpp>
@@ -64,11 +66,30 @@ struct TFIFOSync {
     static constexpr int fifoSize = DataFIFO::fifoDepth;
     static constexpr int syncPeriod = DataFIFO::fifoPeriod;
 
+    struct SharedState {
+        std::mutex mutex;
+        std::condition_variable cv;
+        int next_producer_slot = 0;
+        int next_consumer_slot = 0;
+        int occupied = 0;
+    };
+
+    inline static SharedState shared_state{};
+
+    PTO_INTERNAL static void reset_for_cpu_sim()
+    {
+        std::lock_guard<std::mutex> lock(shared_state.mutex);
+        shared_state.next_producer_slot = 0;
+        shared_state.next_consumer_slot = 0;
+        shared_state.occupied = 0;
+        shared_state.cv.notify_all();
+    }
+
     // -------------------------------------------------------------------------
     // Producer Interface
     // -------------------------------------------------------------------------
     struct Producer {
-        volatile int tile_id;
+        int tile_id;
 
         PTO_INTERNAL Producer()
         {
@@ -87,13 +108,19 @@ struct TFIFOSync {
 
         PTO_INTERNAL void allocate()
         {
-            // For multithreaded operations code locking data block of fifo buffer should be added here
+            std::unique_lock<std::mutex> lock(shared_state.mutex);
+            shared_state.cv.wait(lock, []() { return shared_state.occupied < fifoSize; });
+            tile_id = shared_state.next_producer_slot;
         }
 
         PTO_INTERNAL void record()
         {
-            tile_id = (tile_id + 1) % fifoSize;
-            // Add notification routine from producer to notifier for multithreaded scenario
+            {
+                std::lock_guard<std::mutex> lock(shared_state.mutex);
+                shared_state.next_producer_slot = (tile_id + 1) % fifoSize;
+                ++shared_state.occupied;
+            }
+            shared_state.cv.notify_all();
         }
     };
 
@@ -101,12 +128,13 @@ struct TFIFOSync {
     // Consumer Interface
     // -------------------------------------------------------------------------
     struct Consumer {
-        volatile int tile_id;
-        volatile int sub_tile_id;
+        int tile_id;
+        int sub_tile_id;
 
         PTO_INTERNAL Consumer()
         {
             tile_id = 0;
+            sub_tile_id = 0;
         }
 
         PTO_INTERNAL void set_tile_id(int tid, int sub_tid)
@@ -121,13 +149,19 @@ struct TFIFOSync {
 
         PTO_INTERNAL void wait()
         {
-            // Add wait routine if fifo buffer is empty.
+            std::unique_lock<std::mutex> lock(shared_state.mutex);
+            shared_state.cv.wait(lock, []() { return shared_state.occupied > 0; });
+            tile_id = shared_state.next_consumer_slot;
         }
 
         PTO_INTERNAL void free()
         {
-            tile_id = (tile_id + 1) % fifoSize;
-            // Add notification to producer that will notify that particular block in FIFO is free now
+            {
+                std::lock_guard<std::mutex> lock(shared_state.mutex);
+                shared_state.next_consumer_slot = (tile_id + 1) % fifoSize;
+                --shared_state.occupied;
+            }
+            shared_state.cv.notify_all();
         }
     };
 };

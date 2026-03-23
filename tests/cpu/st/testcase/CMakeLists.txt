@@ -118,6 +118,7 @@ tloadconv
 treduce
 treshape
 tpushpop
+tpushpop_cv
 )
 
 foreach(TESTCASE ${ALL_TESTCASES})
