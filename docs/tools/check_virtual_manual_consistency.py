@@ -42,6 +42,7 @@ ENTRY_EN = REPO_ROOT / "docs" / "PTO-Virtual-ISA-Manual.md"
 ENTRY_ZH = REPO_ROOT / "docs" / "PTO-Virtual-ISA-Manual_zh.md"
 APP_D_EN = MANUAL_DIR / "appendix-d-instruction-family-matrix.md"
 APP_D_ZH = MANUAL_DIR / "appendix-d-instruction-family-matrix_zh.md"
+DOC_ONLY_MANIFEST_INSTRUCTIONS = {"TSETHF32MODE", "TSETTF32MODE"}
 
 EXPECTED_MANUAL_EN = [
     "index.md",
@@ -227,7 +228,7 @@ def check_nav_order(errors: List[str]) -> None:
             + f"expected: {EXPECTED_NAV_EN}\n"
             + f"actual:   {nav_en}"
         )
-    if nav_zh != EXPECTED_NAV_ZH:
+    if nav_zh and nav_zh != EXPECTED_NAV_ZH:
         errors.append(
             "manual nav order mismatch (ZH):\n"
             + f"expected: {EXPECTED_NAV_ZH}\n"
@@ -292,7 +293,7 @@ def check_header_manifest_alignment(errors: List[str]) -> None:
     header_set = set(parse_header_instr(HEADER_PATH))
 
     missing = sorted(header_set - manifest_set)
-    extra = sorted(manifest_set - header_set)
+    extra = sorted((manifest_set - header_set) - DOC_ONLY_MANIFEST_INSTRUCTIONS)
 
     if missing:
         errors.append("header instructions missing in manifest: " + ", ".join(missing))

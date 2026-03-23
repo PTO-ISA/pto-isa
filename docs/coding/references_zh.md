@@ -2,20 +2,7 @@
 
 本文档提供 PTO 开发相关的参考资料、学术论文、在线资源和扩展阅读，帮助开发者深入学习和掌握 PTO 编程。
 
-## 目录
-
-- [1. 官方文档](#1-官方文档)
-- [2. 示例代码](#2-示例代码)
-- [3. 学术论文](#3-学术论文)
-- [4. 在线资源](#4-在线资源)
-- [5. 相关项目](#5-相关项目)
-- [6. 培训资源](#6-培训资源)
-- [7. 工具和库](#7-工具和库)
-- [8. 书籍推荐](#8-书籍推荐)
-
----
-
-## 1. 官方文档
+## 官方文档
 
 ### PTO-ISA 核心文档
 
@@ -100,52 +87,52 @@
 
 ---
 
-## 2. 示例代码
+## 示例代码
 
 ### 基础示例
 
-- **[Add 算子](../../demos/baseline/add/)**
+- **[Add 算子](../../demos/baseline/add/README.md)**
   - 最简单的逐元素加法
   - PyTorch 集成示例
   - 完整的构建和测试流程
 
-- **[MatMul 算子](../../demos/baseline/matmul/)**
+- **[GEMM Basic 算子](../../demos/baseline/gemm_basic/README.md)**
   - 矩阵乘法实现
   - Tile 分块策略
   - 性能优化技巧
 
-- **[Softmax 算子](../../demos/baseline/softmax/)**
-  - 归约操作示例
-  - 数值稳定性处理
-  - 行级并行
+- **[Flash Attention 基线示例](../../demos/baseline/flash_atten/README.md)**
+  - 注意力类算子基线
+  - 数据搬运与流水线模式
+  - 端到端构建流程
 
 ### 性能优化示例
 
-- **[手动优化内核](../../kernels/manual/)**
+- **[手动优化内核](../../kernels/manual/README.md)**
   - 双缓冲实现
   - 流水线优化
   - 多核并行
 
-- **[Flash Attention](../../kernels/flash_attention/)**
+- **[Flash Attention](../../kernels/manual/common/flash_atten/README.md)**
   - 高级优化技术
   - 内存高效实现
   - 性能基准测试
 
 ### 测试用例
 
-- **[单元测试](../../tests/unit/)**
+- **[CPU 仿真测试](../../tests/README_zh.md)**
   - Tile 操作测试
   - 数值正确性验证
   - 边界条件测试
 
-- **[集成测试](../../tests/integration/)**
+- **[NPU 测试](../../tests/README_zh.md)**
   - 端到端测试
   - 框架集成测试
   - 性能回归测试
 
 ---
 
-## 3. 学术论文
+## 学术论文
 
 ### 注意力机制优化
 
@@ -227,7 +214,7 @@
 
 ---
 
-## 4. 在线资源
+## 在线资源
 
 ### 官方网站
 
@@ -284,16 +271,16 @@
 
 ---
 
-## 5. 相关项目
+## 相关项目
 
 ### 前端工具
 
-**[PyPTO](https://gitcode.com/cann/pypto/)**
+**[pypto](https://github.com/PTO-ISA/pypto)**
 - Python 前端接口
 - 简化 PTO 编程
 - 快速原型开发
 
-**[TileLang Ascend](https://github.com/tile-ai/tilelang-ascend/)**
+**[tilelang-ascend](https://github.com/PTO-ISA/tilelang-ascend)**
 - DSL 前端
 - 高层抽象
 - 自动代码生成
@@ -336,7 +323,7 @@
 
 ---
 
-## 6. 培训资源
+## 培训资源
 
 ### 官方培训
 
@@ -371,7 +358,7 @@
 
 ---
 
-## 7. 工具和库
+## 工具和库
 
 ### 开发工具
 
@@ -401,7 +388,7 @@
 
 ---
 
-## 8. 书籍推荐
+## 书籍推荐
 
 ### 并行编程
 
@@ -464,4 +451,3 @@
 ---
 
 **最后更新**：2025-12-27
-

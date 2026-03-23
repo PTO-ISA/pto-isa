@@ -1,4 +1,4 @@
-﻿# TPARTMIN
+# TPARTMIN
 
 ## 指令示意图
 
@@ -10,25 +10,37 @@
 
 ## 数学语义
 
-对目标有效区域内的每个元素 `(i, j)`：
+对每个元素 `(i, j)` in the destination valid region:
 
 $$
 \mathrm{dst}_{i,j} =
 \begin{cases}
-\min(\mathrm{src0}_{i,j}, \mathrm{src1}_{i,j}) & \text{若两个输入在 } (i,j) \text{ 处均有定义} \\\\
-\mathrm{src0}_{i,j} & \text{若仅 src0 在 } (i,j) \text{ 处有定义} \\\\
-\mathrm{src1}_{i,j} & \text{若仅 src1 在 } (i,j) \text{ 处有定义}
+\min(\mathrm{src0}_{i,j}, \mathrm{src1}_{i,j}) & \text{if both inputs are defined at } (i,j) \\
+\mathrm{src0}_{i,j} & \text{if only src0 is defined at } (i,j) \\
+\mathrm{src1}_{i,j} & \text{if only src1 is defined at } (i,j)
 \end{cases}
 $$
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 %dst = tpartmin %src0, %src1 : !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 1 (SSA)
+
+```text
+%dst = pto.tpartmin %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tpartmin ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -45,7 +57,7 @@ pto.tpartmin ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%ds
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`：
+声明于 `include/pto/common/pto_instr.hpp`:
 
 ```cpp
 template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
@@ -55,14 +67,14 @@ PTO_INST RecordEvent TPARTMIN(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1
 ## 约束
 
 - **实现检查 (A2A3)**:
-    - `dst`/`src0`/`src1` 元素类型必须相同，且必须是以下之一：`int32_t`、`int16_t`、`half`、`float`。
-    - 三个 Tile 都必须是行主序（`isRowMajor`）。
-    - 运行时：若 `dst.GetValidRow() == 0` 或 `dst.GetValidCol() == 0`，操作提前返回。
-    - 运行时：实现要求至少一个输入的有效区域与 `dst` 的有效区域匹配，另一个输入的有效区域不大于 `dst` 的有效区域（否则断言失败）。
+    - `dst/src0/src1` element types must be identical, and must be one of: `int32_t`, `int16_t`, `half`, `float`.
+    - All three tiles must be row-major (`isRowMajor`).
+    - Runtime: if `dst.GetValidRow() == 0` or `dst.GetValidCol() == 0`, the op returns early.
+    - Runtime: the implementation requires at least one input's valid region to match `dst`'s valid region, and the onther's valid region not greater than `dst`'s valid region (otherwise it asserts).
 - **实现检查 (A5)**:
-    - `dst`/`src0`/`src1` 元素类型必须相同，且必须是以下之一：`int8_t`、`uint8_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`bfloat16_t`、`float`。
-    - 运行时：若 `src0`/`src1`/`dst` 中任意一个的有效区域为零，操作提前返回。
-    - 要求 `src0` 和 `src1` 的有效区域在两个维度上均不超过 `dst` 的有效区域；其他模式不受支持（由目标定义行为）。
+    - `dst/src0/src1` element types must be identical and must be one of: `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `bfloat16_t`, `float`.
+    - Runtime: if any of `src0/src1/dst` has a zero valid region, the op returns early.
+    - Requires `src0` and `src1` valid region to be `<= dst` valid region in both dimensions; other patterns are not supported (target-defined behavior).
 
 ## 示例
 
@@ -95,31 +107,4 @@ void example_manual() {
   TASSIGN(dst,  0x3000);
   TPARTMIN(dst, src0, src1);
 }
-```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%dst = pto.tpartmin %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.tpartmin %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%dst = tpartmin %src0, %src1 : !pto.tile<...> -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.tpartmin ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```

@@ -1,4 +1,4 @@
-﻿# TASSIGN
+# TASSIGN
 
 ## 指令示意图
 
@@ -10,18 +10,30 @@
 
 ## 数学语义
 
-不适用。
+Not applicable.
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
-`TASSIGN` 通常在将 SSA tile 映射到物理存储时由缓冲化/降级引入。
+`TASSIGN` is typically introduced by bufferization/lowering when mapping SSA tiles to physical storage.
 
 同步形式：
 
 ```text
 tassign %tile, %addr : !pto.tile<...>, index
+```
+
+### AS Level 1 (SSA)
+
+```text
+pto.tassign %tile, %addr : !pto.tile<...>, dtype
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tassign ins(%tile, %addr : !pto.tile_buf<...>, dtype)
 ```
 
 ### AS Level 1（SSA）
@@ -38,40 +50,43 @@ pto.tassign ins(%tile, %addr : !pto.tile_buf<...>, dtype)
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`。
+声明于 `include/pto/common/pto_instr.hpp`.
 
-### 形式 1：运行时地址
+### Form 1: Runtime address
 
 ```cpp
 template <typename T, typename AddrType>
 PTO_INST void TASSIGN(T& obj, AddrType addr);
 ```
 
-将 `obj` 绑定到片上地址 `addr`。不执行编译时边界检查（地址值在编译时不可知）。
+Binds `obj` to the on-chip address `addr`. No compile-time bounds checking is
+performed (the address value is not available at compile time).
 
-### 形式 2：编译时地址（含静态边界检查）
+### Form 2: Compile-time address (with static bounds check)
 
 ```cpp
 template <std::size_t Addr, typename T>
 PTO_INST void TASSIGN(T& obj);
 ```
 
-将 `obj` 绑定到片上地址 `Addr`。由于 `Addr` 是非类型模板参数，编译器通过 `static_assert`
-执行以下**编译时**检查：
+Binds `obj` to the on-chip address `Addr`. Because `Addr` is a non-type
+template parameter, the compiler performs the following **compile-time** checks
+via `static_assert`:
 
-| 检查项 | 条件 | 断言 ID | 错误信息 |
-|--------|------|---------|----------|
-| 内存空间存在 | `capacity > 0` | SA-0351 | 当前架构不支持该内存空间。 |
-| Tile 可放入内存 | `tile_size <= capacity` | SA-0352 | Tile 存储大小超出内存空间容量。 |
-| 地址未越界 | `Addr + tile_size <= capacity` | SA-0353 | addr + tile_size 超出内存空间容量（越界）。 |
-| 地址对齐 | `Addr % alignment == 0` | SA-0354 | addr 未按目标内存空间要求对齐。 |
+| Check | Condition | Assertion ID | Error message |
+|-------|-----------|--------------|---------------|
+| Memory space exists | `capacity > 0` | SA-0351 | Memory space is not available on this architecture. |
+| Tile fits in memory | `tile_size <= capacity` | SA-0352 | Tile storage size exceeds memory space capacity. |
+| Address in bounds | `Addr + tile_size <= capacity` | SA-0353 | addr + tile_size exceeds memory space capacity (out of bounds). |
+| Address aligned | `Addr % alignment == 0` | SA-0354 | addr is not properly aligned for the target memory space. |
 
-修复建议请参阅 `docs/coding/debug.md`（修复方案 `FIX-A12`）。
+See `docs/coding/debug.md` (fix recipe `FIX-A12`) for suggested remedies.
 
-内存空间、容量和对齐由 Tile 的 `TileType`（即 `Loc` 模板参数）自动确定：
+The memory space, capacity, and alignment are determined automatically from the
+Tile's `TileType` (i.e. `Loc` template parameter):
 
-| TileType | 内存空间 | 容量 (A2A3) | 容量 (A5) | 容量 (Kirin9030) | 容量 (KirinX90) | 对齐 |
-|----------|----------|-------------|-----------|------------------|-----------------|------|
+| TileType | Memory | Capacity (A2A3) | Capacity (A5) | Capacity (Kirin9030) | Capacity (KirinX90) | Alignment |
+|----------|--------|-----------------|---------------|----------------------|---------------------|-----------|
 | Vec | UB | 192 KB | 256 KB | 128 KB | 128 KB | 32 B |
 | Mat | L1 | 512 KB | 512 KB | 512 KB | 1024 KB | 32 B |
 | Left | L0A | 64 KB | 64 KB | 32 KB | 64 KB | 32 B |
@@ -82,23 +97,25 @@ PTO_INST void TASSIGN(T& obj);
 | ScaleLeft | L0A | N/A | 4 KB | N/A | N/A | 32 B |
 | ScaleRight | L0B | N/A | 4 KB | N/A | N/A | 32 B |
 
-容量可通过编译标志 `-D` 覆盖（如 `-DPTO_UBUF_SIZE_BYTES=262144`）。详见 `include/pto/common/buffer_limits.hpp`。
+Capacities can be overridden at build time via `-D` flags (e.g.
+`-DPTO_UBUF_SIZE_BYTES=262144`). See `include/pto/common/buffer_limits.hpp`.
 
-**注意：** 该重载仅适用于 `Tile` 和 `ConvTile` 类型。对于 `GlobalTensor`，请使用 `TASSIGN(obj, pointer)`（形式 1）。
+**Note:** This overload is only available for `Tile` and `ConvTile` types. For
+`GlobalTensor`, use `TASSIGN(obj, pointer)` (Form 1).
 
 ## 约束
 
 - **实现检查**:
-    - 如果 `obj` 是 Tile：
-    - 在手动模式下（未定义 `__PTO_AUTO__` 时），`addr` 必须是整数类型，并被重新解释为 tile 的存储地址。
-    - 在自动模式下（定义了 `__PTO_AUTO__` 时），`TASSIGN(tile, addr)` 是空操作。
-    - 如果 `obj` 是 `GlobalTensor`：
-    - `addr` 必须是指针类型。
-    - 指向的元素类型必须匹配 `GlobalTensor::DType`。
+    - If `obj` is a Tile:
+    - In manual mode (when `__PTO_AUTO__` is not defined), `addr` must be an integral type and is reinterpreted as the tile's storage address.
+    - In auto mode (when `__PTO_AUTO__` is defined), `TASSIGN(tile, addr)` is a no-op.
+    - If `obj` is a `GlobalTensor`:
+    - `addr` must be a pointer type.
+    - The pointed-to element type must match `GlobalTensor::DType`.
 
 ## 示例
 
-### 运行时地址（无编译时检查）
+### Runtime address (no compile-time check)
 
 ```cpp
 #include <pto/pto-inst.hpp>
@@ -115,7 +132,7 @@ void example_runtime() {
 }
 ```
 
-### 编译时地址（含静态边界检查）
+### Compile-time address (with static bounds check)
 
 ```cpp
 #include <pto/pto-inst.hpp>
@@ -133,15 +150,15 @@ void example_checked() {
 }
 ```
 
-以下示例触发编译错误：
+The following triggers a compile error:
 
 ```cpp
 void example_oob() {
-  // Tile<Vec, float, 256, 256> 占用 256*256*4 = 256KB
+  // Tile<Vec, float, 256, 256> occupies 256*256*4 = 256KB
   using BigTile = Tile<TileType::Vec, float, 256, 256>;
   BigTile t;
 
-  // static_assert 触发 [SA-0352]: tile_size (256KB) > UB 容量 (A2A3 为 192KB)
+  // static_assert fires: tile_size (256KB) > UB capacity (192KB on A2A3)
   TASSIGN<0x0>(t);
 }
 ```
@@ -151,12 +168,13 @@ void example_oob_addr() {
   using TileT = Tile<TileType::Vec, float, 128, 128>;  // 64KB
   TileT t;
 
-  // static_assert 触发 [SA-0353]: 0x20001 + 64KB > 192KB
+  // static_assert fires: 0x20000 (128KB) + 64KB = 192KB,
+  //                       but 0x20001 + 64KB > 192KB
   TASSIGN<0x20001>(t);
 }
 ```
 
-### Ping-pong L0 缓冲区分配
+### Ping-pong L0 buffer allocation
 
 ```cpp
 void example_pingpong() {
@@ -168,35 +186,7 @@ void example_pingpong() {
 
   TASSIGN<0x0000>(a0);   // L0A ping
   TASSIGN<0x8000>(a1);   // L0A pong
-  TASSIGN<0x0000>(b0);   // L0B ping（与 L0A 为不同物理内存）
+  TASSIGN<0x0000>(b0);   // L0B ping  (separate physical memory from L0A)
   TASSIGN<0x8000>(b1);   // L0B pong
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-pto.tassign %tile, %addr : !pto.tile<...>, dtype
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-pto.tassign %tile, %addr : !pto.tile<...>, dtype
-```
-
-### PTO 汇编形式
-
-```text
-tassign %tile, %addr : !pto.tile<...>, index
-# AS Level 2 (DPS)
-pto.tassign ins(%tile, %addr : !pto.tile_buf<...>, dtype)
-```
-

@@ -36,6 +36,18 @@ Synchronous form:
 ```text
 pto.texpands ins(%scalar : dtype) outs(%dst : !pto.tile_buf<...>)
 ```
+
+### IR Level 1 (SSA)
+
+```text
+%dst = pto.texpands %scalar : dtype -> !pto.tile<...>
+```
+
+### IR Level 2 (DPS)
+
+```text
+pto.texpands ins(%scalar : dtype) outs(%dst : !pto.tile_buf<...>)
+```
 ## C++ Intrinsic
 
 Declared in `include/pto/common/pto_instr.hpp`:
@@ -130,4 +142,3 @@ void example_manual() {
 # AS Level 2 (DPS)
 pto.texpands ins(%scalar : dtype) outs(%dst : !pto.tile_buf<...>)
 ```
-

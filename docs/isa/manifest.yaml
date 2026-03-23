@@ -514,6 +514,19 @@
       "notes": []
     },
     {
+      "instruction": "TAXPY",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_en": "AXPY-style fused update: multiply a tile by a scalar and accumulate into the destination tile.",
+      "summary_zh": "AXPY 风格融合更新：将 Tile 乘以标量并累加到目标 Tile。",
+      "diagram_template": "scalar",
+      "operands": [
+        "dst",
+        "src",
+        "scalar"
+      ],
+      "notes": []
+    },
+    {
       "instruction": "TSUBS",
       "category": "Tile-Scalar / Tile-Immediate",
       "summary_en": "Elementwise subtract a scalar from a tile.",
@@ -704,6 +717,19 @@
       "operands": [
         "dst",
         "src"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "TROWPROD",
+      "category": "Axis Reduce / Expand",
+      "summary_en": "Reduce each row by multiplying across columns.",
+      "summary_zh": "对每一行沿列方向连乘归约。",
+      "diagram_template": "reduce_expand",
+      "operands": [
+        "dst",
+        "src",
+        "tmp"
       ],
       "notes": []
     },
@@ -1280,10 +1306,61 @@
       "notes": []
     },
     {
+      "instruction": "TALIAS",
+      "category": "Data Movement / Layout",
+      "summary_en": "Create an alias tile view that shares the original tile storage.",
+      "summary_zh": "创建一个与原始 Tile 共享底层存储的别名视图。",
+      "diagram_template": "reshape_move",
+      "operands": [
+        "original",
+        "alias"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "TSUBVIEW",
+      "category": "Data Movement / Layout",
+      "summary_en": "Create a sub-tile view at a row/column offset without copying data.",
+      "summary_zh": "在给定行列偏移处创建子 Tile 视图而不复制数据。",
+      "diagram_template": "reshape_move",
+      "operands": [
+        "dst",
+        "src",
+        "row",
+        "col"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "TCONCAT",
+      "category": "Data Movement / Layout",
+      "summary_en": "Concatenate two source tiles along the column dimension into a destination tile.",
+      "summary_zh": "沿列维将两个源 Tile 拼接到目标 Tile。",
+      "diagram_template": "reshape_move",
+      "operands": [
+        "dst",
+        "src0",
+        "src1"
+      ],
+      "notes": []
+    },
+    {
       "instruction": "TTRANS",
       "category": "Data Movement / Layout",
       "summary_en": "Transpose with an implementation-defined temporary tile.",
       "summary_zh": "使用实现定义的临时 Tile 进行转置。",
+      "diagram_template": "reshape_move",
+      "operands": [
+        "dst",
+        "src"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "TPACK",
+      "category": "Data Movement / Layout",
+      "summary_en": "Pack or convert tile elements into a narrower destination representation.",
+      "summary_zh": "将 Tile 元素打包或转换为更窄的目标表示。",
       "diagram_template": "reshape_move",
       "operands": [
         "dst",
@@ -1457,6 +1534,70 @@
         "dst",
         "src0",
         "src1"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "TDEQUANT",
+      "category": "Complex",
+      "summary_en": "Dequantize an integer tile into a floating-point tile using scale and offset tiles.",
+      "summary_zh": "使用 scale 与 offset Tile 将整数量化 Tile 反量化为浮点 Tile。",
+      "diagram_template": "complex",
+      "operands": [
+        "dst",
+        "src",
+        "scale",
+        "offset"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "TPUSH",
+      "category": "Complex",
+      "summary_en": "Push a tile into a pipe or FIFO producer endpoint.",
+      "summary_zh": "将 Tile 推入 pipe 或 FIFO 的生产者端。",
+      "diagram_template": "complex",
+      "operands": [
+        "producer",
+        "tile",
+        "fifo"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "TPOP",
+      "category": "Complex",
+      "summary_en": "Pop a tile from a pipe or FIFO consumer endpoint.",
+      "summary_zh": "从 pipe 或 FIFO 的消费者端弹出一个 Tile。",
+      "diagram_template": "complex",
+      "operands": [
+        "consumer",
+        "tile",
+        "fifo"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "TFREE",
+      "category": "Complex",
+      "summary_en": "Release the currently held pipe or FIFO slot back to the producer.",
+      "summary_zh": "将当前占用的 pipe 或 FIFO 槽位释放回生产者。",
+      "diagram_template": "complex",
+      "operands": [
+        "pipe"
+      ],
+      "notes": []
+    },
+    {
+      "instruction": "THISTOGRAM",
+      "category": "Complex",
+      "summary_en": "Accumulate histogram bin counts from source values using an index tile.",
+      "summary_zh": "使用索引 Tile 从源值中累计直方图 bin 计数。",
+      "diagram_template": "complex",
+      "operands": [
+        "dst",
+        "src",
+        "idx"
       ],
       "notes": []
     }

@@ -21,14 +21,17 @@
 - [PTO AS 索引](assembly/README_zh.md)
 - [通用约定](isa/conventions_zh.md)
 - [PTO 汇编语法（PTO-AS）](assembly/PTO-AS_zh.md)
-- [虚拟 ISA / AS 指南](../manual/09-virtual-isa-and-ir_zh.md)
-- [字节码 / 工具链指南](../manual/10-bytecode-and-toolchain_zh.md)
-- [内存顺序 / 一致性指南](../manual/11-memory-ordering-and-consistency_zh.md)
-- [后端画像 / 一致性指南](../manual/12-backend-profiles-and-conformance_zh.md)
+- [虚拟 ISA / AS 指南](mkdocs/src/manual/09-virtual-isa-and-ir_zh.md)
+- [字节码 / 工具链指南](mkdocs/src/manual/10-bytecode-and-toolchain_zh.md)
+- [内存顺序 / 一致性指南](mkdocs/src/manual/11-memory-ordering-and-consistency_zh.md)
+- [后端画像 / 一致性指南](mkdocs/src/manual/12-backend-profiles-and-conformance_zh.md)
+- [编程模型（Tiles/GlobalTensor/Events/Scalars）](coding/ProgrammingModel_zh.md)
+- [PTO ISA 编程教程（C++ intrinsic）](coding/tutorial_zh.md)
+- [抽象机器模型（core/device/host）](machine/abstract-machine_zh.md)
 - [入门指南（建议先跑 CPU 仿真）](getting-started_zh.md)
 - [实现与扩展说明](coding/README_zh.md)
 - [Kernel 示例（偏 NPU）](../kernels/README_zh.md)
-- [文档工具（manifest/index/svg/一致性检查）](tools/)
+- [文档工具（manifest/index/svg/一致性检查）](tools/README_zh.md)
 
 ## 文档组织
 

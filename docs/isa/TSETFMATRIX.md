@@ -41,6 +41,18 @@ pto.tsetfmatrix %cfg : !pto.fmatrix_config -> ()
 ```text
 pto.tsetfmatrix ins(%cfg : !pto.fmatrix_config) outs()
 ```
+
+### IR Level 1 (SSA)
+
+```text
+pto.tsetfmatrix %cfg : !pto.fmatrix_config -> ()
+```
+
+### IR Level 2 (DPS)
+
+```text
+pto.tsetfmatrix ins(%cfg : !pto.fmatrix_config) outs()
+```
 ## Constraints
 
 Type/layout/location/shape legality is backend-dependent; treat implementation-specific notes as normative for that backend.
@@ -75,4 +87,3 @@ pto.tsetfmatrix %cfg : !pto.fmatrix_config -> ()
 # AS Level 2 (DPS)
 pto.tsetfmatrix ins(%cfg : !pto.fmatrix_config) outs()
 ```
-

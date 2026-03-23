@@ -1,4 +1,4 @@
-﻿# TSTORE
+# TSTORE
 
 ## 指令示意图
 
@@ -10,13 +10,13 @@
 
 ## 数学语义
 
-符号表示取决于 `GlobalTensor` 的形状/步长和 `Tile` 的布局。概念上（二维视图，带基础偏移量）：
+Notation depends on the `GlobalTensor` shape/stride and the `Tile` layout. Conceptually (2D view, with a base offset):
 
 $$ \mathrm{dst}_{r_0 + i,\; c_0 + j} = \mathrm{src}_{i,j} $$
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
@@ -38,7 +38,7 @@ pto.tstore ins(%src : !pto.tile_buf<...>) outs(%mem : !pto.partition_tensor_view
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/constants.hpp`：
+声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/constants.hpp`:
 
 ```cpp
 template <typename TileData, typename GlobalData, AtomicType atomicType = AtomicType::AtomicNone,
@@ -54,38 +54,38 @@ template <typename TileData, typename GlobalData, typename FpTileData, AtomicTyp
 PTO_INST RecordEvent TSTORE_FP(GlobalData &dst, TileData &src, FpTileData &fp, WaitEvents &... events);
 ```
 
-在当前 A2/A3 与 A5 后端上，`preQuantScalar` 与 `TSTORE_FP` 量化存储重载仅对 `TileType::Acc` 合法；它们不提供原生的 Vec Tile 量化存储契约。
+The `preQuantScalar` and `TSTORE_FP` quantized-store overloads are only legal for `TileType::Acc` on current A2/A3 and A5 backends. They do not provide a native vec-tile quantized store contract.
 
 ## 约束
 
 - **实现检查 (A2A3)**:
-  - 源 tile 位置必须是以下之一：`TileType::Vec`、`TileType::Mat`、`TileType::Acc`。
-  - 运行时：所有 `dst.GetShape(dim)` 值和 `src.GetValidRow()/GetValidCol()` 必须 `> 0`。
-  - 对于 `TileType::Vec` / `TileType::Mat`：
-    - `TileData::DType` 必须是以下之一：`int8_t`、`uint8_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`int64_t`、`uint64_t`、`half`、`bfloat16_t`、`float`。
-    - `sizeof(TileData::DType) == sizeof(GlobalData::DType)`。
-    - 布局必须匹配 ND/DN/NZ（或特殊情况：`TileData::Rows == 1` 或 `TileData::Cols == 1`）。
-    - 对于 `int64_t/uint64_t`，仅支持 ND->ND 或 DN->DN。
-    - A2/A3 不暴露原生的 Vec 量化存储路径。当前端需要执行 `vec -> GM` 的类型转换或量化时，必须先生成转换后的 Vec Tile（例如通过 `TCVT`），再发射同类型的 `TSTORE`。
-  - 对于 `TileType::Acc`（包括量化/原子变体）：
-    - 目标布局必须是 ND 或 NZ。
-    - 源数据类型必须是 `int32_t` 或 `float`。
-    - 不使用量化时，目标数据类型必须是 `__gm__ int32_t/float/half/bfloat16_t`。
-    - 静态形状约束：`1 <= TileData::Cols <= 4095`；如果是 ND 则 `1 <= TileData::Rows <= 8192`；如果是 NZ 则 `1 <= TileData::Rows <= 65535` 且 `TileData::Cols % 16 == 0`。
-    - 运行时：`1 <= src.GetValidCol() <= 4095`。
+  - Source tile location must be one of: `TileType::Vec`, `TileType::Mat`, `TileType::Acc`.
+  - Runtime: all `dst.GetShape(dim)` values and `src.GetValidRow()/GetValidCol()` must be `> 0`.
+  - For `TileType::Vec` / `TileType::Mat`:
+    - `TileData::DType` must be one of: `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `int64_t`, `uint64_t`, `half`, `bfloat16_t`, `float`.
+    - `sizeof(TileData::DType) == sizeof(GlobalData::DType)`.
+    - Layouts must match ND/DN/NZ (or a special case where `TileData::Rows == 1` or `TileData::Cols == 1`).
+    - For `int64_t/uint64_t`, only ND->ND or DN->DN are supported.
+    - A2/A3 does not expose a native vec quantized-store path. Frontends that need `vec -> GM` dtype conversion or quantization MUST first materialize the converted vec tile (for example via `TCVT`) and then issue a same-dtype `TSTORE`.
+  - For `TileType::Acc` (including quantized/atomic variants):
+    - Destination layout must be ND or NZ.
+    - Source dtype must be `int32_t` or `float`.
+    - When not using quantization, destination dtype must be `__gm__ int32_t/float/half/bfloat16_t`.
+    - Static shape constraints: `1 <= TileData::Cols <= 4095`; if ND then `1 <= TileData::Rows <= 8192`; if NZ then `1 <= TileData::Rows <= 65535` and `TileData::Cols % 16 == 0`.
+    - Runtime: `1 <= src.GetValidCol() <= 4095`.
 - **实现检查 (A5)**:
-  - 源 tile 位置必须是 `TileType::Vec` 或 `TileType::Acc`（此目标不支持 `Mat` 存储）。
-  - 对于 `TileType::Vec`：
-    - `sizeof(TileData::DType) == sizeof(GlobalData::DType)`。
-    - `TileData::DType` 必须是以下之一：`int8_t`、`uint8_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`int64_t`、`uint64_t`、`half`、`bfloat16_t`、`float`、`float8_e4m3_t`、`float8_e5m2_t`、`hifloat8_t`、`float4_e1m2x2_t`、`float4_e2m1x2_t`。
-    - 布局必须匹配 ND/DN/NZ（或特殊情况：`TileData::Rows == 1` 或 `TileData::Cols == 1`）。
-    - 强制执行额外的对齐约束（例如，对于 ND，行主序宽度（以字节为单位）必须是 32 的倍数；对于 DN，列主序高度（以字节为单位）必须是 32 的倍数，但有特殊情况例外）。
-  - 对于 `TileType::Acc`：
-    - 目标布局必须是 ND 或 NZ；源数据类型必须是 `int32_t` 或 `float`。
-    - 不使用量化时，目标数据类型必须是 `__gm__ int32_t/float/half/bfloat16_t`。
-    - 静态形状约束与 A2A3 对于行/列的约束相同；`AtomicAdd` 额外限制目标数据类型为支持的原子类型。
+  - Source tile location must be `TileType::Vec` or `TileType::Acc` (no `Mat` store on this target).
+  - For `TileType::Vec`:
+    - `sizeof(TileData::DType) == sizeof(GlobalData::DType)`.
+    - `TileData::DType` must be one of: `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `int64_t`, `uint64_t`, `half`, `bfloat16_t`, `float`, `float8_e4m3_t`, `float8_e5m2_t`, `hifloat8_t`, `float4_e1m2x2_t`, `float4_e2m1x2_t`.
+    - Layouts must match ND/DN/NZ (or a special case where `TileData::Rows == 1` or `TileData::Cols == 1`).
+    - Additional alignment constraints are enforced (e.g., for ND the row-major width in bytes must be a multiple of 32; for DN the column-major height in bytes must be a multiple of 32, with special-case exceptions).
+  - For `TileType::Acc`:
+    - Destination layout must be ND or NZ; source dtype must be `int32_t` or `float`.
+    - When not using quantization, destination dtype must be `__gm__ int32_t/float/half/bfloat16_t`.
+    - Static shape constraints match A2A3 for rows/cols; `AtomicAdd` additionally restricts destination dtype to supported atomic types.
 - **有效区域**:
-  - 实现使用 `src.GetValidRow()` / `src.GetValidCol()` 作为传输大小。
+  - The implementation uses `src.GetValidRow()` / `src.GetValidCol()` as the transfer size.
 
 ## 示例
 
@@ -128,31 +128,4 @@ void example_manual(__gm__ T* out) {
   TASSIGN(t, 0x1000);
   TSTORE<TileT, GTensor, AtomicType::AtomicAdd>(gout, t);
 }
-```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-pto.tstore %src, %mem : (!pto.tile<...>, !pto.partition_tensor_view<MxNxdtype>) -> ()
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-pto.tstore %src, %mem : (!pto.tile<...>, !pto.partition_tensor_view<MxNxdtype>) -> ()
-```
-
-### PTO 汇编形式
-
-```text
-tstore %t1, %sv_out[%c0, %c0]
-# IR Level 2 (DPS)
-pto.tstore ins(%src : !pto.tile_buf<...>) outs(%mem : !pto.partition_tensor_view<MxNxdtype>)
 ```

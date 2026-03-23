@@ -34,6 +34,17 @@ pto.tset_img2col_rpt %cfg : !pto.fmatrix_config -> ()
 pto.tset_img2col_rpt ins(%cfg : !pto.fmatrix_config) outs()
 ```
 
+### IR Level 1 (SSA)
+
+```text
+pto.tset_img2col_rpt %cfg
+```
+
+### IR Level 2 (DPS)
+
+```text
+pto.tset_img2col_rpt ins(%cfg) outs()
+```
 ## C++ Intrinsic
 
 Declared in `include/pto/common/pto_instr.hpp`:
@@ -93,4 +104,3 @@ pto.tset_img2col_rpt %cfg : !pto.fmatrix_config -> ()
 # AS Level 2 (DPS)
 pto.tset_img2col_rpt ins(%cfg : !pto.fmatrix_config) outs()
 ```
-

@@ -37,6 +37,19 @@ Synchronous form:
 ```text
 pto.tload ins(%mem : !pto.partition_tensor_view<MxNxdtype>) outs(%dst : !pto.tile_buf<...>)
 ```
+
+### IR Level 1 (SSA)
+
+```text
+%dst = pto.tload %mem : !pto.partition_tensor_view<MxNxdtype> ->
+!pto.tile<loc, dtype, rows, cols, blayout, slayout, fractal, pad>
+```
+
+### IR Level 2 (DPS)
+
+```text
+pto.tload ins(%mem : !pto.partition_tensor_view<MxNxdtype>) outs(%dst : !pto.tile_buf<...>)
+```
 ## C++ Intrinsic
 
 Declared in `include/pto/common/pto_instr.hpp`:
@@ -144,4 +157,3 @@ void example_manual(__gm__ T* in) {
 # AS Level 2 (DPS)
 pto.tload ins(%mem : !pto.partition_tensor_view<MxNxdtype>) outs(%dst : !pto.tile_buf<...>)
 ```
-

@@ -1,4 +1,4 @@
-﻿# TMOV_FP
+# TMOV_FP
 
 ## 指令示意图
 
@@ -10,18 +10,30 @@
 
 ## 数学语义
 
-概念上使用从 `fp` 派生的实现定义的量化/反量化配置转换每个元素：
+Conceptually converts each element using an implementation-defined quantization/dequantization configuration derived from `fp`:
 
 $$ \mathrm{dst}_{i,j} = \mathrm{Convert}\!\left(\mathrm{src}_{i,j};\ \mathrm{fp}\right) $$
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 %dst = tmov.fp %src, %fp : !pto.tile<...>, !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 1 (SSA)
+
+```text
+%dst = pto.tmov.fp %src, %fp : !pto.tile<...>, !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tmov.fp ins(%src, %fp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -38,7 +50,7 @@ pto.tmov.fp ins(%src, %fp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : 
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/constants.hpp`：
+声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/constants.hpp`:
 
 ```cpp
 template <typename DstTileData, typename SrcTileData, typename FpTileData, ReluPreMode reluMode = ReluPreMode::NoRelu,
@@ -49,12 +61,12 @@ PTO_INST RecordEvent TMOV_FP(DstTileData &dst, SrcTileData &src, FpTileData &fp,
 ## 约束
 
 - **实现检查 (A2A3)**:
-    - fp 路径仅支持累加器转换，并通过 `TMOV_IMPL(dst, src, fp)` 中的内部编译时检查进行验证。
-    - `FpTileData::Loc` 必须是 `TileType::Scaling`（`static_assert`）。
+    - The fp path is only supported for accumulator conversion and is validated by internal compile-time checks in `TMOV_IMPL(dst, src, fp)`.
+    - `FpTileData::Loc` must be `TileType::Scaling` (`static_assert`).
 - **实现检查 (A5)**:
-    - 通过 `CheckTMovAccValid(...)` 和 `TMOV_IMPL(dst, src, fp)` 中的相关编译时检查进行验证。
-    - `FpTileData::Loc` 必须是 `TileType::Scaling`（`static_assert`）。
-    - 目标位置取决于目标（fp 路径支持 `Vec` 或 `Mat`）。
+    - Validated by `CheckTMovAccValid(...)` and related compile-time checks in `TMOV_IMPL(dst, src, fp)`.
+    - `FpTileData::Loc` must be `TileType::Scaling` (`static_assert`).
+    - Destination location is target-dependent (`Vec` or `Mat` are supported in the fp path).
 
 ## 示例
 
@@ -98,31 +110,3 @@ void example_manual() {
   TMOV_FP(dst, acc, fp);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%dst = pto.tmov.fp %src, %fp : !pto.tile<...>, !pto.tile<...> -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.tmov.fp %src, %fp : !pto.tile<...>, !pto.tile<...> -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%dst = tmov.fp %src, %fp : !pto.tile<...>, !pto.tile<...> -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.tmov.fp ins(%src, %fp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-

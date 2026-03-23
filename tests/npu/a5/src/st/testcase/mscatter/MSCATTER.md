@@ -37,7 +37,7 @@ $$ \mathrm{table}[\mathrm{idx}_{i,j}] \mathrel{+}= \mathrm{src}_{i,j} $$
 
 ## Assembly Syntax
 
-PTO-AS form: see [docs/assembly/PTO-AS.md](/docs/assembly/PTO-AS.md).
+PTO-AS form: see [PTO-AS Specification](../../../../../../../docs/assembly/PTO-AS.md).
 
 Row-indexed scatter:
 
@@ -252,6 +252,6 @@ void example_manual() {
 
 ## Related Instructions
 
-- [`TSTORE`](/docs/isa/TSTORE.md): Contiguous block transfer from Tile to GM
-- [`TSCATTER`](/docs/isa/TSCATTER.md): Index-based scatter within tiles (UB-to-UB)
+- [`TSTORE`](../../../../../../../docs/isa/TSTORE.md): Contiguous block transfer from Tile to GM
+- [`TSCATTER`](../../../../../../../docs/isa/TSCATTER.md): Index-based scatter within tiles (UB-to-UB)
 - [`MGATHER`](../mgather/MGATHER.md): Indexed gather from GM to Tile (inverse operation)

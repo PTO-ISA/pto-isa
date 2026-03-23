@@ -1,4 +1,4 @@
-﻿# TMATMUL
+# TMATMUL
 
 ## 指令示意图
 
@@ -10,26 +10,38 @@
 
 ## 数学语义
 
-设：
+Let:
 
 - `M = aMatrix.GetValidRow()`
 - `K = aMatrix.GetValidCol()`
 - `N = bMatrix.GetValidCol()`
 
-对于 `0 <= i < M` 和 `0 <= j < N`（有效矩阵乘法域中的输出元素）：
+For `0 <= i < M` and `0 <= j < N` (output elements in the effective matmul domain):
 
 $$ \mathrm{C}_{i,j} = \sum_{k=0}^{K-1} \mathrm{A}_{i,k} \cdot \mathrm{B}_{k,j} $$
 
-精确的累加器行为和数据类型提升由目标/实现定义。
+Exact accumulator behavior and datatype promotion are target/implementation-defined.
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 %acc = tmatmul %a, %b : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### AS Level 1 (SSA)
+
+```text
+%c = pto.tmatmul %a, %b : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tmatmul ins(%a, %b : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%c : !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -46,7 +58,7 @@ pto.tmatmul ins(%a, %b : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%c : !pto.
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`：
+声明于 `include/pto/common/pto_instr.hpp`:
 
 ```cpp
 template <typename TileRes, typename TileLeft, typename TileRight, typename... WaitEvents>
@@ -59,24 +71,24 @@ PTO_INST RecordEvent TMATMUL(TileRes &cMatrix, TileLeft &aMatrix, TileRight &bMa
 ## 约束
 
 - **实现检查 (A2A3)**:
-    - 支持的 `(CType, AType, BType)` 三元组：
+    - Supported `(CType, AType, BType)` triples:
     - `(int32_t, int8_t, int8_t)`
     - `(float, half, half)`
     - `(float, float, float)`
     - `(float, bfloat16_t, bfloat16_t)`
-    - 静态形状约束：`TileLeft::Rows == TileRes::Rows`、`TileLeft::Cols == TileRight::Rows`、`TileRight::Cols == TileRes::Cols`。
-    - Tile 位置：`TileLeft::Loc == Left`、`TileRight::Loc == Right`、`TileRes::Loc == Acc`。
-    - 运行时：`m/k/n`（取自 `aMatrix.GetValidRow()`、`aMatrix.GetValidCol()`、`bMatrix.GetValidCol()`）必须在 `[1, 4095]` 范围内。
+    - Static shape constraints: `TileLeft::Rows == TileRes::Rows`, `TileLeft::Cols == TileRight::Rows`, `TileRight::Cols == TileRes::Cols`.
+    - Tile locations: `TileLeft::Loc == Left`, `TileRight::Loc == Right`, `TileRes::Loc == Acc`.
+    - Runtime: `m/k/n` (taken from `aMatrix.GetValidRow()`, `aMatrix.GetValidCol()`, `bMatrix.GetValidCol()`) must be in `[1, 4095]`.
 - **实现检查 (A5)**:
-    - 累加器类型必须是 `int32_t` 或 `float`。
-    - 如果是 `int32_t`：`AType == int8_t` 且 `BType == int8_t`。
-    - 如果是 `float`：支持 `half/bfloat16_t/float` 和选定的 fp8 对（目标定义）。
-    - 静态形状约束：`TileLeft::Rows == TileRes::Rows`、`TileLeft::Cols == TileRight::Rows`、`TileRight::Cols == TileRes::Cols`。
-    - 强制执行分形/布局约束：
-    - Left：`Loc == Left`、`!isRowMajor`、`SFractal == RowMajor`
-    - Right：`Loc == Right`、`isRowMajor`、`SFractal == ColMajor`
-    - Acc：`Loc == Acc`、`!isRowMajor`、`SFractal == RowMajor`
-    - 运行时：`m/k/n`（取自 `aMatrix.GetValidRow()`、`aMatrix.GetValidCol()`、`bMatrix.GetValidCol()`）必须在 `[1, 4095]` 范围内。
+    - Accumulator type must be `int32_t` or `float`.
+    - If `int32_t`: `AType == int8_t` and `BType == int8_t`.
+    - If `float`: supports `half/bfloat16_t/float` and selected fp8 pairs (target-defined).
+    - Static shape constraints: `TileLeft::Rows == TileRes::Rows`, `TileLeft::Cols == TileRight::Rows`, `TileRight::Cols == TileRes::Cols`.
+    - Fractal/layout constraints are enforced:
+    - Left: `Loc == Left`, `!isRowMajor`, `SFractal == RowMajor`
+    - Right: `Loc == Right`, `isRowMajor`, `SFractal == ColMajor`
+    - Acc: `Loc == Acc`, `!isRowMajor`, `SFractal == RowMajor`
+    - Runtime: `m/k/n` (taken from `aMatrix.GetValidRow()`, `aMatrix.GetValidCol()`, `bMatrix.GetValidCol()`) must be in `[1, 4095]`.
 
 ## 示例
 
@@ -118,31 +130,3 @@ void example_manual() {
   TMATMUL(c, a, b);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%c = pto.tmatmul %a, %b : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%c = pto.tmatmul %a, %b : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%acc = tmatmul %a, %b : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.tmatmul ins(%a, %b : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%c : !pto.tile_buf<...>)
-```
-

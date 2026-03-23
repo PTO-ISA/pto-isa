@@ -1,4 +1,4 @@
-﻿# TGATHER
+# TGATHER
 
 ## 指令示意图
 
@@ -12,19 +12,19 @@
 
 基于索引的 gather（概念性定义）：
 
-设 `R = dst.GetValidRow()`，`C = dst.GetValidCol()`。对于 `0 <= i < R` 且 `0 <= j < C`：
+Let `R = dst.GetValidRow()` and `C = dst.GetValidCol()`. For `0 <= i < R` and `0 <= j < C`:
 
 $$ \mathrm{dst}_{i,j} = \mathrm{src0}\!\left[\mathrm{indices}_{i,j}\right] $$
 
-确切的索引解释和边界行为由实现定义。
+Exact index interpretation and bounds behavior are implementation-defined.
 
-基于掩码模式的 gather 是由 `pto::MaskPattern` 控制的实现定义的选择/归约操作。
+Mask-pattern gather is an implementation-defined selection/reduction controlled by `pto::MaskPattern`.
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
-基于索引的 gather：
+Index-based gather:
 
 ```text
 %dst = tgather %src0, %indices : !pto.tile<...> -> !pto.tile<...>
@@ -34,6 +34,20 @@ PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 
 ```text
 %dst = tgather %src {maskPattern = #pto.mask_pattern<P0101>} : !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 1 (SSA)
+
+```text
+%dst = pto.tgather %src, %indices : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+%dst = pto.tgather %src {maskPattern = #pto.mask_pattern<P0101>}: !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tgather ins(%src, %indices : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+pto.tgather ins(%src, {maskPattern = #pto.mask_pattern<P0101>} : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -52,7 +66,7 @@ pto.tgather ins(%src, {maskPattern = #pto.mask_pattern<P0101>} : !pto.tile_buf<.
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/type.hpp`：
+声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/type.hpp`:
 
 ```cpp
 template <typename TileDataD, typename TileDataS0, typename TileDataS1, typename... WaitEvents>
@@ -64,28 +78,30 @@ PTO_INST RecordEvent TGATHER(DstTileData& dst, SrcTileData& src, WaitEvents&... 
 
 ## 约束
 
-- **基于索引的 gather：实现检查 (A2A3)**:
-    - `sizeof(DstTileData::DType)` 对应类型必须是 `int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`float` 之一。
-    - `sizeof(Src1TileData::DType)` 对应类型必须是 `int32_t`、`uint32_t` 之一。
-    - `DstTileData::DType` 必须与 `Src0TileData::DType` 类型相同。
-    - `src1.GetValidCol() == Src1TileData::Cols` 且 `dst.GetValidCol() == DstTileData::Cols`。
-- **基于索引的 gather：实现检查 (A5)**:
-    - `sizeof(DstTileData::DType)` 对应类型必须是 `int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`float` 之一。
-    - `sizeof(Src1TileData::DType)` 对应类型必须是 `int16_t`、`uint16_t`、`int32_t`、`uint32_t` 之一。
-    - `DstTileData::DType` 必须与 `Src0TileData::DType` 类型相同。
-    - `src1.GetValidCol() == Src1TileData::Cols` 且 `dst.GetValidCol() == DstTileData::Cols`。
-- **基于掩码模式的 gather：实现检查 (A2A3)**:
-    - 源元素大小必须是 `2` 或 `4` 字节。
-    - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`bfloat16_t` 或 `float` 之一。
-    - `dst` 和 `src` 必须都是 `TileType::Vec` 且行主序。
-    - `sizeof(dst element) == sizeof(src element)` 且 `dst.GetValidCol() == DstTileData::Cols`（连续的目标存储）。
-- **基于掩码模式的 gather：实现检查 (A5)**:
-    - 源元素大小必须是 `1`、`2` 或 `4` 字节。
-    - `dst` 和 `src` 必须都是 `TileType::Vec` 且行主序。
-    - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int8_t`、`uint8_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`、`half`、`bfloat16_t`、`float`、`float8_e4m3_t`、`float8_e5m2_t` 或 `hifloat8_t` 之一。
-    - 支持的数据类型限制为目标定义的集合（通过实现中的 `static_assert` 强制执行），且 `sizeof(dst element) == sizeof(src element)`，`dst.GetValidCol() == DstTileData::Cols`（连续的目标存储）。
+- **Index-based gather: implementation checks (A2A3)**:
+    - `sizeof(DstTileData::DType)` must be must be `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `float`.
+    - `sizeof(Src1TileData::DType)` must be must be `int32_t`, `uint32_t`.
+    - `DstTileData::DType` must be the same type as `Src0TileData::DType`.
+    - `src1.GetValidCol() == Src1TileData::Cols` and `dst.GetValidCol() == DstTileData::Cols`.
+- **Index-based gather: implementation checks (A5)**:
+    - `sizeof(DstTileData::DType)` must be must be `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `half`, `float`.
+    - `sizeof(Src1TileData::DType)` must be must be `int16_t`, `uint16_t`, `int32_t`, `uint32_t`.
+    - `DstTileData::DType` must be the same type as `Src0TileData::DType`.
+    - `src1.GetValidCol() == Src1TileData::Cols` and `dst.GetValidCol() == DstTileData::Cols`.
+- **基于掩码模式的 gather： implementation checks (A2A3)**:
+    - Source element size must be `2` or `4` bytes.
+    - `SrcTileData::DType`/`DstTileData::DType` must be `int16_t` or `uint16_t` or `int32_t` or `uint32_t`
+    or `half` or `bfloat16_t` or `float`.
+    - `dst` and `src` must both be `TileType::Vec` and row-major.
+    - `sizeof(dst element) == sizeof(src element)` and `dst.GetValidCol() == DstTileData::Cols` (continuous dst storage).
+- **基于掩码模式的 gather： implementation checks (A5)**:
+    - Source element size must be `1` or `2` or `4` bytes.
+    - `dst` and `src` must both be `TileType::Vec` and row-major.
+    - `SrcTileData::DType`/`DstTileData::DType` must be `int8_t` or `uint8_t` or `int16_t` or `uint16_t` or `int32_t` or `uint32_t`
+    or `half` or `bfloat16_t` or `float` or `float8_e4m3_t`or `float8_e5m2_t` or `hifloat8_t`.
+    - Supported dtypes are restricted to a target-defined set (checked via `static_assert` in the implementation), and `sizeof(dst element) == sizeof(src element)`, `dst.GetValidCol() == DstTileData::Cols` (continuous dst storage).
 - **边界 / 有效性**:
-    - 索引边界不通过显式运行时断言进行验证；超出范围的索引行为由目标定义。
+    - Index bounds are not validated by explicit runtime assertions; out-of-range indices are target-defined.
 
 ## 示例
 
@@ -124,31 +140,3 @@ void example_manual() {
   TGATHER<DstT, SrcT, MaskPattern::P0101>(dst, src);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%dst = pto.tgather %src, %indices : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.tgather %src, %indices : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%dst = pto.tgather %src, %indices : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.tgather ins(%src, %indices : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-

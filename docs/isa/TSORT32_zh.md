@@ -1,4 +1,4 @@
-﻿# TSORT32
+# TSORT32
 
 ## 指令示意图
 
@@ -10,20 +10,32 @@
 
 ## 数学语义
 
-将 `src` 中的值排序后写入 `dst`，并在 `idx` 中生成索引映射。概念上，对每一行 `i`：
+Sorts values from `src` into `dst` and produces an index mapping in `idx`. Conceptually, for each row `i`:
 
 $$ \mathrm{dst}_{i,k} = \mathrm{src}_{i,\pi_i(k)} $$
 
-其中 $\pi_i$ 是该行索引的一个排列。排序顺序和稳定性由目标定义。
+where $\pi_i$ is a permutation of the indices in the row. Sort order and stability are target-defined.
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 %dst, %idx = tsort32 %src : !pto.tile<...> -> (!pto.tile<...>, !pto.tile<...>)
+```
+
+### AS Level 1 (SSA)
+
+```text
+%dst, %idx = pto.tsort32 %src : !pto.tile<...> -> (!pto.tile<...>, !pto.tile<...>)
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tsort32 ins(%src : !pto.tile_buf<...>) outs(%dst, %idx : !pto.tile_buf<...>, !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -40,7 +52,7 @@ pto.tsort32 ins(%src : !pto.tile_buf<...>) outs(%dst, %idx : !pto.tile_buf<...>,
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`：
+声明于 `include/pto/common/pto_instr.hpp`:
 
 ```cpp
 template <typename DstTileData, typename SrcTileData, typename IdxTileData>
@@ -52,14 +64,14 @@ PTO_INST RecordEvent TSORT32(DstTileData &dst, SrcTileData &src, IdxTileData &id
 
 ## 约束
 
-- `TSORT32` 不接受 `WaitEvents&...` 参数，也不在内部调用 `TSYNC(...)`；如有需要请显式同步。
+- `TSORT32` does not take `WaitEvents&...` and does not call `TSYNC(...)` internally; synchronize explicitly if needed.
 - **实现检查 (A2A3/A5)**:
-    - `DstTileData::DType` 必须是 `half` 或 `float`。
-    - `SrcTileData::DType` 必须与 `DstTileData::DType` 匹配。
-    - `IdxTileData::DType` 必须是 `uint32_t`。
-    - `dst`/`src`/`idx` Tile 位置必须是 `TileType::Vec`，且都必须是行主序（`isRowMajor`）。
+    - `DstTileData::DType` must be `half` or `float`.
+    - `SrcTileData::DType` must match `DstTileData::DType`.
+    - `IdxTileData::DType` must be `uint32_t`.
+    - `dst/src/idx` tile location must be `TileType::Vec`, and all must be row-major (`isRowMajor`).
 - **有效区域**:
-    - 实现使用 `dst.GetValidRow()` 作为行数，并使用 `src.GetValidCol()` 确定每行需要排序的 32 元素块的数量。
+    - The implementation uses `dst.GetValidRow()` as the number of rows and uses `src.GetValidCol()` to determine how many 32-element blocks to sort per row.
 
 ## 示例
 
@@ -101,31 +113,3 @@ void example_manual() {
   TSORT32(dst, src, idx);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%dst, %idx = pto.tsort32 %src : !pto.tile<...> -> (!pto.tile<...>, !pto.tile<...>)
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst, %idx = pto.tsort32 %src : !pto.tile<...> -> (!pto.tile<...>, !pto.tile<...>)
-```
-
-### PTO 汇编形式
-
-```text
-%dst, %idx = tsort32 %src : !pto.tile<...> -> (!pto.tile<...>, !pto.tile<...>)
-# AS Level 2 (DPS)
-pto.tsort32 ins(%src : !pto.tile_buf<...>) outs(%dst, %idx : !pto.tile_buf<...>, !pto.tile_buf<...>)
-```
-

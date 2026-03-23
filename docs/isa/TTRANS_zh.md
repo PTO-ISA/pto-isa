@@ -1,4 +1,4 @@
-﻿# TTRANS
+# TTRANS
 
 ## 指令示意图
 
@@ -10,22 +10,34 @@
 
 ## 数学语义
 
-对于二维 Tile，在有效转置域上：
+For a 2D tile, over the effective transpose domain:
 
 $$ \mathrm{dst}_{i,j} = \mathrm{src}_{j,i} $$
 
-确切的形状/布局及转置域取决于目标硬件（参见约束）。
+Exact shape/layout and the transpose domain depend on the target (see Constraints).
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 %dst = ttrans %src : !pto.tile<...> -> !pto.tile<...>
 ```
-降低时可能引入内部临时 Tile；C++ 内建接口需要显式传入 `tmp` 操作数。
+Lowering may introduce internal scratch tiles; the C++ intrinsic requires an explicit `tmp` operand.
+
+### AS Level 1 (SSA)
+
+```text
+%dst = pto.ttrans %src : !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.ttrans ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+```
 
 ### AS Level 1（SSA）
 
@@ -41,7 +53,7 @@ pto.ttrans ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`：
+声明于 `include/pto/common/pto_instr.hpp`:
 
 ```cpp
 template <typename TileDataDst, typename TileDataSrc, typename TileDataTmp, typename... WaitEvents>
@@ -51,24 +63,24 @@ PTO_INST RecordEvent TTRANS(TileDataDst &dst, TileDataSrc &src, TileDataTmp &tmp
 ## 约束
 
 - **实现检查 (A2A3)**:
-    - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`。
-    - 源布局必须是行主序（`TileDataSrc::isRowMajor`）。
-    - 元素大小必须是 `1`、`2` 或 `4` 字节。
-    - 支持的元素类型按元素宽度限制如下：
-    - 4 字节：`uint32_t`、`int32_t`、`float`
-    - 2 字节：`uint16_t`、`int16_t`、`half`、`bfloat16_t`
-    - 1 字节：`uint8_t`、`int8_t`
-    - 转置大小取自 `src.GetValidRow()` / `src.GetValidCol()`。
+    - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`.
+    - Source layout must be row-major (`TileDataSrc::isRowMajor`).
+    - Element size must be `1`, `2`, or `4` bytes.
+    - Supported element types are restricted per element width:
+    - 4 bytes: `uint32_t`, `int32_t`, `float`
+    - 2 bytes: `uint16_t`, `int16_t`, `half`, `bfloat16_t`
+    - 1 byte: `uint8_t`, `int8_t`
+    - The transpose size is taken from `src.GetValidRow()` / `src.GetValidCol()`.
 - **实现检查 (A5)**:
-    - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`。
-    - 对输入和输出的主维度强制执行 32 字节对齐约束（行主序检查 `Cols * sizeof(T) % 32 == 0`，列主序检查 `Rows * sizeof(T) % 32 == 0`）。
-    - 支持的元素类型按元素宽度限制如下：
-    - 4 字节：`uint32_t`、`int32_t`、`float`
-    - 2 字节：`uint16_t`、`int16_t`、`half`、`bfloat16_t`
-    - 1 字节：`uint8_t`、`int8_t`
-    - 实现在静态 Tile 形状（`TileDataSrc::Rows/Cols`）上运算，不参考 `GetValidRow/GetValidCol`。
-- **临时 Tile**:
-    - C++ API 需要 `tmp`，但某些实现可能不使用它。
+    - `sizeof(TileDataSrc::DType) == sizeof(TileDataDst::DType)`.
+    - 32-byte alignment constraints are enforced on the major dimension of both input and output (row-major checks `Cols * sizeof(T) % 32 == 0`, col-major checks `Rows * sizeof(T) % 32 == 0`).
+    - Supported element types are restricted per element width:
+    - 4 bytes: `uint32_t`, `int32_t`, `float`
+    - 2 bytes: `uint16_t`, `int16_t`, `half`, `bfloat16_t`
+    - 1 byte: `uint8_t`, `int8_t`
+    - The implementation operates over the static tile shape (`TileDataSrc::Rows/Cols`) and does not consult `GetValidRow/GetValidCol`.
+- **Temporary tile**:
+    - The C++ API requires `tmp`, but some implementations may not use it.
 
 ## 示例
 
@@ -110,31 +122,3 @@ void example_manual() {
   TTRANS(dst, src, tmp);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%dst = pto.ttrans %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.ttrans %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%dst = ttrans %src : !pto.tile<...> -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.ttrans ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-

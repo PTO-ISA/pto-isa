@@ -1,4 +1,4 @@
-﻿# TSYNC
+# TSYNC
 
 ## 指令示意图
 
@@ -8,18 +8,20 @@
 
 同步 PTO 执行（等待事件或插入每操作流水线屏障）。
 
-- `TSYNC(events...)` 等待一组显式事件令牌。
-- `TSYNC<Op>()` 为单个向量操作类插入流水线屏障。
+Synchronize PTO execution:
 
-`include/pto/common/pto_instr.hpp` 中的许多内建函数在发射指令前会在内部调用 `TSYNC(events...)`。
+- `TSYNC(events...)` waits on a set of explicit event tokens.
+- `TSYNC<Op>()` inserts a pipeline barrier for a single vector op class.
+
+Many intrinsics in `include/pto/common/pto_instr.hpp` call `TSYNC(events...)` internally before issuing the instruction.
 
 ## 数学语义
 
-不适用。
+Not applicable.
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 Event operand form:
 
@@ -50,13 +52,9 @@ pto.barrier(op)
 // 支持的op：TVEC,TMATMUL
 ```
 
-对当前的 PTO-DSL 内核编写流程，`record_event` 和 `wait_event` 应视为低层
-TSYNC 形式。前端内核通常应保持源码不显式写事件，并依赖
-`ptoas --enable-insert-sync`。
-
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`：
+声明于 `include/pto/common/pto_instr.hpp`:
 
 ```cpp
 template <Op OpCode>
@@ -68,10 +66,10 @@ PTO_INST void TSYNC(WaitEvents &... events);
 
 ## 约束
 
-- **实现检查（`TSYNC<Op>()`）**:
-  - `TSYNC_IMPL<Op>()` 仅支持向量流水线操作（`include/pto/common/event.hpp` 中通过 `static_assert(pipe == PIPE_V)` 强制执行）。
-- **`TSYNC(events...)` 语义**:
-  - `TSYNC(events...)` 调用 `WaitAllEvents(events...)`，后者对每个事件令牌调用 `events.Wait()`。
+- **实现检查 (`TSYNC<Op>()`)**:
+  - `TSYNC_IMPL<Op>()` only supports vector-pipeline ops (`static_assert(pipe == PIPE_V)` in `include/pto/common/event.hpp`).
+- **`TSYNC(events...)` semantics**:
+  - `TSYNC(events...)` calls `WaitAllEvents(events...)`, which invokes `events.Wait()` on each event token.
 
 ## 示例
 
@@ -111,31 +109,4 @@ void example_manual() {
   TSYNC<Op::TADD>();
   TSYNC(e);
 }
-```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%result = pto.tsync ...
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%result = pto.tsync ...
-```
-
-### PTO 汇编形式
-
-```text
-tsync %e0, %e1 : !pto.event<...>, !pto.event<...>
-# IR Level 2 (DPS)
-pto.record_event[src_op, dst_op, eventID]
 ```

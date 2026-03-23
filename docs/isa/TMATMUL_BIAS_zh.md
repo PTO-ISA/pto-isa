@@ -1,4 +1,4 @@
-﻿# TMATMUL_BIAS
+# TMATMUL_BIAS
 
 ## 指令示意图
 
@@ -10,26 +10,38 @@
 
 ## 数学语义
 
-设：
+Let:
 
 - `M = aMatrix.GetValidRow()`
 - `K = aMatrix.GetValidCol()`
 - `N = bMatrix.GetValidCol()`
 
-对于 `0 <= i < M` 和 `0 <= j < N`：
+For `0 <= i < M` and `0 <= j < N`:
 
 $$ \mathrm{C}_{i,j} = \sum_{k=0}^{K-1} \mathrm{A}_{i,k} \cdot \mathrm{B}_{k,j} + \mathrm{Bias}_{0,j} $$
 
-偏置广播行为由实现定义。
+Bias broadcasting behavior is implementation-defined.
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 %acc = tmatmul.bias %a, %b, %bias : (!pto.tile<...>, !pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### AS Level 1 (SSA)
+
+```text
+%c = pto.tmatmul.bias %a, %b, %bias : (!pto.tile<...>, !pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tmatmul.bias ins(%a, %b, %bias : !pto.tile_buf<...>, !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%c : !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -46,7 +58,7 @@ pto.tmatmul.bias ins(%a, %b, %bias : !pto.tile_buf<...>, !pto.tile_buf<...>, !pt
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`：
+声明于 `include/pto/common/pto_instr.hpp`:
 
 ```cpp
 template <typename TileRes, typename TileLeft, typename TileRight, typename TileBias, typename... WaitEvents>
@@ -59,13 +71,13 @@ PTO_INST RecordEvent TMATMUL_BIAS(TileRes &cMatrix, TileLeft &aMatrix, TileRight
 
 ## 约束
 
-- 所有来自 `TMATMUL` 的约束都适用于 `(cMatrix, aMatrix, bMatrix)` 三元组。
-- **偏置约束 (A2A3)**:
-    - `TileBias::DType` 必须匹配 `TileRes::DType`。
-    - `TileBias::Loc == TileType::Bias` 且 `TileBias::Rows == 1`。
-- **偏置约束 (A5)**:
-    - `TileBias::DType` 必须匹配 `TileRes::DType`。
-    - `TileBias::Loc == TileType::Bias`、`TileBias::Rows == 1` 且 `TileBias::isRowMajor`。
+- All constraints from `TMATMUL` apply to the `(cMatrix, aMatrix, bMatrix)` triple.
+- **Bias constraints (A2A3)**:
+    - `TileBias::DType` must match `TileRes::DType`.
+    - `TileBias::Loc == TileType::Bias` and `TileBias::Rows == 1`.
+- **Bias constraints (A5)**:
+    - `TileBias::DType` must match `TileRes::DType`.
+    - `TileBias::Loc == TileType::Bias`, `TileBias::Rows == 1`, and `TileBias::isRowMajor`.
 
 ## 示例
 
@@ -112,31 +124,3 @@ void example_manual() {
   TMATMUL_BIAS(c, a, b, bias);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%c = pto.tmatmul.bias %a, %b, %bias : (!pto.tile<...>, !pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%c = pto.tmatmul.bias %a, %b, %bias : (!pto.tile<...>, !pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%acc = tmatmul.bias %a, %b, %bias : (!pto.tile<...>, !pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.tmatmul.bias ins(%a, %b, %bias : !pto.tile_buf<...>, !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%c : !pto.tile_buf<...>)
-```
-

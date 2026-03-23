@@ -1,4 +1,4 @@
-﻿# TXOR
+# TXOR
 
 ## 指令示意图
 
@@ -16,12 +16,24 @@ $$ \mathrm{dst}_{i,j} = \mathrm{src0}_{i,j} \oplus \mathrm{src1}_{i,j} $$
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 %dst = txor %src0, %src1 : !pto.tile<...>
+```
+
+### AS Level 1 (SSA)
+
+```text
+%dst = pto.txor %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.txor ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -38,7 +50,7 @@ pto.txor ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : 
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`：
+声明于 `include/pto/common/pto_instr.hpp`:
 
 ```cpp
 template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename TileDataTmp,
@@ -48,10 +60,10 @@ PTO_INST RecordEvent TXOR(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &sr
 
 ## 约束
 
-- 适用于整数元素类型。
-- 该操作在 `dst.GetValidRow()` / `dst.GetValidCol()` 上迭代。
-- A3 计算需要临时空间，而 A5 不使用。
-- 对于 A3，2 个源 Tile、目标 Tile、临时空间必须在不同的内存范围内且不重叠。
+- Intended for integral element types.
+- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
+- Temporary space is required by A3 for calculation, while not used by A5.
+- For A3, 2 source Tile, destination Tile, temporary space must in different memory range without overlapping.
 
 ## 示例
 
@@ -72,31 +84,3 @@ void example() {
   TXOR(dst, src0, src1, tmp);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%dst = pto.txor %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.txor %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%dst = txor %src0, %src1 : !pto.tile<...>
-# AS Level 2 (DPS)
-pto.txor ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-

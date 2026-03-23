@@ -41,6 +41,22 @@ pto.tmrgsort ins(%src, %blockLen : !pto.tile_buf<...>, dtype)  outs(%dst : !pto.
 pto.tmrgsort ins(%src0, %src1, %src2, %src3 {exhausted = false} : !pto.tile_buf<...>, !pto.tile_buf<...>, !pto.tile_buf<...>, !pto.tile_buf<...>)
 outs(%dst, %executed : !pto.tile_buf<...>, vector<4xi16>)
 ```
+
+### IR Level 1 (SSA)
+
+```text
+%dst = pto.tmrgsort %src, %blockLen : (!pto.tile<...>, dtype) -> !pto.tile<...>
+%dst, %executed = pto.tmrgsort %src0, %src1, %src2, %src3 {exhausted = false}
+ : (!pto.tile<...>, !pto.tile<...>, !pto.tile<...>, !pto.tile<...>) -> (!pto.tile<...>, vector<4xi16>)
+```
+
+### IR Level 2 (DPS)
+
+```text
+pto.tmrgsort ins(%src, %blockLen : !pto.tile_buf<...>, dtype)  outs(%dst : !pto.tile_buf<...>)
+pto.tmrgsort ins(%src0, %src1, %src2, %src3 {exhausted = false} : !pto.tile_buf<...>, !pto.tile_buf<...>, !pto.tile_buf<...>, !pto.tile_buf<...>)
+outs(%dst, %executed : !pto.tile_buf<...>, vector<4xi16>)
+```
 ## C++ Intrinsic
 
 Declared in `include/pto/common/pto_instr.hpp`:
@@ -137,4 +153,3 @@ void example_manual() {
 # AS Level 2 (DPS)
 pto.tmrgsort ins(%src, %blockLen : !pto.tile_buf<...>, dtype)  outs(%dst : !pto.tile_buf<...>)
 ```
-

@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="../figures/pto_logo.svg" alt="PTO Tile Lib" width="180" />
 </p>
 
@@ -6,14 +6,16 @@
 
 本目录是 PTO Tile Lib ISA 的指令参考（每条指令一页）。
 
-- 权威来源（C++ 内建函数）：`include/pto/common/pto_instr.hpp`
-- [通用约定（操作数、事件、修饰符）](conventions_zh.md)
+- 权威来源：`include/pto/common/pto_instr.hpp`
+- 通用约定（操作数、事件、修饰符）：`docs/isa/conventions_zh.md`
 
 ## 同步
 - [TSYNC](TSYNC_zh.md) - 同步 PTO 执行（等待事件或插入每操作流水线屏障）。
 
 ## 手动 / 资源绑定
 - [TASSIGN](TASSIGN_zh.md) - 将 Tile 对象绑定到实现定义的片上地址（手动放置）。
+- [TSETHF32MODE](TSETHF32MODE_zh.md) - 设置 HF32 变换模式（实现定义）。
+- [TSETTF32MODE](TSETTF32MODE_zh.md) - 设置 TF32 变换模式（实现定义）。
 - [TSETFMATRIX](TSETFMATRIX_zh.md) - 为类 IMG2COL 操作设置 FMATRIX 寄存器。
 - [TSET_IMG2COL_RPT](TSET_IMG2COL_RPT_zh.md) - 从 IMG2COL 配置 Tile 设置 IMG2COL 重复次数元数据。
 - [TSET_IMG2COL_PADDING](TSET_IMG2COL_PADDING_zh.md) - 从 IMG2COL 配置 Tile 设置 IMG2COL 填充元数据。
@@ -51,9 +53,10 @@
 ## Tile-标量 / Tile-立即数
 - [TEXPANDS](TEXPANDS_zh.md) - 将标量广播到目标 Tile 中。
 - [TCMPS](TCMPS_zh.md) - 将 Tile 与标量比较并写入逐元素比较结果。
-- [TSELS](TSELS_zh.md) - 使用掩码 Tile 在源 Tile 和标量之间进行选择（源 Tile 逐元素选择）。
+- [TSELS](TSELS_zh.md) - 使用标量 `selectMode` 在两个源 Tile 中选择一个（全局选择）。
 - [TMINS](TMINS_zh.md) - Tile 与标量的逐元素最小值。
 - [TADDS](TADDS_zh.md) - Tile 与标量的逐元素加法。
+- [TAXPY](TAXPY_zh.md) - AXPY 风格融合更新：将 Tile 乘以标量并累加到目标 Tile。
 - [TSUBS](TSUBS_zh.md) - 从 Tile 中逐元素减去一个标量。
 - [TDIVS](TDIVS_zh.md) - 与标量的逐元素除法（Tile/标量 或 标量/Tile）。
 - [TMULS](TMULS_zh.md) - Tile 与标量的逐元素乘法。
@@ -71,7 +74,7 @@
 
 ## 轴归约 / 扩展
 - [TROWSUM](TROWSUM_zh.md) - 通过对列求和来归约每一行。
-- [TROWPROD](TROWPROD_zh.md) - 通过跨列乘积来归约每一行。
+- [TROWPROD](TROWPROD_zh.md) - 对每一行沿列方向连乘归约。
 - [TCOLSUM](TCOLSUM_zh.md) - 通过对行求和来归约每一列。
 - [TCOLPROD](TCOLPROD_zh.md) - 通过跨行乘积来归约每一列。
 - [TCOLMAX](TCOLMAX_zh.md) - 通过取行间最大值来归约每一列。
@@ -125,7 +128,11 @@
 - [TMOV](TMOV_zh.md) - 在 Tile 之间移动/复制，可选应用实现定义的转换模式。
 - [TMOV_FP](TMOV_FP_zh.md) - 使用缩放 (`fp`) Tile 作为向量量化参数，将累加器 Tile 移动/转换到目标 Tile。
 - [TRESHAPE](TRESHAPE_zh.md) - 将 Tile 重新解释为另一种 Tile 类型/形状，同时保留底层字节。
+- [TALIAS](TALIAS_zh.md) - 创建一个与原始 Tile 共享底层存储的别名视图。
+- [TSUBVIEW](TSUBVIEW_zh.md) - 在给定行列偏移处创建子 Tile 视图而不复制数据。
+- [TCONCAT](TCONCAT_zh.md) - 沿列维将两个源 Tile 拼接到目标 Tile。
 - [TTRANS](TTRANS_zh.md) - 使用实现定义的临时 Tile 进行转置。
+- [TPACK](TPACK_zh.md) - 将 Tile 元素打包或转换为更窄的目标表示。
 
 ## 复杂指令
 - [TPRINT](TPRINT_zh.md) - 调试/打印 Tile 中的元素（实现定义）。
@@ -139,9 +146,10 @@
 - [TPARTMAX](TPARTMAX_zh.md) - 部分逐元素最大值，对不匹配的有效区域具有实现定义的处理方式。
 - [TPARTMIN](TPARTMIN_zh.md) - 部分逐元素最小值，对不匹配的有效区域具有实现定义的处理方式。
 - [TGATHERB](TGATHERB_zh.md) - 使用字节偏移量收集元素。
-- [TSCATTER](TSCATTER_zh.md) - 使用逐元素目标扁平偏移，将源 Tile 元素散播到目标 Tile 中。
+- [TSCATTER](TSCATTER_zh.md) - 使用逐元素行索引将源 Tile 的行散播到目标 Tile 中。
 - [TQUANT](TQUANT_zh.md) - 量化 Tile（例如 FP32 到 FP8），生成指数/缩放/最大值输出。
-
-## 通信
-
-完整的通信 ISA 指令参考（点对点、异步、同步原语及集合通信）见 [comm/README_zh.md](comm/README_zh.md)。
+- [TDEQUANT](TDEQUANT_zh.md) - 使用 scale 与 offset Tile 将整数量化 Tile 反量化为浮点 Tile。
+- [TPUSH](TPUSH_zh.md) - 将 Tile 推入 pipe 或 FIFO 的生产者端。
+- [TPOP](TPOP_zh.md) - 从 pipe 或 FIFO 的消费者端弹出一个 Tile。
+- [TFREE](TFREE_zh.md) - 将当前占用的 pipe 或 FIFO 槽位释放回生产者。
+- [THISTOGRAM](THISTOGRAM_zh.md) - 使用索引 Tile 从源值中累计直方图 bin 计数。

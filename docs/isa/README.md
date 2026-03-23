@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="../figures/pto_logo.svg" alt="PTO Tile Lib" width="180" />
 </p>
 
@@ -7,13 +7,15 @@
 This directory contains the per-instruction reference for the PTO Tile Lib ISA.
 
 - Source of truth (C++ intrinsics): `include/pto/common/pto_instr.hpp`
-- [Common conventions (operands, events, modifiers)](conventions.md)
+- Common conventions (operands, events, modifiers): `docs/isa/conventions.md`
 
 ## Synchronization
 - [TSYNC](TSYNC.md) - Synchronize PTO execution (wait on events or insert a per-op pipeline barrier).
 
 ## Manual / Resource Binding
 - [TASSIGN](TASSIGN.md) - Bind a Tile object to an implementation-defined on-chip address (manual placement).
+- [TSETHF32MODE](TSETHF32MODE.md) - Configure HF32 transform mode (implementation-defined).
+- [TSETTF32MODE](TSETTF32MODE.md) - Configure TF32 transform mode (implementation-defined).
 - [TSETFMATRIX](TSETFMATRIX.md) - Set FMATRIX register(s) for IMG2COL-like ops.
 - [TSET_IMG2COL_RPT](TSET_IMG2COL_RPT.md) - Set IMG2COL repeat metadata from an IMG2COL configuration tile.
 - [TSET_IMG2COL_PADDING](TSET_IMG2COL_PADDING.md) - Set IMG2COL padding metadata from an IMG2COL configuration tile.
@@ -51,9 +53,10 @@ This directory contains the per-instruction reference for the PTO Tile Lib ISA.
 ## Tile-Scalar / Tile-Immediate
 - [TEXPANDS](TEXPANDS.md) - Broadcast a scalar into a destination tile.
 - [TCMPS](TCMPS.md) - Compare a tile against a scalar and write per-element comparison results.
-- [TSELS](TSELS.md) - Select between source tile and scalar using a mask tile (per-element selection for source tile).
+- [TSELS](TSELS.md) - Select one of two source tiles using a scalar `selectMode` (global select).
 - [TMINS](TMINS.md) - Elementwise minimum of a tile and a scalar.
 - [TADDS](TADDS.md) - Elementwise add a scalar to a tile.
+- [TAXPY](TAXPY.md) - AXPY-style fused update: multiply a tile by a scalar and accumulate into the destination tile.
 - [TSUBS](TSUBS.md) - Elementwise subtract a scalar from a tile.
 - [TDIVS](TDIVS.md) - Elementwise division with a scalar (tile/scalar or scalar/tile).
 - [TMULS](TMULS.md) - Elementwise multiply a tile by a scalar.
@@ -125,7 +128,11 @@ This directory contains the per-instruction reference for the PTO Tile Lib ISA.
 - [TMOV](TMOV.md) - Move/copy between tiles, optionally applying implementation-defined conversion modes.
 - [TMOV_FP](TMOV_FP.md) - Move/convert from an accumulator tile into a destination tile, using a scaling (`fp`) tile for vector quantization parameters.
 - [TRESHAPE](TRESHAPE.md) - Reinterpret a tile as another tile type/shape while preserving the underlying bytes.
+- [TALIAS](TALIAS.md) - Create an alias tile view that shares the original tile storage.
+- [TSUBVIEW](TSUBVIEW.md) - Create a sub-tile view at a row/column offset without copying data.
+- [TCONCAT](TCONCAT.md) - Concatenate two source tiles along the column dimension into a destination tile.
 - [TTRANS](TTRANS.md) - Transpose with an implementation-defined temporary tile.
+- [TPACK](TPACK.md) - Pack or convert tile elements into a narrower destination representation.
 
 ## Complex
 - [TPRINT](TPRINT.md) - Debug/print elements from a tile (implementation-defined).
@@ -139,9 +146,10 @@ This directory contains the per-instruction reference for the PTO Tile Lib ISA.
 - [TPARTMAX](TPARTMAX.md) - Partial elementwise max with implementation-defined handling of mismatched valid regions.
 - [TPARTMIN](TPARTMIN.md) - Partial elementwise min with implementation-defined handling of mismatched valid regions.
 - [TGATHERB](TGATHERB.md) - Gather elements using byte offsets.
-- [TSCATTER](TSCATTER.md) - Scatter source elements into a destination tile using per-element flattened destination offsets.
+- [TSCATTER](TSCATTER.md) - Scatter rows of a source tile into a destination tile using per-element row indices.
 - [TQUANT](TQUANT.md) - Quantize a tile (e.g. FP32 to FP8) producing exponent/scaling/max outputs.
-
-## Communication
-
-See [comm/README.md](comm/README.md) for the full per-instruction communication ISA reference (point-to-point, async, synchronization, and collective operations).
+- [TDEQUANT](TDEQUANT.md) - Dequantize an integer tile into a floating-point tile using scale and offset tiles.
+- [TPUSH](TPUSH.md) - Push a tile into a pipe or FIFO producer endpoint.
+- [TPOP](TPOP.md) - Pop a tile from a pipe or FIFO consumer endpoint.
+- [TFREE](TFREE.md) - Release the currently held pipe or FIFO slot back to the producer.
+- [THISTOGRAM](THISTOGRAM.md) - Accumulate histogram bin counts from source values using an index tile.

@@ -19,6 +19,8 @@ This page is the source-synchronized ISA index generated from `docs/isa/manifest
 |---|---|---|
 | Synchronization | [`TSYNC`](isa/TSYNC.md) | Synchronize PTO execution (wait on events or insert a per-op pipeline barrier). |
 | Manual / Resource Binding | [`TASSIGN`](isa/TASSIGN.md) | Bind a Tile object to an implementation-defined on-chip address (manual placement). |
+| Manual / Resource Binding | [`TSETHF32MODE`](isa/TSETHF32MODE.md) | Configure HF32 transform mode (implementation-defined). |
+| Manual / Resource Binding | [`TSETTF32MODE`](isa/TSETTF32MODE.md) | Configure TF32 transform mode (implementation-defined). |
 | Manual / Resource Binding | [`TSETFMATRIX`](isa/TSETFMATRIX.md) | Set FMATRIX register(s) for IMG2COL-like ops. |
 | Manual / Resource Binding | [`TSET_IMG2COL_RPT`](isa/TSET_IMG2COL_RPT.md) | Set IMG2COL repeat metadata from an IMG2COL configuration tile. |
 | Manual / Resource Binding | [`TSET_IMG2COL_PADDING`](isa/TSET_IMG2COL_PADDING.md) | Set IMG2COL padding metadata from an IMG2COL configuration tile. |
@@ -52,9 +54,10 @@ This page is the source-synchronized ISA index generated from `docs/isa/manifest
 | Elementwise (Tile-Tile) | [`TFMOD`](isa/TFMOD.md) | Elementwise fmod of two tiles. |
 | Tile-Scalar / Tile-Immediate | [`TEXPANDS`](isa/TEXPANDS.md) | Broadcast a scalar into a destination tile. |
 | Tile-Scalar / Tile-Immediate | [`TCMPS`](isa/TCMPS.md) | Compare a tile against a scalar and write per-element comparison results. |
-| Tile-Scalar / Tile-Immediate | [`TSELS`](isa/TSELS.md) | Select between source tile and scalar using a mask tile (per-element selection for source tile). |
+| Tile-Scalar / Tile-Immediate | [`TSELS`](isa/TSELS.md) | Select one of two source tiles using a scalar `selectMode` (global select). |
 | Tile-Scalar / Tile-Immediate | [`TMINS`](isa/TMINS.md) | Elementwise minimum of a tile and a scalar. |
 | Tile-Scalar / Tile-Immediate | [`TADDS`](isa/TADDS.md) | Elementwise add a scalar to a tile. |
+| Tile-Scalar / Tile-Immediate | [`TAXPY`](isa/TAXPY.md) | AXPY-style fused update: multiply a tile by a scalar and accumulate into the destination tile. |
 | Tile-Scalar / Tile-Immediate | [`TSUBS`](isa/TSUBS.md) | Elementwise subtract a scalar from a tile. |
 | Tile-Scalar / Tile-Immediate | [`TDIVS`](isa/TDIVS.md) | Elementwise division with a scalar (tile/scalar or scalar/tile). |
 | Tile-Scalar / Tile-Immediate | [`TMULS`](isa/TMULS.md) | Elementwise multiply a tile by a scalar. |
@@ -118,7 +121,11 @@ This page is the source-synchronized ISA index generated from `docs/isa/manifest
 | Data Movement / Layout | [`TMOV`](isa/TMOV.md) | Move/copy between tiles, optionally applying implementation-defined conversion modes. |
 | Data Movement / Layout | [`TMOV_FP`](isa/TMOV_FP.md) | Move/convert from an accumulator tile into a destination tile, using a scaling (`fp`) tile for vector quantization parameters. |
 | Data Movement / Layout | [`TRESHAPE`](isa/TRESHAPE.md) | Reinterpret a tile as another tile type/shape while preserving the underlying bytes. |
+| Data Movement / Layout | [`TALIAS`](isa/TALIAS.md) | Create an alias tile view that shares the original tile storage. |
+| Data Movement / Layout | [`TSUBVIEW`](isa/TSUBVIEW.md) | Create a sub-tile view at a row/column offset without copying data. |
+| Data Movement / Layout | [`TCONCAT`](isa/TCONCAT.md) | Concatenate two source tiles along the column dimension into a destination tile. |
 | Data Movement / Layout | [`TTRANS`](isa/TTRANS.md) | Transpose with an implementation-defined temporary tile. |
+| Data Movement / Layout | [`TPACK`](isa/TPACK.md) | Pack or convert tile elements into a narrower destination representation. |
 | Complex | [`TPRINT`](isa/TPRINT.md) | Debug/print elements from a tile (implementation-defined). |
 | Complex | [`TMRGSORT`](isa/TMRGSORT.md) | Merge sort for multiple sorted lists (implementation-defined element format and layout). |
 | Complex | [`TSORT32`](isa/TSORT32.md) | Sort a fixed-size 32-element block and produce an index mapping. |
@@ -132,14 +139,8 @@ This page is the source-synchronized ISA index generated from `docs/isa/manifest
 | Complex | [`TGATHERB`](isa/TGATHERB.md) | Gather elements using byte offsets. |
 | Complex | [`TSCATTER`](isa/TSCATTER.md) | Scatter rows of a source tile into a destination tile using per-element row indices. |
 | Complex | [`TQUANT`](isa/TQUANT.md) | Quantize a tile (e.g. FP32 to FP8) producing exponent/scaling/max outputs. |
-| Communication | [`TPUT`](isa/comm/TPUT.md) | Remote write: transfer local data to remote NPU memory (GM → UB → GM). |
-| Communication | [`TGET`](isa/comm/TGET.md) | Remote read: read remote NPU data to local memory (GM → UB → GM). |
-| Communication | [`TPUT_ASYNC`](isa/comm/TPUT_ASYNC.md) | Asynchronous remote write (local GM → DMA engine → remote GM). |
-| Communication | [`TGET_ASYNC`](isa/comm/TGET_ASYNC.md) | Asynchronous remote read (remote GM → DMA engine → local GM). |
-| Communication | [`TNOTIFY`](isa/comm/TNOTIFY.md) | Send flag notification to remote NPU. |
-| Communication | [`TWAIT`](isa/comm/TWAIT.md) | Blocking wait until signal(s) meet comparison condition. |
-| Communication | [`TTEST`](isa/comm/TTEST.md) | Non-blocking test if signal(s) meet comparison condition. |
-| Communication | [`TGATHER`](isa/comm/TGATHER.md) | Gather data from all ranks and concatenate along DIM_3. |
-| Communication | [`TSCATTER`](isa/comm/TSCATTER.md) | Scatter data to all ranks by splitting along DIM_3. |
-| Communication | [`TREDUCE`](isa/comm/TREDUCE.md) | Gather and reduce data from all ranks element-wise to local. |
-| Communication | [`TBROADCAST`](isa/comm/TBROADCAST.md) | Broadcast data from current NPU to all ranks. |
+| Complex | [`TDEQUANT`](isa/TDEQUANT.md) | Dequantize an integer tile into a floating-point tile using scale and offset tiles. |
+| Complex | [`TPUSH`](isa/TPUSH.md) | Push a tile into a pipe or FIFO producer endpoint. |
+| Complex | [`TPOP`](isa/TPOP.md) | Pop a tile from a pipe or FIFO consumer endpoint. |
+| Complex | [`TFREE`](isa/TFREE.md) | Release the currently held pipe or FIFO slot back to the producer. |
+| Complex | [`THISTOGRAM`](isa/THISTOGRAM.md) | Accumulate histogram bin counts from source values using an index tile. |

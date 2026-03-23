@@ -36,6 +36,18 @@ Synchronous form:
 ```text
 pto.tfmods ins(%src, %scalar : !pto.tile_buf<...>, f32) outs(%dst : !pto.tile_buf<...>)
 ```
+
+### IR Level 1 (SSA)
+
+```text
+%dst = pto.tfmods %src, %scalar : !pto.tile<...>, f32
+```
+
+### IR Level 2 (DPS)
+
+```text
+pto.tfmods ins(%src, %scalar : !pto.tile_buf<...>, f32) outs(%dst : !pto.tile_buf<...>)
+```
 ## C++ Intrinsic
 
 Declared in `include/pto/common/pto_instr.hpp`:
@@ -90,4 +102,3 @@ void example() {
 # AS Level 2 (DPS)
 pto.tfmods ins(%src, %scalar : !pto.tile_buf<...>, f32) outs(%dst : !pto.tile_buf<...>)
 ```
-

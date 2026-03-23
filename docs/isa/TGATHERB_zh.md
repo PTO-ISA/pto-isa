@@ -1,4 +1,4 @@
-﻿# TGATHERB
+# TGATHERB
 
 ## 指令示意图
 
@@ -10,20 +10,32 @@
 
 ## 数学语义
 
-对有效区域内的每个元素：
+对每个元素 在有效区域内：
 
 $$ \mathrm{dst}_{i,j} = *\left(\mathrm{srcBase} + \mathrm{offset}_{i,j}\right) $$
 
-精确的边界行为由实现定义。
+Exact bounds behavior is implementation-defined.
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 %dst = tgatherb %src, %offsets : !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 1 (SSA)
+
+```text
+%dst = pto.tgatherb %src, %offsets : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tgatherb ins(%src, %offsets : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -40,7 +52,7 @@ pto.tgatherb ins(%src, %offsets : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp`：
+声明于 `include/pto/common/pto_instr.hpp`:
 
 ```cpp
 template <typename TileDataDst, typename TileDataSrc, typename TileDataOffset, typename... WaitEvents>
@@ -50,15 +62,15 @@ PTO_INST RecordEvent TGATHERB(TileDataDst &dst, TileDataSrc &src, TileDataOffset
 ## 约束
 
 - **实现检查 (A2A3)**:
-    - 目标布局必须是行主序（`TileDataDst::isRowMajor`）。
-    - 目标元素大小必须是 `1`、`2` 或 `4` 字节（通过辅助函数中的 `static_assert` 强制执行）。
-    - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int8_t` 或 `uint8_t` 或 `int16_t` 或 `uint16_t` 或 `int32_t` 或 `uint32_t` 或 `half` 或 `bfloat16_t` 或 `float`。
+    - Destination layout must be row-major (`TileDataDst::isRowMajor`).
+    - Destination element size must be `1`, `2`, or `4` bytes (enforced via `static_assert` in the helper).
+    - `SrcTileData::DType`/`DstTileData::DType` must be `int8_t` or `uint8_t` or `int16_t` or `uint16_t` or `int32_t` or `uint32_t` or `half` or `bfloat16_t` or `float`.
 - **实现检查 (A5)**:
-    - 目标元素大小必须是 `1`、`2` 或 `4` 字节。
-    - `SrcTileData::DType`/`DstTileData::DType` 必须是 `int8_t` 或 `uint8_t` 或 `int16_t` 或 `uint16_t` 或 `int32_t` 或 `uint32_t` 或 `half` 或 `bfloat16_t` 或 `float`。
-- **偏移量解释**:
-    - 偏移量被实现解释为 `uint32_t` 值（字节偏移量）。
-    - 偏移量边界不通过显式运行时断言进行验证；超出范围的偏移量由目标定义。
+    - Destination element size must be `1`, `2`, or `4` bytes.
+    - `SrcTileData::DType`/`DstTileData::DType` must be `int8_t` or `uint8_t` or `int16_t` or `uint16_t` or `int32_t` or `uint32_t` or `half` or `bfloat16_t` or `float`.
+- **Offset interpretation**:
+    - Offsets are interpreted as `uint32_t` values (byte offsets) by the implementation.
+    - Offset bounds are not validated by explicit runtime assertions; out-of-range offsets are target-defined.
 
 ## 示例
 
@@ -100,31 +112,3 @@ void example_manual() {
   TGATHERB(dst, src, off);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%dst = pto.tgatherb %src, %offsets : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.tgatherb %src, %offsets : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%dst = tgatherb %src, %offsets : !pto.tile<...> -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.tgatherb ins(%src, %offsets : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-

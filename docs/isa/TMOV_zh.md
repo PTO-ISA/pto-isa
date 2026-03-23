@@ -1,4 +1,4 @@
-﻿# TMOV
+# TMOV
 
 ## 指令示意图
 
@@ -8,27 +8,27 @@
 
 在 Tile 之间移动/复制，可选应用实现定义的转换模式。
 
-在 Tile 之间移动/复制，可选通过模板参数和重载选择实现定义的转换模式。
+Move/copy between tiles, optionally applying implementation-defined conversion modes selected by template parameters and overloads.
 
-`TMOV` 用于：
+`TMOV` is used for:
 
-- Vec -> Vec 移动
-- Mat -> Left/Right/Bias/Scaling/Scale（微缩放）移动（取决于目标）
-- Acc -> Vec 移动（取决于目标）
+- Vec -> Vec moves
+- Mat -> Left/Right/Bias/Scaling/Scale(Microscaling) moves (target-dependent)
+- Acc -> Vec moves (target-dependent)
 
 ## 数学语义
 
-概念上在有效区域上将元素从 `src` 复制或转换到 `dst`。确切的转换取决于所选模式和目标。
+Conceptually copies or transforms elements from `src` into `dst` over the valid region. Exact transformation depends on the selected mode and target.
 
-对于纯复制情况：
+For the pure copy case:
 
 $$ \mathrm{dst}_{i,j} = \mathrm{src}_{i,j} $$
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
-PTO AS 设计建议将 `TMOV` 拆分为一系列操作：
+The PTO AS design recommends splitting `TMOV` into a family of ops:
 
 ```text
 %left  = tmov.m2l %mat  : !pto.tile<...> -> !pto.tile<...>
@@ -37,6 +37,18 @@ PTO AS 设计建议将 `TMOV` 拆分为一系列操作：
 %scale = tmov.m2s %mat  : !pto.tile<...> -> !pto.tile<...>
 %vec   = tmov.a2v %acc  : !pto.tile<...> -> !pto.tile<...>
 %v1    = tmov.v2v %v0   : !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 1 (SSA)
+
+```text
+%dst = pto.tmov.s2d %src  : !pto.tile<...> -> !pto.tile<...>
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tmov ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
 
 ### AS Level 1（SSA）
@@ -53,7 +65,7 @@ pto.tmov ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/constants.hpp`：
+声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/constants.hpp`:
 
 ```cpp
 template <typename DstTileData, typename SrcTileData, typename... WaitEvents>
@@ -82,21 +94,21 @@ PTO_INST RecordEvent TMOV(DstTileData &dst, SrcTileData &src, uint64_t preQuantS
 ## 约束
 
 - **实现检查 (A2A3)**:
-    - 形状必须匹配：`SrcTileData::Rows == DstTileData::Rows` 且 `SrcTileData::Cols == DstTileData::Cols`。
-    - 支持的位置对（编译时检查）：
+    - Shapes must match: `SrcTileData::Rows == DstTileData::Rows` and `SrcTileData::Cols == DstTileData::Cols`.
+    - Supported location pairs (compile-time checked):
     - `Mat -> Left/Right/Bias/Scaling`
     - `Vec -> Vec`
-    - `Acc -> Mat`（包括通过重载的可选预量化/relu/fp 变体）
-    - 对于 `Acc -> Mat`，强制执行额外的分形/类型约束（例如，`Acc` 使用类 NZ 分形，`Mat` 使用 512B 分形，且仅允许特定的数据类型转换）。
+    - `Acc -> Mat` (including optional pre-quant / relu / fp variants via overloads)
+    - For `Acc -> Mat`, additional fractal/type constraints are enforced (e.g., `Acc` uses NZ-like fractal, `Mat` uses 512B fractal, and only specific dtype conversions are allowed).
 - **实现检查 (A5)**:
-    - 对于 `Mat -> *`，形状必须匹配；对于某些 `Vec` 移动，有效复制大小是 src/dst 有效行/列的最小值。
-    - 支持的位置对包括（取决于目标）：
+    - For `Mat -> *`, shapes must match; for some `Vec` moves, the effective copy size is the min of src/dst valid rows/cols.
+    - Supported location pairs include (target-dependent):
     - `Mat -> Left/Right/Bias/Scaling/Scale`
-    - `Vec -> Vec` 和 `Vec -> Mat`
-    - `Acc -> Vec` 和 `Acc -> Mat`（包括通过重载的可选预量化/relu/fp 变体）
-    - 对于 `Mat -> Left/Right`，通过 `CommonCheck` 强制执行额外的分形和数据类型约束（源分形必须兼容且元素类型必须匹配）。
-    - 对于 `Acc -> Vec/Mat`，通过 `CheckTMovAccValid` 强制执行额外的分形/类型/对齐约束。
-    - 对于 `Mat -> Scale`，通过 `CommonCheckMX` 强制执行额外的分形和数据类型约束（源分形必须兼容且元素类型必须匹配）。
+    - `Vec -> Vec` and `Vec -> Mat`
+    - `Acc -> Vec` and `Acc -> Mat` (including optional pre-quant / relu / fp variants via overloads)
+    - For `Mat -> Left/Right`, additional fractal and dtype constraints are enforced via `CommonCheck` (source fractal must be compatible and element types must match).
+    - For `Acc -> Vec/Mat`, additional fractal/type/alignment constraints are enforced via `CheckTMovAccValid`.
+    - For `Mat -> Scale`, additional fractal and dtype constraints are enforced via `CommonCheckMX` (source fractal must be compatible and element types must match).
 
 ## 示例
 
@@ -131,31 +143,3 @@ void example_manual() {
   TMOV(left, mat);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-%dst = pto.tmov.s2d %src  : !pto.tile<...> -> !pto.tile<...>
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.tmov.s2d %src  : !pto.tile<...> -> !pto.tile<...>
-```
-
-### PTO 汇编形式
-
-```text
-%dst = pto.tmov.s2d %src  : !pto.tile<...> -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.tmov ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-

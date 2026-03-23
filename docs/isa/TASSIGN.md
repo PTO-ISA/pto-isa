@@ -36,6 +36,18 @@ pto.tassign %tile, %addr : !pto.tile<...>, dtype
 ```text
 pto.tassign ins(%tile, %addr : !pto.tile_buf<...>, dtype)
 ```
+
+### IR Level 1 (SSA)
+
+```text
+pto.tassign %tile, %addr : !pto.tile<...>, dtype
+```
+
+### IR Level 2 (DPS)
+
+```text
+pto.tassign ins(%tile, %addr : !pto.tile_buf<...>, dtype)
+```
 ## C++ Intrinsic
 
 Declared in `include/pto/common/pto_instr.hpp`.

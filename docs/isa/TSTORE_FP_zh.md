@@ -1,4 +1,4 @@
-﻿# TSTORE_FP
+# TSTORE_FP
 
 ## 指令示意图
 
@@ -10,18 +10,30 @@
 
 ## 数学语义
 
-设 `R = src.GetValidRow()`，`C = src.GetValidCol()`。概念上（二维视图，带基础偏移），对 `0 <= i < R` 且 `0 <= j < C`：
+Let `R = src.GetValidRow()` and `C = src.GetValidCol()`. Conceptually (2D view, with a base offset), for `0 <= i < R` and `0 <= j < C`:
 
 $$ \mathrm{dst}_{r_0 + i,\; c_0 + j} = \mathrm{Convert}\!\left(\mathrm{src}_{i,j};\ \mathrm{fp}\right) $$
 
 ## 汇编语法
 
-PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
+PTO-AS 形式：参见 [PTO-AS Specification](../assembly/PTO-AS.md).
 
 同步形式：
 
 ```text
 tstore.fp %src, %fp, %sv_out[%c0, %c0]
+```
+
+### AS Level 1 (SSA)
+
+```text
+pto.tstore.fp %src, %fp, %mem : (!pto.tile<...>, !pto.tile<...>, !pto.partition_tensor_view<MxNxdtype>) -> ()
+```
+
+### AS Level 2 (DPS)
+
+```text
+pto.tstore.fp ins(%src, %fp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%mem : !pto.partition_tensor_view<MxNxdtype>)
 ```
 
 ### AS Level 1（SSA）
@@ -38,7 +50,7 @@ pto.tstore.fp ins(%src, %fp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%mem 
 
 ## C++ 内建接口
 
-声明于 `include/pto/common/pto_instr.hpp` 和 `include/pto/common/constants.hpp`：
+声明于 `include/pto/common/pto_instr.hpp` and `include/pto/common/constants.hpp`:
 
 ```cpp
 template <typename TileData, typename GlobalData, typename FpTileData, AtomicType atomicType = AtomicType::AtomicNone,
@@ -49,15 +61,15 @@ PTO_INST RecordEvent TSTORE_FP(GlobalData &dst, TileData &src, FpTileData &fp, W
 ## 约束
 
 - **实现检查 (A2A3)**:
-    - fp 存储路径通过 `TSTORE_IMPL(dst, src, fp)` 实现，并使用与量化累加器存储相同的累加器到 GM 合法性检查：
-    - 目标布局必须是 ND 或 NZ。
-    - 源数据类型必须是 `int32_t` 或 `float`。
-    - 静态形状约束：`1 <= TileData::Cols <= 4095`；若为 ND 则 `1 <= TileData::Rows <= 8192`；若为 NZ 则 `1 <= TileData::Rows <= 65535` 且 `TileData::Cols % 16 == 0`。
-    - 运行时：`1 <= src.GetValidCol() <= 4095`。
-    - 对 `FpTileData` 不执行显式 `static_assert`（实现使用 `fp` 设置 FPC 状态）。
+    - The fp store path is implemented via `TSTORE_IMPL(dst, src, fp)` and uses the same accumulator-to-GM legality checks as quantized accumulator stores:
+    - Destination layout must be ND or NZ.
+    - Source dtype must be `int32_t` or `float`.
+    - Static shape constraints: `1 <= TileData::Cols <= 4095`; if ND then `1 <= TileData::Rows <= 8192`; if NZ then `1 <= TileData::Rows <= 65535` and `TileData::Cols % 16 == 0`.
+    - Runtime: `1 <= src.GetValidCol() <= 4095`.
+    - No explicit `static_assert` is enforced on `FpTileData` (the implementation uses `fp` to set FPC state).
 - **实现检查 (A5)**:
-    - 通过 `TSTORE_IMPL(dst, src, fp)` 实现，并由 `CheckStaticAcc<..., true>()` 验证累加器路径（仅支持 ND/NZ，源数据类型为 `int32_t`/`float`，行/列范围有限制）。
-    - 对 `FpTileData` 不执行显式 `static_assert`（实现使用 `fp` 设置 FPC 状态）。
+    - Implemented via `TSTORE_IMPL(dst, src, fp)` and validated by `CheckStaticAcc<..., true>()` for the accumulator path (ND/NZ only, `int32_t/float` source dtype, rows/cols ranges).
+    - No explicit `static_assert` is enforced on `FpTileData` (the implementation uses `fp` to set FPC state).
 
 ## 示例
 
@@ -104,31 +116,3 @@ void example_manual(__gm__ int8_t* out) {
   TSTORE_FP(gout, acc, fp);
 }
 ```
-
-## 汇编示例（ASM）
-
-### 自动模式
-
-```text
-# 自动模式：由编译器/运行时负责资源放置与调度。
-pto.tstore.fp %src, %fp, %mem : (!pto.tile<...>, !pto.tile<...>, !pto.partition_tensor_view<MxNxdtype>) -> ()
-```
-
-### 手动模式
-
-```text
-# 手动模式：先显式绑定资源，再发射指令。
-# 可选（当该指令包含 tile 操作数时）：
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-pto.tstore.fp %src, %fp, %mem : (!pto.tile<...>, !pto.tile<...>, !pto.partition_tensor_view<MxNxdtype>) -> ()
-```
-
-### PTO 汇编形式
-
-```text
-tstore.fp %src, %fp, %sv_out[%c0, %c0]
-# AS Level 2 (DPS)
-pto.tstore.fp ins(%src, %fp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%mem : !pto.partition_tensor_view<MxNxdtype>)
-```
-

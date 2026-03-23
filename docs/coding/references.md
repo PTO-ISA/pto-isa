@@ -4,17 +4,17 @@ This document provides PTO development-related references, academic papers, onli
 
 ## Contents
 
-- [1. Official Documentation](#1-official-documentation)
-- [2. Example Code](#2-example-code)
-- [3. Academic Papers](#3-academic-papers)
-- [4. Online Resources](#4-online-resources)
-- [5. Related Projects](#5-related-projects)
-- [6. Tools and Libraries](#6-tools-and-libraries)
-- [7. Recommended Books](#7-recommended-books)
+- [Official Documentation](#official-documentation)
+- [Example Code](#example-code)
+- [Academic Papers](#academic-papers)
+- [Online Resources](#online-resources)
+- [Related Projects](#related-projects)
+- [Tools and Libraries](#tools-and-libraries)
+- [Recommended Books](#recommended-books)
 
 ---
 
-## 1. Official Documentation
+## Official Documentation
 
 ### PTO-ISA Core Documentation
 
@@ -99,53 +99,53 @@ This document provides PTO development-related references, academic papers, onli
 
 ---
 
-## 2. Example Code
+## Example Code
 
 ### Basic Examples
 
-- **[Add Operator](../../demos/baseline/add/)**
+- **[Add Operator](../../demos/baseline/add/README.md)**
   - Simple element-wise addition
   - Basic Tile operations
   - Multi-core parallelism
 
-- **[ReLU Operator](../../demos/baseline/relu/)**
-  - Activation function implementation
-  - Conditional operations
-  - Performance optimization
+- **[GEMM Basic](../../demos/baseline/gemm_basic/README.md)**
+  - Matrix multiplication baseline
+  - Tile blocking fundamentals
+  - Build and test workflow
 
-- **[Softmax Operator](../../demos/baseline/softmax/)**
-  - Reduction operations
-  - Numerical stability
-  - Row-wise processing
+- **[Flash Attention Baseline](../../demos/baseline/flash_atten/README.md)**
+  - Attention-style kernel baseline
+  - Memory movement patterns
+  - End-to-end demo workflow
 
 ### Advanced Examples
 
-- **[GEMM Optimization](../../kernels/manual/a2a3/gemm_performance/)**
+- **[GEMM Optimization](../../kernels/manual/a2a3/gemm_performance/README.md)**
   - Matrix multiplication optimization
   - Tiling strategies
   - Pipeline optimization
   - Performance tuning
 
-- **[Flash Attention](../../kernels/manual/common/flash_atten/)**
+- **[Flash Attention](../../kernels/manual/common/flash_atten/README.md)**
   - Attention mechanism implementation
   - Memory-efficient algorithm
   - Operator fusion
 
-- **[LayerNorm](../../kernels/manual/common/layernorm/)**
-  - Normalization layer
-  - Reduction and broadcast
-  - Numerical precision
+- **[TopK](../../kernels/manual/a2a3/topk/README.md)**
+  - Selection and sorting flow
+  - Reduction and data movement
+  - Manual kernel structure
 
 ### Custom Operator Examples
 
-- **[Fused Add-ReLU-Mul](../../kernels/custom/fused_add_relu_mul/)**
+- **[Fused Add-ReLU-Mul](../../kernels/custom/fused_add_relu_mul/README.md)**
   - Operator fusion example
   - Three implementation versions
   - Progressive optimization
 
 ---
 
-## 3. Academic Papers
+## Academic Papers
 
 ### Tensor Compilers and DSLs
 
@@ -190,7 +190,7 @@ This document provides PTO development-related references, academic papers, onli
 
 ---
 
-## 4. Online Resources
+## Online Resources
 
 ### Official Websites
 
@@ -211,7 +211,7 @@ This document provides PTO development-related references, academic papers, onli
   - Best practices
   - Case studies
 
-- **[PTO-ISA Examples Repository](../../demos/)**
+- **[PTO-ISA Examples Repository](../../demos/README.md)**
   - Hands-on examples
   - Step-by-step tutorials
   - Performance benchmarks
@@ -223,14 +223,14 @@ This document provides PTO development-related references, academic papers, onli
   - Technical discussions
   - Community support
 
-- **[GitHub Issues](https://github.com/Ascend/pto-isa/issues)**
+- **[GitHub Issues](https://github.com/PTO-ISA/pto-isa/issues)**
   - Bug reports
   - Feature requests
   - Technical discussions
 
 ---
 
-## 5. Related Projects
+## Related Projects
 
 ### Tensor Compilers
 
@@ -280,7 +280,7 @@ This document provides PTO development-related references, academic papers, onli
 
 ---
 
-## 6. Tools and Libraries
+## Tools and Libraries
 
 ### Development Tools
 
@@ -325,7 +325,7 @@ This document provides PTO development-related references, academic papers, onli
 
 ---
 
-## 7. Recommended Books
+## Recommended Books
 
 ### Computer Architecture
 
@@ -376,15 +376,15 @@ This document provides PTO development-related references, academic papers, onli
 
 We welcome contributions to improve this documentation:
 
-- **Report Issues**: [GitHub Issues](https://github.com/Ascend/pto-isa/issues)
-- **Submit PRs**: [GitHub Pull Requests](https://github.com/Ascend/pto-isa/pulls)
+- **Report Issues**: [GitHub Issues](https://github.com/PTO-ISA/pto-isa/issues)
+- **Submit PRs**: [GitHub Pull Requests](https://github.com/PTO-ISA/pto-isa/pulls)
 - **Join Discussions**: [Ascend Forum](https://www.hiascend.com/forum)
 
 ---
 
 ## License
 
-This documentation is licensed under [Apache License 2.0](../../LICENSE).
+This documentation is licensed under [Apache License 2.0](https://github.com/PTO-ISA/pto-isa/blob/main/LICENSE).
 
 ---
 
@@ -392,5 +392,5 @@ This documentation is licensed under [Apache License 2.0](../../LICENSE).
 
 - **Email**: support@ascend.com
 - **Forum**: [Ascend Community Forum](https://www.hiascend.com/forum)
-- **GitHub**: [PTO-ISA Repository](https://github.com/Ascend/pto-isa)
+- **GitHub**: [PTO-ISA Repository](https://github.com/PTO-ISA/pto-isa)
 
