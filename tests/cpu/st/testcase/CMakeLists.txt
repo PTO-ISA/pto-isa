@@ -116,6 +116,7 @@ tnotify
 twait
 tloadconv
 treduce
+treshape
 tpushpop
 )
 
