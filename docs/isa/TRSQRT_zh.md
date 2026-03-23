@@ -43,11 +43,15 @@ pto.trsqrt ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```cpp
 template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
 PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events);
+
+template <typename TileDataDst, typename TileDataSrc, typename TileDataTmp, typename... WaitEvents>
+PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, TileDataTmp &tmp, WaitEvents &... events);
 ```
 
 ## 约束
 
 - **实现检查 (NPU)**:
+    - `tmp`的空间至少要大于等于32字节。传入`tmp`则执行高精度版本。
     - `TileData::DType` 必须是以下之一：`float` 或 `half`。
     - Tile 位置必须是向量（`TileData::Loc == TileType::Vec`);
     - 静态有效边界：`TileData::ValidRow <= TileData::Rows` 且 `TileData::ValidCol <= TileData::Cols`。

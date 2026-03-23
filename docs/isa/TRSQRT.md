@@ -43,11 +43,15 @@ Declared in `include/pto/common/pto_instr.hpp`:
 ```cpp
 template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
 PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events);
+
+template <typename TileDataDst, typename TileDataSrc, typename TileDataTmp, typename... WaitEvents>
+PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, TileDataTmp &tmp, WaitEvents &... events);
 ```
 
 ## Constraints
 
 - **Implementation checks (NPU)**:
+    - The `tmp` buffer must be at least 32 bytes. When tmp is provided, the high-precision version is executed.
     - `TileData::DType` must be one of: `float` or `half`;
     - Tile location must be vector (`TileData::Loc == TileType::Vec`);
     - Static valid bounds: `TileData::ValidRow <= TileData::Rows` and `TileData::ValidCol <= TileData::Cols`;

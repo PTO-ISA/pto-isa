@@ -1255,6 +1255,15 @@ PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, WaitEvents &... 
     return {};
 }
 
+template <typename TileDataDst, typename TileDataSrc, typename TileDataTmp, typename... WaitEvents,
+          typename = std::void_t<typename TileDataTmp::DType>>
+PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, TileDataTmp &tmp, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MAP_INSTR_IMPL(TRSQRT, dst, src, tmp);
+    return {};
+}
+
 template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
 PTO_INST RecordEvent TSQRT(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events)
 {

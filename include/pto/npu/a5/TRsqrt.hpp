@@ -163,5 +163,11 @@ PTO_INTERNAL void TRSQRT_IMPL(DstTile &dst, SrcTile &src)
     PTO_ASSERT(dstValidRow == src.GetValidRow(), "TRSQRT: Number of rows of src and dst must be the same.");
     TRsqrt<DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
 }
+
+template <typename DstTile, typename SrcTile, typename TmpTile>
+PTO_INTERNAL void TRSQRT_IMPL(DstTile &dst, SrcTile &src, TmpTile &tmp)
+{
+    TRSQRT_IMPL(dst, src);
+}
 } // namespace pto
 #endif

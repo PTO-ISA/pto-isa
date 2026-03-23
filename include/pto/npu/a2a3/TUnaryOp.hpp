@@ -227,8 +227,8 @@ __tf__ PTO_INTERNAL void TUnaryOp(typename DstTile::TileDType __out__ dstData,
     }
 }
 
-template <typename Op, typename DstTile, typename SrcTile, bool floatOnly = true>
-PTO_INTERNAL void TUNARY_IMPL(DstTile &dst, SrcTile &src)
+template <typename DstTile, typename SrcTile, bool floatOnly = true>
+PTO_INTERNAL void TunaryCheck()
 {
     static_assert(DstTile::isRowMajor && SrcTile::isRowMajor, "TUnaryOp: Not supported Layout type");
     static_assert(DstTile::Loc == TileType::Vec && SrcTile::Loc == TileType::Vec,
@@ -248,7 +248,12 @@ PTO_INTERNAL void TUNARY_IMPL(DstTile &dst, SrcTile &src)
                       std::is_same<typename DstTile::DType, half>::value ||
                       std::is_same<typename DstTile::DType, float16_t>::value,
                   "TUNARY: Invalid data type");
+}
 
+template <typename Op, typename DstTile, typename SrcTile, bool floatOnly = true>
+PTO_INTERNAL void TUNARY_IMPL(DstTile &dst, SrcTile &src)
+{
+    TunaryCheck<DstTile, SrcTile, floatOnly>();
     unsigned dstValidRow = dst.GetValidRow();
     unsigned dstValidCol = dst.GetValidCol();
     PTO_ASSERT(dstValidRow == src.GetValidRow(), "TUNARY: Number of rows of src and dst must be the same.");
@@ -270,6 +275,53 @@ template <typename DstTile, typename SrcTile>
 PTO_INTERNAL void TRSQRT_IMPL(DstTile &dst, SrcTile &src)
 {
     TUNARY_IMPL<RsqrtOp<typename DstTile::DType>>(dst, src);
+}
+
+template <typename DstTile, typename SrcTile, typename TmpTile>
+__tf__ PTO_INTERNAL void TRsqrtHighPrecision(typename DstTile::TileDType __out__ dstData,
+                                             typename SrcTile::TileDType __in__ srcData,
+                                             typename TmpTile::TileDType __in__ tmpData, unsigned validRow,
+                                             unsigned validCol)
+{
+    using T = typename DstTile::DType;
+    __ubuf__ T *dst = (__ubuf__ T *)__cce_get_tile_ptr(dstData);
+    __ubuf__ T *src = (__ubuf__ T *)__cce_get_tile_ptr(srcData);
+    __ubuf__ T *tmp = (__ubuf__ T *)__cce_get_tile_ptr(tmpData);
+
+    constexpr unsigned dstStride = DstTile::RowStride;
+    constexpr unsigned srcStride = SrcTile::RowStride;
+
+    constexpr unsigned blockSizeElem = BLOCK_BYTE_SIZE / sizeof(T);
+
+    set_mask_count();
+    set_vector_mask(0, blockSizeElem);
+
+    vector_dup(tmp, (T)(1.0), 0, 0, 0, 0, 0);
+
+    set_vector_mask(0, validCol);
+    for (uint32_t i = 0; i < validRow; ++i) {
+        vsqrt(dst + i * dstStride, src + i * srcStride, 0, 1, 1, 8, 8);
+    }
+
+    pipe_barrier(PIPE_V);
+
+    for (uint32_t i = 0; i < validRow; ++i) {
+        vdiv(dst + i * dstStride, tmp, dst + i * dstStride, 0, 1, 0, 1, 8, 0, 8);
+    }
+
+    set_mask_norm();
+    set_vector_mask(-1, -1);
+}
+
+template <typename DstTile, typename SrcTile, typename TmpTile>
+PTO_INTERNAL void TRSQRT_IMPL(DstTile &dst, SrcTile &src, TmpTile &tmp)
+{
+    TunaryCheck<DstTile, SrcTile>();
+    unsigned dstValidRow = dst.GetValidRow();
+    unsigned dstValidCol = dst.GetValidCol();
+    PTO_ASSERT(dstValidRow == src.GetValidRow(), "TRSQRT: Number of rows of src and dst must be the same.");
+    PTO_ASSERT(dstValidCol == src.GetValidCol(), "TRSQRT: Number of columns of src and dst must be the same.");
+    TRsqrtHighPrecision<DstTile, SrcTile, TmpTile>(dst.data(), src.data(), tmp.data(), dstValidRow, dstValidCol);
 }
 
 /* SQRT */

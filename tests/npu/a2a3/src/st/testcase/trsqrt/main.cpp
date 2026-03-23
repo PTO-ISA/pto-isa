@@ -80,15 +80,13 @@ void test_trsqrt()
 
     float eps = 0.0f;
     if constexpr (std::is_same_v<T, float>) {
-#ifdef ACCURATE_RSQRT
-        eps = 0.0001f;
-#else
-        // Known issue with accuracy for built-in `vrsqrt` intrinsic funtion
-        // Thats why epsilon is 0.003f, while requirement 0.0001f
-        // #define ACCURATE_RSQRT in TUnaryOp.hpp to enable accurate implementation
-        // or add_compile_definitions(ACCURATE_RSQRT) in CMake files
-        eps = 0.003f;
-#endif
+        if constexpr (isInPlace) {
+            eps = 0.0001f;
+        } else {
+            // Known issue with accuracy for built-in `vrsqrt` intrinsic funtion
+            // Thats why epsilon is 0.003f, while requirement 0.0001f
+            eps = 0.003f;
+        }
     } else if constexpr (std::is_same_v<T, aclFloat16>) {
         eps = 0.001f;
     }

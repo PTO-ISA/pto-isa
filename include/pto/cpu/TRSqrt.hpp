@@ -35,6 +35,11 @@ PTO_INTERNAL void TRSQRT_IMPL(TileData &dst, TileData &src)
     });
 }
 
+template <typename TileData, typename TmpTileData>
+PTO_INTERNAL void TSQRT_IMPL(TileData &dst, TileData &src, TmpTileData &tmp)
+{
+    TRSQRT_IMPL(dst, src);
+}
 } // namespace pto
 
 #endif
