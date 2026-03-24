@@ -16,8 +16,8 @@ using namespace pto;
 
 #define PTO_DIV_ROUNDUP(x, y) (((x) + (y)-1) / (y))
 
-template <typename T, int validRows, int validCols, int upperOrLower, int diagonal>
-__global__ AICORE void runTTri(__gm__ T __out__ *out)
+template <typename T, int validRows, int validCols, int upperOrLower>
+__global__ AICORE void runTTri(__gm__ T __out__ *out, int diagonal)
 {
     constexpr uint16_t alignedCol = PTO_DIV_ROUNDUP(validCols, BLOCK_BYTE_SIZE) * BLOCK_BYTE_SIZE;
 
@@ -38,27 +38,67 @@ __global__ AICORE void runTTri(__gm__ T __out__ *out)
     out = dstGlobal.data();
 }
 
-template <typename T, int validRows, int validCols, int upperOrLower, int diagonal>
-void LaunchTTri(T *out, void *stream)
+template <typename T, int validRows, int validCols, int upperOrLower>
+void LaunchTTri(T *out, int diagonal, void *stream)
 {
     if constexpr (std::is_same_v<T, aclFloat16>) {
-        runTTri<half, validRows, validCols, upperOrLower, diagonal><<<1, nullptr, stream>>>((half *)(out));
+        runTTri<half, validRows, validCols, upperOrLower><<<1, nullptr, stream>>>((half *)(out), diagonal);
     } else {
-        runTTri<T, validRows, validCols, upperOrLower, diagonal><<<1, nullptr, stream>>>(out);
+        runTTri<T, validRows, validCols, upperOrLower><<<1, nullptr, stream>>>(out, diagonal);
     }
 }
 
-template void LaunchTTri<aclFloat16, 20, 32, 0, 0>(aclFloat16 *out, void *stream);
-template void LaunchTTri<uint8_t, 20, 32, 0, 0>(uint8_t *out, void *stream);
-template void LaunchTTri<float, 32, 91, 0, 0>(float *out, void *stream);
-template void LaunchTTri<float, 128, 128, 0, 0>(float *out, void *stream);
-template void LaunchTTri<float, 32, 91, 0, 3>(float *out, void *stream);
-template void LaunchTTri<float, 128, 128, 0, 3>(float *out, void *stream);
-template void LaunchTTri<float, 32, 91, 0, -3>(float *out, void *stream);
-template void LaunchTTri<float, 128, 128, 0, -3>(float *out, void *stream);
-template void LaunchTTri<float, 32, 91, 1, 0>(float *out, void *stream);
-template void LaunchTTri<float, 128, 128, 1, 0>(float *out, void *stream);
-template void LaunchTTri<float, 32, 91, 1, 3>(float *out, void *stream);
-template void LaunchTTri<float, 128, 128, 1, 3>(float *out, void *stream);
-template void LaunchTTri<float, 32, 91, 1, -3>(float *out, void *stream);
-template void LaunchTTri<float, 128, 128, 1, -3>(float *out, void *stream);
+template void LaunchTTri<aclFloat16, 20, 32, 0>(aclFloat16 *out, int diagonal, void *stream);
+template void LaunchTTri<uint8_t, 20, 32, 0>(uint8_t *out, int diagonal, void *stream);
+template void LaunchTTri<float, 32, 91, 0>(float *out, int diagonal, void *stream);
+template void LaunchTTri<float, 128, 128, 0>(float *out, int diagonal, void *stream);
+template void LaunchTTri<float, 32, 91, 1>(float *out, int diagonal, void *stream);
+template void LaunchTTri<float, 128, 128, 1>(float *out, int diagonal, void *stream);
+template void LaunchTTri<float, 763, 32, 0>(float *out, int diagonal, void *stream);
+template void LaunchTTri<float, 763, 32, 1>(float *out, int diagonal, void *stream);
+
+// --- Dynamic (static != valid) variants ---
+
+template <typename T, int staticRows, int staticCols, int validRows, int validCols, int upperOrLower>
+__global__ AICORE void runTTriDyn(__gm__ T __out__ *out, int diagonal)
+{
+    constexpr uint16_t alignedCol = PTO_DIV_ROUNDUP(staticCols, BLOCK_BYTE_SIZE) * BLOCK_BYTE_SIZE;
+
+    using GlobalDataDst = GlobalTensor<T, Shape<1, 1, 1, validRows, validCols>, pto::Stride<1, 1, 1, validCols, 1>>;
+    using TileDataDst = Tile<TileType::Vec, T, staticRows, alignedCol, BLayout::RowMajor, -1, -1>;
+    TileDataDst dstTile(validRows, validCols);
+    GlobalDataDst dstGlobal(out);
+
+    TASSIGN(dstTile, 0x0);
+    TTRI<TileDataDst, upperOrLower>(dstTile, diagonal);
+
+#ifndef __PTO_AUTO__
+    set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+    wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+#endif
+
+    TSTORE(dstGlobal, dstTile);
+    out = dstGlobal.data();
+}
+
+template <typename T, int staticRows, int staticCols, int validRows, int validCols, int upperOrLower>
+void LaunchTTriDyn(T *out, int diagonal, void *stream)
+{
+    if constexpr (std::is_same_v<T, aclFloat16>) {
+        runTTriDyn<half, staticRows, staticCols, validRows, validCols, upperOrLower>
+            <<<1, nullptr, stream>>>((half *)(out), diagonal);
+    } else {
+        runTTriDyn<T, staticRows, staticCols, validRows, validCols, upperOrLower>
+            <<<1, nullptr, stream>>>(out, diagonal);
+    }
+}
+
+template void LaunchTTriDyn<aclFloat16, 30, 208, 30, 208, 1>(aclFloat16 *out, int diagonal, void *stream);
+template void LaunchTTriDyn<aclFloat16, 30, 208, 30, 176, 1>(aclFloat16 *out, int diagonal, void *stream);
+template void LaunchTTriDyn<aclFloat16, 293, 16, 269, 16, 0>(aclFloat16 *out, int diagonal, void *stream);
+template void LaunchTTriDyn<aclFloat16, 293, 16, 293, 16, 0>(aclFloat16 *out, int diagonal, void *stream);
+template void LaunchTTriDyn<aclFloat16, 293, 16, 287, 16, 0>(aclFloat16 *out, int diagonal, void *stream);
+template void LaunchTTriDyn<int8_t, 32, 128, 32, 128, 0>(int8_t *out, int diagonal, void *stream);
+template void LaunchTTriDyn<int8_t, 32, 128, 24, 112, 0>(int8_t *out, int diagonal, void *stream);
+template void LaunchTTriDyn<aclFloat16, 293, 16, 1, 16, 0>(aclFloat16 *out, int diagonal, void *stream);
+template void LaunchTTriDyn<aclFloat16, 293, 16, 2, 16, 0>(aclFloat16 *out, int diagonal, void *stream);

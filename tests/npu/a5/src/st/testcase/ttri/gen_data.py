@@ -38,6 +38,17 @@ class TTRIParams:
         self.valid_cols = valid_cols
         self.upper_or_lower = upper_or_lower
         self.diagonal = diagonal
+
+
+class TTRIDynParams:
+    def __init__(self, dtype, static_rows, static_cols, valid_rows, valid_cols, upper_or_lower=0, diagonal=0):
+        self.dtype = dtype
+        self.static_rows = static_rows
+        self.static_cols = static_cols
+        self.valid_rows = valid_rows
+        self.valid_cols = valid_cols
+        self.upper_or_lower = upper_or_lower
+        self.diagonal = diagonal
         
 def generate_case_name(param):
     dtype_str = {
@@ -54,6 +65,23 @@ def generate_case_name(param):
     sign_diag = '' if param.diagonal >=0 else 'n'
     diag_str = sign_diag + str(abs(param.diagonal))
     return f"TTRITest.case_{dtype_str}_{param.valid_rows}x{param.valid_cols}_{type_str}_diag_{diag_str}"
+
+
+def generate_dyn_case_name(param):
+    dtype_str = {
+        np.float32: 'float',
+        np.float16: 'fp16',
+        np.int16:   'int16',
+        np.int32:   'int32',
+        np.uint16:  'uint16',
+        np.uint32:  'uint32',
+        np.int8:    'int8',
+        np.uint8:   'uint8'
+    }[param.dtype]
+    type_str = 'upper' if param.upper_or_lower == 1 else 'lower'
+    sign_diag = '' if param.diagonal >= 0 else 'n'
+    diag_str = sign_diag + str(abs(param.diagonal))
+    return f"TTRITest.case_{dtype_str}_s{param.static_rows}x{param.static_cols}_v{param.valid_rows}x{param.valid_cols}_{type_str}_diag_{diag_str}"
 
 if __name__ == "__main__":
     # Get the absolute path of the script
@@ -79,10 +107,33 @@ if __name__ == "__main__":
         TTRIParams(np.float32, 128,  128, 1, 3),
         TTRIParams(np.float32,  32,   91, 1, -3),
         TTRIParams(np.float32, 128,  128, 1, -3),
+        TTRIParams(np.float32, 763,   32, 0, -41),
+        TTRIParams(np.float32, 763,   32, 1, -41),
     ]
 
     for param in case_params_list:
         case_name = generate_case_name(param)
+        if not os.path.exists(case_name):
+            os.makedirs(case_name)
+        original_dir = os.getcwd()
+        os.chdir(case_name)
+        gen_golden_data_ttril(case_name, param)
+        os.chdir(original_dir)
+
+    dyn_case_params_list = [
+        TTRIDynParams(np.float16, 30, 208, 30, 208, 1, 0),
+        TTRIDynParams(np.float16, 30, 208, 30, 176, 1, 0),
+        TTRIDynParams(np.float16, 293, 16, 269, 16, 0, -41),
+        TTRIDynParams(np.float16, 293, 16, 293, 16, 0, -41),
+        TTRIDynParams(np.float16, 293, 16, 287, 16, 0, -41),
+        TTRIDynParams(np.int8, 32, 128, 32, 128, 0, 0),
+        TTRIDynParams(np.int8, 32, 128, 24, 112, 0, 0),
+        TTRIDynParams(np.float16, 293, 16, 1, 16, 0, 0),
+        TTRIDynParams(np.float16, 293, 16, 2, 16, 0, 0),
+    ]
+
+    for param in dyn_case_params_list:
+        case_name = generate_dyn_case_name(param)
         if not os.path.exists(case_name):
             os.makedirs(case_name)
         original_dir = os.getcwd()
