@@ -17,13 +17,14 @@ np.random.seed(42)
 
 
 class MGatherParams:
-    def __init__(self, name, dtype, table_rows, table_cols, out_rows, out_cols):
+    def __init__(self, name, dtype, table_rows, table_cols, out_rows, out_cols, mode="default"):
         self.name = name
         self.dtype = dtype
         self.table_rows = table_rows
         self.table_cols = table_cols
         self.out_rows = out_rows
         self.out_cols = out_cols
+        self.mode = mode
 
 
 def gen_golden_data(param: MGatherParams):
@@ -36,14 +37,28 @@ def gen_golden_data(param: MGatherParams):
     table_size = table_rows * table_cols
     out_size = out_rows * out_cols
 
-    # Generate 1D table data - use integers first, then convert
     table = ((np.arange(1, table_size + 1) % 256) + 1).astype(dtype)
 
-    # Generate 1D indices (each index points to a valid position in table)
-    indices = (np.arange(0, out_size) % table_size).astype(np.int32)
-
-    # Compute golden output: out[i] = table[indices[i]]
-    golden = table[indices]
+    if param.mode == "default":
+        indices = (np.arange(0, out_size) % table_size).astype(np.int32)
+        golden = table[indices]
+    elif param.mode == "clamp":
+        indices = np.arange(0, out_size, dtype=np.int32)
+        indices[out_size // 2 :] = np.arange(table_size, table_size + out_size // 2, dtype=np.int32)
+        clamped = np.clip(indices, 0, table_size - 1)
+        golden = table[clamped]
+    elif param.mode == "wrap":
+        indices = np.arange(0, out_size, dtype=np.int32)
+        indices[out_size // 2 :] = np.arange(table_size, table_size + out_size // 2, dtype=np.int32)
+        wrapped = indices % table_size
+        golden = table[wrapped]
+    elif param.mode == "zero":
+        indices = np.arange(0, out_size, dtype=np.int32)
+        indices[out_size // 2 :] = np.arange(table_size, table_size + out_size // 2, dtype=np.int32)
+        golden = np.zeros(out_size, dtype=dtype)
+        for i in range(out_size):
+            if indices[i] < table_size:
+                golden[i] = table[indices[i]]
 
     table.tofile("table.bin")
     indices.tofile("indices.bin")
@@ -66,6 +81,9 @@ if __name__ == "__main__":
         MGatherParams("MGATHERTest.case_int32_32x32_16x16", np.int32, 32, 32, 16, 16),
         MGatherParams("MGATHERTest.case_uint8_16x64_8x32", np.uint8, 16, 64, 8, 32),
         MGatherParams("MGATHERTest.case_uint8_32x64_16x32", np.uint8, 32, 64, 16, 32),
+        MGatherParams("MGATHERTest.case_float_clamp_16x64_8x32", np.float32, 16, 64, 8, 32, "clamp"),
+        MGatherParams("MGATHERTest.case_int32_wrap_16x64_8x32", np.int32, 16, 64, 8, 32, "wrap"),
+        MGatherParams("MGATHERTest.case_half_zero_16x64_8x32", np.float16, 16, 64, 8, 32, "zero"),
     ]
 
     for param in case_params_list:

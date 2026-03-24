@@ -17,12 +17,14 @@ np.random.seed(42)
 
 
 class MScatterParams:
-    def __init__(self, name, dtype, src_rows, src_cols, out_size):
+    def __init__(self, name, dtype, src_rows, src_cols, out_size, mode="default", atomic="none"):
         self.name = name
         self.dtype = dtype
         self.src_rows = src_rows
         self.src_cols = src_cols
         self.out_size = out_size
+        self.mode = mode
+        self.atomic = atomic
 
 
 def gen_golden_data(param: MScatterParams):
@@ -33,16 +35,44 @@ def gen_golden_data(param: MScatterParams):
 
     src_size = src_rows * src_cols
 
-    # Generate 1D source data - use integers first, then convert
     src = ((np.arange(1, src_size + 1) % 256) + 1).astype(dtype)
 
-    # Generate 1D indices (each index points to a valid position in output)
-    indices = (np.arange(0, src_size) % out_size).astype(np.int32)
-
-    # Compute golden output: out[indices[i]] = src[i]
-    golden = np.zeros(out_size, dtype=dtype)
-    for i in range(src_size):
-        golden[indices[i]] = src[i]
+    if param.mode == "default" and param.atomic == "none":
+        indices = (np.arange(0, src_size) % out_size).astype(np.int32)
+        golden = np.zeros(out_size, dtype=dtype)
+        for i in range(src_size):
+            golden[indices[i]] = src[i]
+    elif param.mode == "skip":
+        indices = np.arange(0, src_size, dtype=np.int32)
+        indices[src_size // 2 :] = np.arange(out_size, out_size + src_size // 2, dtype=np.int32)
+        golden = np.zeros(out_size, dtype=dtype)
+        if param.atomic == "add":
+            for i in range(src_size):
+                if indices[i] < out_size:
+                    golden[indices[i]] = dtype(golden[indices[i]] + src[i])
+        else:
+            for i in range(src_size):
+                if indices[i] < out_size:
+                    golden[indices[i]] = src[i]
+    elif param.mode == "clamp":
+        indices = np.arange(0, src_size, dtype=np.int32)
+        indices[src_size // 2 :] = np.arange(out_size, out_size + src_size // 2, dtype=np.int32)
+        golden = np.zeros(out_size, dtype=dtype)
+        for i in range(src_size):
+            clamped_idx = min(int(indices[i]), out_size - 1)
+            golden[clamped_idx] = src[i]
+    elif param.mode == "wrap":
+        indices = np.arange(0, src_size, dtype=np.int32)
+        indices[src_size // 2 :] = np.arange(out_size, out_size + src_size // 2, dtype=np.int32)
+        golden = np.zeros(out_size, dtype=dtype)
+        for i in range(src_size):
+            wrapped_idx = int(indices[i]) % out_size
+            golden[wrapped_idx] = src[i]
+    elif param.mode == "default" and param.atomic == "add":
+        indices = (np.arange(0, src_size) % out_size).astype(np.int32)
+        golden = np.zeros(out_size, dtype=dtype)
+        for i in range(src_size):
+            golden[indices[i]] = dtype(golden[indices[i]] + src[i])
 
     src.tofile("src.bin")
     indices.tofile("indices.bin")
@@ -62,6 +92,11 @@ if __name__ == "__main__":
         MScatterParams("MSCATTERTest.case_int32_16x16_512", np.int32, 16, 16, 512),
         MScatterParams("MSCATTERTest.case_uint8_16x32_1024", np.uint8, 16, 32, 1024),
         MScatterParams("MSCATTERTest.case_uint8_16x64_2048", np.uint8, 16, 64, 2048),
+        MScatterParams("MSCATTERTest.case_float_skip_8x32_512", np.float32, 8, 32, 512, "skip"),
+        MScatterParams("MSCATTERTest.case_int32_clamp_8x16_256", np.int32, 8, 16, 256, "clamp"),
+        MScatterParams("MSCATTERTest.case_half_wrap_8x32_1024", np.float16, 8, 32, 1024, "wrap"),
+        MScatterParams("MSCATTERTest.case_float_atomicadd_8x32_512", np.float32, 8, 32, 512, "default", "add"),
+        MScatterParams("MSCATTERTest.case_int32_atomicadd_skip_8x16_256", np.int32, 8, 16, 256, "skip", "add"),
     ]
 
     for param in case_params_list:

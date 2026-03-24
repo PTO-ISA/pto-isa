@@ -230,3 +230,165 @@ void LaunchMGATHERHalf<64, 64, 32, 32>(aclFloat16 *out, aclFloat16 *table, int32
 {
     runMGATHER_half_64x64_32x32<<<1, nullptr, stream>>>((half *)out, (half *)table, indices);
 }
+
+extern "C" __global__ AICORE void runMGATHER_float_clamp_16x64_8x32(__gm__ float *out, __gm__ float *table,
+                                                                    __gm__ int32_t *indices)
+{
+    using T = float;
+    using TIdx = int32_t;
+    constexpr int kTableRows = 16, kTableCols = 64, kOutRows = 8, kOutCols = 32;
+
+    using DynShape_table = pto::Shape<1, 1, 1, kTableRows, kTableCols>;
+    using DynStrid_table = pto::Stride<1, 1, 1, kTableCols, 1>;
+    using GlobalData_table = GlobalTensor<T, DynShape_table, DynStrid_table>;
+
+    using DynShape_idx = pto::Shape<1, 1, 1, kOutRows, kOutCols>;
+    using DynStrid_idx = pto::Stride<1, 1, 1, kOutCols, 1>;
+    using GlobalData_idx = GlobalTensor<TIdx, DynShape_idx, DynStrid_idx>;
+
+    using DynShape_out = pto::Shape<1, 1, 1, kOutRows, kOutCols>;
+    using DynStrid_out = pto::Stride<1, 1, 1, kOutCols, 1>;
+    using GlobalData_out = GlobalTensor<T, DynShape_out, DynStrid_out>;
+
+    using TileData_idx = Tile<TileType::Vec, TIdx, kOutRows, kOutCols, BLayout::RowMajor, -1, -1>;
+    using TileData_out = Tile<TileType::Vec, T, kOutRows, kOutCols, BLayout::RowMajor, -1, -1>;
+
+    TileData_idx idxTile(kOutRows, kOutCols);
+    TileData_out outTile(kOutRows, kOutCols);
+
+    TASSIGN(idxTile, 0x0);
+    TASSIGN(outTile, kOutRows * kOutCols * sizeof(TIdx));
+
+    GlobalData_table tableGlobal(table);
+    GlobalData_idx idxGlobal(indices);
+    GlobalData_out outGlobal(out);
+
+    TLOAD(idxTile, idxGlobal);
+#ifndef __PTO_AUTO__
+    set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+    wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+#endif
+    MGATHER_IMPL<pto::GatherOOB::Clamp>(outTile, tableGlobal, idxTile);
+#ifndef __PTO_AUTO__
+    set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+    wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+#endif
+    TSTORE(outGlobal, outTile);
+}
+
+extern "C" __global__ AICORE void runMGATHER_int32_wrap_16x64_8x32(__gm__ int32_t *out, __gm__ int32_t *table,
+                                                                   __gm__ int32_t *indices)
+{
+    using T = int32_t;
+    using TIdx = int32_t;
+    constexpr int kTableRows = 16, kTableCols = 64, kOutRows = 8, kOutCols = 32;
+
+    using DynShape_table = pto::Shape<1, 1, 1, kTableRows, kTableCols>;
+    using DynStrid_table = pto::Stride<1, 1, 1, kTableCols, 1>;
+    using GlobalData_table = GlobalTensor<T, DynShape_table, DynStrid_table>;
+
+    using DynShape_idx = pto::Shape<1, 1, 1, kOutRows, kOutCols>;
+    using DynStrid_idx = pto::Stride<1, 1, 1, kOutCols, 1>;
+    using GlobalData_idx = GlobalTensor<TIdx, DynShape_idx, DynStrid_idx>;
+
+    using DynShape_out = pto::Shape<1, 1, 1, kOutRows, kOutCols>;
+    using DynStrid_out = pto::Stride<1, 1, 1, kOutCols, 1>;
+    using GlobalData_out = GlobalTensor<T, DynShape_out, DynStrid_out>;
+
+    using TileData_idx = Tile<TileType::Vec, TIdx, kOutRows, kOutCols, BLayout::RowMajor, -1, -1>;
+    using TileData_out = Tile<TileType::Vec, T, kOutRows, kOutCols, BLayout::RowMajor, -1, -1>;
+
+    TileData_idx idxTile(kOutRows, kOutCols);
+    TileData_out outTile(kOutRows, kOutCols);
+
+    TASSIGN(idxTile, 0x0);
+    TASSIGN(outTile, kOutRows * kOutCols * sizeof(TIdx));
+
+    GlobalData_table tableGlobal(table);
+    GlobalData_idx idxGlobal(indices);
+    GlobalData_out outGlobal(out);
+
+    TLOAD(idxTile, idxGlobal);
+#ifndef __PTO_AUTO__
+    set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+    wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+#endif
+    MGATHER_IMPL<pto::GatherOOB::Wrap>(outTile, tableGlobal, idxTile);
+#ifndef __PTO_AUTO__
+    set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+    wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+#endif
+    TSTORE(outGlobal, outTile);
+}
+
+extern "C" __global__ AICORE void runMGATHER_half_zero_16x64_8x32(__gm__ half *out, __gm__ half *table,
+                                                                  __gm__ int32_t *indices)
+{
+    using T = half;
+    using TIdx = int32_t;
+    constexpr int kTableRows = 16, kTableCols = 64, kOutRows = 8, kOutCols = 32;
+
+    using DynShape_table = pto::Shape<1, 1, 1, kTableRows, kTableCols>;
+    using DynStrid_table = pto::Stride<1, 1, 1, kTableCols, 1>;
+    using GlobalData_table = GlobalTensor<T, DynShape_table, DynStrid_table>;
+
+    using DynShape_idx = pto::Shape<1, 1, 1, kOutRows, kOutCols>;
+    using DynStrid_idx = pto::Stride<1, 1, 1, kOutCols, 1>;
+    using GlobalData_idx = GlobalTensor<TIdx, DynShape_idx, DynStrid_idx>;
+
+    using DynShape_out = pto::Shape<1, 1, 1, kOutRows, kOutCols>;
+    using DynStrid_out = pto::Stride<1, 1, 1, kOutCols, 1>;
+    using GlobalData_out = GlobalTensor<T, DynShape_out, DynStrid_out>;
+
+    using TileData_idx = Tile<TileType::Vec, TIdx, kOutRows, kOutCols, BLayout::RowMajor, -1, -1>;
+    using TileData_out = Tile<TileType::Vec, T, kOutRows, kOutCols, BLayout::RowMajor, -1, -1>;
+
+    TileData_idx idxTile(kOutRows, kOutCols);
+    TileData_out outTile(kOutRows, kOutCols);
+
+    TASSIGN(idxTile, 0x0);
+    TASSIGN(outTile, kOutRows * kOutCols * sizeof(TIdx));
+
+    GlobalData_table tableGlobal(table);
+    GlobalData_idx idxGlobal(indices);
+    GlobalData_out outGlobal(out);
+
+    TLOAD(idxTile, idxGlobal);
+#ifndef __PTO_AUTO__
+    set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+    wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
+#endif
+    MGATHER_IMPL<pto::GatherOOB::Zero>(outTile, tableGlobal, idxTile);
+#ifndef __PTO_AUTO__
+    set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+    wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
+#endif
+    TSTORE(outGlobal, outTile);
+}
+
+template <::GatherOOB Mode, typename T, typename TIdx, int kTableRows, int kTableCols, int kOutRows, int kOutCols>
+void LaunchMGATHER_mode(T *out, T *table, TIdx *indices, void *stream);
+
+template <>
+void LaunchMGATHER_mode<::GatherOOB::Clamp, float, int32_t, 16, 64, 8, 32>(float *out, float *table, int32_t *indices,
+                                                                           void *stream)
+{
+    runMGATHER_float_clamp_16x64_8x32<<<1, nullptr, stream>>>(out, table, indices);
+}
+
+template <>
+void LaunchMGATHER_mode<::GatherOOB::Wrap, int32_t, int32_t, 16, 64, 8, 32>(int32_t *out, int32_t *table,
+                                                                            int32_t *indices, void *stream)
+{
+    runMGATHER_int32_wrap_16x64_8x32<<<1, nullptr, stream>>>(out, table, indices);
+}
+
+template <::GatherOOB Mode, int kTableRows, int kTableCols, int kOutRows, int kOutCols>
+void LaunchMGATHERHalf_mode(aclFloat16 *out, aclFloat16 *table, int32_t *indices, void *stream);
+
+template <>
+void LaunchMGATHERHalf_mode<::GatherOOB::Zero, 16, 64, 8, 32>(aclFloat16 *out, aclFloat16 *table, int32_t *indices,
+                                                              void *stream)
+{
+    runMGATHER_half_zero_16x64_8x32<<<1, nullptr, stream>>>((half *)out, (half *)table, indices);
+}

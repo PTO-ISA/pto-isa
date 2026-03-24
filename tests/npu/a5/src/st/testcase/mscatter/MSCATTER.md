@@ -59,12 +59,21 @@ mscatter.row.atomic_add %table, %src, %idx : (!pto.memref<...>, !pto.tile<NxMxT>
 
 ## C++ Intrinsic
 
-Declared in `include/pto/npu/a5/MScatter.hpp`:
+Declared in `include/pto/common/pto_instr.hpp` and `include/pto/npu/a5/MScatter.hpp`:
 
 ```cpp
-template <ScatterAtomicOp Atomic = ScatterAtomicOp::None, ScatterOOB Mode = ScatterOOB::Undefined,
-          typename GlobalTable, typename TileSrc, typename TileIdx>
-PTO_INTERNAL void MSCATTER(GlobalTable& table, TileSrc& src, TileIdx& indices);
+// Default mode (ScatterAtomicOp::None, ScatterOOB::Undefined)
+template <typename GlobalData, typename TileSrc, typename TileInd, typename... WaitEvents>
+PTO_INST RecordEvent MSCATTER(GlobalData& dst, TileSrc& src, TileInd& indexes, WaitEvents&... events);
+
+// Explicit atomic mode
+template <ScatterAtomicOp Atomic, typename GlobalData, typename TileSrc, typename TileInd, typename... WaitEvents>
+PTO_INST RecordEvent MSCATTER(GlobalData& dst, TileSrc& src, TileInd& indexes, WaitEvents&... events);
+
+// Explicit atomic + OOB mode
+template <ScatterAtomicOp Atomic, ScatterOOB Mode, typename GlobalData, typename TileSrc, typename TileInd,
+          typename... WaitEvents>
+PTO_INST RecordEvent MSCATTER(GlobalData& dst, TileSrc& src, TileInd& indexes, WaitEvents&... events);
 ```
 
 **Parameters:**
@@ -255,3 +264,24 @@ void example_manual() {
 - [`TSTORE`](../../../../../../../docs/isa/TSTORE.md): Contiguous block transfer from Tile to GM
 - [`TSCATTER`](../../../../../../../docs/isa/TSCATTER.md): Index-based scatter within tiles (UB-to-UB)
 - [`MGATHER`](../mgather/MGATHER.md): Indexed gather from GM to Tile (inverse operation)
+
+## Test Cases
+
+| Case | Data Type | Src Size | Out Size | Atomic | OOB Mode | Description |
+|------|-----------|----------|----------|--------|----------|-------------|
+| case_half_8x32_1024 | half | 8×32 | 1024 | None | Undefined | Default mode |
+| case_half_16x64_2048 | half | 16×64 | 2048 | None | Undefined | Default mode |
+| case_float_8x32_512 | float | 8×32 | 512 | None | Undefined | Default mode |
+| case_float_16x32_1024 | float | 16×32 | 1024 | None | Undefined | Default mode |
+| case_float_16x64_2048 | float | 16×64 | 2048 | None | Undefined | Default mode |
+| case_float_8x8_128 | float | 8×8 | 128 | None | Undefined | Default mode |
+| case_int32_8x16_256 | int32 | 8×16 | 256 | None | Undefined | Default mode |
+| case_int32_16x32_1024 | int32 | 16×32 | 1024 | None | Undefined | Default mode |
+| case_int32_16x16_512 | int32 | 16×16 | 512 | None | Undefined | Default mode |
+| case_uint8_16x32_1024 | uint8 | 16×32 | 1024 | None | Undefined | Default mode |
+| case_uint8_16x64_2048 | uint8 | 16×64 | 2048 | None | Undefined | Default mode |
+| case_float_skip_8x32_512 | float | 8×32 | 512 | None | Skip | OOB writes skipped |
+| case_int32_clamp_8x16_256 | int32 | 8×16 | 256 | None | Clamp | OOB indices clamped |
+| case_half_wrap_8x32_1024 | half | 8×32 | 1024 | None | Wrap | OOB indices wrapped via modulo |
+| case_float_atomicadd_8x32_512 | float | 8×32 | 512 | Add | Undefined | Atomic addition |
+| case_int32_atomicadd_skip_8x16_256 | int32 | 8×16 | 256 | Add | Skip | Atomic add with OOB skip |

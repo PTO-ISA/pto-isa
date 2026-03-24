@@ -60,6 +60,12 @@ void LaunchMGATHER(T *out, T *table, TIdx *indices, void *stream);
 template <int kTableRows, int kTableCols, int kOutRows, int kOutCols>
 void LaunchMGATHERHalf(aclFloat16 *out, aclFloat16 *table, int32_t *indices, void *stream);
 
+template <GatherOOB Mode, typename T, typename TIdx, int kTableRows, int kTableCols, int kOutRows, int kOutCols>
+void LaunchMGATHER_mode(T *out, T *table, TIdx *indices, void *stream);
+
+template <GatherOOB Mode, int kTableRows, int kTableCols, int kOutRows, int kOutCols>
+void LaunchMGATHERHalf_mode(aclFloat16 *out, aclFloat16 *table, int32_t *indices, void *stream);
+
 template <typename T, typename TIdx, int kTableRows, int kTableCols, int kOutRows, int kOutCols>
 void test_mgather()
 {
@@ -195,4 +201,83 @@ TEST_F(MGATHERTest, case_uint8_16x64_8x32)
 TEST_F(MGATHERTest, case_uint8_32x64_16x32)
 {
     test_mgather<uint8_t, int32_t, 32, 64, 16, 32>();
+}
+
+template <GatherOOB Mode, typename T, typename TIdx, int kTableRows, int kTableCols, int kOutRows, int kOutCols>
+void test_mgather_mode()
+{
+    size_t tableByteSize = kTableRows * kTableCols * sizeof(T);
+    size_t outByteSize = kOutRows * kOutCols * sizeof(T);
+    size_t idxByteSize = kOutRows * kOutCols * sizeof(TIdx);
+
+    aclInit(nullptr);
+    aclrtSetDevice(0);
+    aclrtStream stream;
+    aclrtCreateStream(&stream);
+
+    T *tableHost, *outHost;
+    TIdx *idxHost;
+    T *tableDevice, *outDevice;
+    TIdx *idxDevice;
+
+    aclrtMallocHost((void **)(&tableHost), tableByteSize);
+    aclrtMallocHost((void **)(&idxHost), idxByteSize);
+    aclrtMallocHost((void **)(&outHost), outByteSize);
+
+    aclrtMalloc((void **)&tableDevice, tableByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclrtMalloc((void **)&idxDevice, idxByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclrtMalloc((void **)&outDevice, outByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+
+    ReadFile(GetGoldenDir() + "/table.bin", tableByteSize, tableHost, tableByteSize);
+    ReadFile(GetGoldenDir() + "/indices.bin", idxByteSize, idxHost, idxByteSize);
+
+    aclrtMemcpy(tableDevice, tableByteSize, tableHost, tableByteSize, ACL_MEMCPY_HOST_TO_DEVICE);
+    aclrtMemcpy(idxDevice, idxByteSize, idxHost, idxByteSize, ACL_MEMCPY_HOST_TO_DEVICE);
+
+    if constexpr (std::is_same<T, aclFloat16>::value) {
+        LaunchMGATHERHalf_mode<Mode, kTableRows, kTableCols, kOutRows, kOutCols>(outDevice, tableDevice, idxDevice,
+                                                                                 stream);
+    } else {
+        LaunchMGATHER_mode<Mode, T, TIdx, kTableRows, kTableCols, kOutRows, kOutCols>(outDevice, tableDevice, idxDevice,
+                                                                                      stream);
+    }
+
+    aclrtSynchronizeStream(stream);
+    aclrtMemcpy(outHost, outByteSize, outDevice, outByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
+
+    WriteFile(GetGoldenDir() + "/output.bin", outHost, outByteSize);
+
+    aclrtFree(tableDevice);
+    aclrtFree(idxDevice);
+    aclrtFree(outDevice);
+
+    aclrtFreeHost(tableHost);
+    aclrtFreeHost(idxHost);
+    aclrtFreeHost(outHost);
+    aclrtDestroyStream(stream);
+    aclrtResetDevice(0);
+    aclFinalize();
+
+    std::vector<T> golden(kOutRows * kOutCols);
+    std::vector<T> devFinal(kOutRows * kOutCols);
+    ReadFile(GetGoldenDir() + "/golden.bin", outByteSize, golden.data(), outByteSize);
+    ReadFile(GetGoldenDir() + "/output.bin", outByteSize, devFinal.data(), outByteSize);
+
+    bool ret = ResultCmp<T>(golden, devFinal, 0.001f);
+    EXPECT_TRUE(ret);
+}
+
+TEST_F(MGATHERTest, case_float_clamp_16x64_8x32)
+{
+    test_mgather_mode<GatherOOB::Clamp, float, int32_t, 16, 64, 8, 32>();
+}
+
+TEST_F(MGATHERTest, case_int32_wrap_16x64_8x32)
+{
+    test_mgather_mode<GatherOOB::Wrap, int32_t, int32_t, 16, 64, 8, 32>();
+}
+
+TEST_F(MGATHERTest, case_half_zero_16x64_8x32)
+{
+    test_mgather_mode<GatherOOB::Zero, aclFloat16, int32_t, 16, 64, 8, 32>();
 }

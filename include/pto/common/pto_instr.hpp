@@ -1489,6 +1489,16 @@ PTO_INST RecordEvent MGATHER(TileDst &dst, GlobalData &src, TileInd &indexes, Wa
     return {};
 }
 
+#ifdef PTO_NPU_ARCH_A5
+template <GatherOOB Mode, typename TileDst, typename GlobalData, typename TileInd, typename... WaitEvents>
+PTO_INST RecordEvent MGATHER(TileDst &dst, GlobalData &src, TileInd &indexes, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MGATHER_IMPL<Mode>(dst, src, indexes);
+    return {};
+}
+#endif
+
 template <typename GlobalData, typename TileSrc, typename TileInd, typename... WaitEvents>
 PTO_INST RecordEvent MSCATTER(GlobalData &dst, TileSrc &src, TileInd &indexes, WaitEvents &... events)
 {
@@ -1496,6 +1506,25 @@ PTO_INST RecordEvent MSCATTER(GlobalData &dst, TileSrc &src, TileInd &indexes, W
     MAP_INSTR_IMPL(MSCATTER, dst, src, indexes);
     return {};
 }
+
+#ifdef PTO_NPU_ARCH_A5
+template <ScatterAtomicOp Atomic, typename GlobalData, typename TileSrc, typename TileInd, typename... WaitEvents>
+PTO_INST RecordEvent MSCATTER(GlobalData &dst, TileSrc &src, TileInd &indexes, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MSCATTER_IMPL<Atomic>(dst, src, indexes);
+    return {};
+}
+
+template <ScatterAtomicOp Atomic, ScatterOOB Mode, typename GlobalData, typename TileSrc, typename TileInd,
+          typename... WaitEvents>
+PTO_INST RecordEvent MSCATTER(GlobalData &dst, TileSrc &src, TileInd &indexes, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MSCATTER_IMPL<Atomic, Mode>(dst, src, indexes);
+    return {};
+}
+#endif
 
 template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
 PTO_INST RecordEvent TNEG(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events)

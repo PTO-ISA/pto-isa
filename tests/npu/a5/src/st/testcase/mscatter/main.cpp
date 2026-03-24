@@ -60,6 +60,12 @@ void LaunchMSCATTER(T *out, T *src, TIdx *indices, void *stream);
 template <int kSrcRows, int kSrcCols, int kOutSize>
 void LaunchMSCATTERHalf(aclFloat16 *out, aclFloat16 *src, int32_t *indices, void *stream);
 
+template <ScatterAtomicOp Atomic, ScatterOOB Mode, typename T, typename TIdx, int kSrcRows, int kSrcCols, int kOutSize>
+void LaunchMSCATTER_mode(T *out, T *src, TIdx *indices, void *stream);
+
+template <ScatterAtomicOp Atomic, ScatterOOB Mode, int kSrcRows, int kSrcCols, int kOutSize>
+void LaunchMSCATTERHalf_mode(aclFloat16 *out, aclFloat16 *src, int32_t *indices, void *stream);
+
 template <typename T, typename TIdx, int kSrcRows, int kSrcCols, int kOutSize>
 void test_mscatter()
 {
@@ -182,4 +188,94 @@ TEST_F(MSCATTERTest, case_uint8_16x32_1024)
 TEST_F(MSCATTERTest, case_uint8_16x64_2048)
 {
     test_mscatter<uint8_t, int32_t, 16, 64, 2048>();
+}
+
+template <ScatterAtomicOp Atomic, ScatterOOB Mode, typename T, typename TIdx, int kSrcRows, int kSrcCols, int kOutSize>
+void test_mscatter_mode()
+{
+    size_t srcByteSize = kSrcRows * kSrcCols * sizeof(T);
+    size_t outByteSize = kOutSize * sizeof(T);
+    size_t idxByteSize = kSrcRows * kSrcCols * sizeof(TIdx);
+
+    aclInit(nullptr);
+    aclrtSetDevice(0);
+    aclrtStream stream;
+    aclrtCreateStream(&stream);
+
+    T *srcHost, *outHost;
+    TIdx *idxHost;
+    T *srcDevice, *outDevice;
+    TIdx *idxDevice;
+
+    aclrtMallocHost((void **)(&srcHost), srcByteSize);
+    aclrtMallocHost((void **)(&idxHost), idxByteSize);
+    aclrtMallocHost((void **)(&outHost), outByteSize);
+
+    aclrtMalloc((void **)&srcDevice, srcByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclrtMalloc((void **)&idxDevice, idxByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclrtMalloc((void **)&outDevice, outByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+
+    ReadFile(GetGoldenDir() + "/src.bin", srcByteSize, srcHost, srcByteSize);
+    ReadFile(GetGoldenDir() + "/indices.bin", idxByteSize, idxHost, idxByteSize);
+
+    aclrtMemcpy(srcDevice, srcByteSize, srcHost, srcByteSize, ACL_MEMCPY_HOST_TO_DEVICE);
+    aclrtMemcpy(idxDevice, idxByteSize, idxHost, idxByteSize, ACL_MEMCPY_HOST_TO_DEVICE);
+
+    aclrtMemset(outDevice, outByteSize, 0, outByteSize);
+
+    if constexpr (std::is_same<T, aclFloat16>::value) {
+        LaunchMSCATTERHalf_mode<Atomic, Mode, kSrcRows, kSrcCols, kOutSize>(outDevice, srcDevice, idxDevice, stream);
+    } else {
+        LaunchMSCATTER_mode<Atomic, Mode, T, TIdx, kSrcRows, kSrcCols, kOutSize>(outDevice, srcDevice, idxDevice,
+                                                                                 stream);
+    }
+
+    aclrtSynchronizeStream(stream);
+    aclrtMemcpy(outHost, outByteSize, outDevice, outByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
+
+    WriteFile(GetGoldenDir() + "/output.bin", outHost, outByteSize);
+
+    aclrtFree(srcDevice);
+    aclrtFree(idxDevice);
+    aclrtFree(outDevice);
+
+    aclrtFreeHost(srcHost);
+    aclrtFreeHost(idxHost);
+    aclrtFreeHost(outHost);
+    aclrtDestroyStream(stream);
+    aclrtResetDevice(0);
+    aclFinalize();
+
+    std::vector<T> golden(kOutSize);
+    std::vector<T> devFinal(kOutSize);
+    ReadFile(GetGoldenDir() + "/golden.bin", outByteSize, golden.data(), outByteSize);
+    ReadFile(GetGoldenDir() + "/output.bin", outByteSize, devFinal.data(), outByteSize);
+
+    bool ret = ResultCmp<T>(golden, devFinal, 0.001f);
+    EXPECT_TRUE(ret);
+}
+
+TEST_F(MSCATTERTest, case_float_skip_8x32_512)
+{
+    test_mscatter_mode<ScatterAtomicOp::None, ScatterOOB::Skip, float, int32_t, 8, 32, 512>();
+}
+
+TEST_F(MSCATTERTest, case_int32_clamp_8x16_256)
+{
+    test_mscatter_mode<ScatterAtomicOp::None, ScatterOOB::Clamp, int32_t, int32_t, 8, 16, 256>();
+}
+
+TEST_F(MSCATTERTest, case_half_wrap_8x32_1024)
+{
+    test_mscatter_mode<ScatterAtomicOp::None, ScatterOOB::Wrap, aclFloat16, int32_t, 8, 32, 1024>();
+}
+
+TEST_F(MSCATTERTest, case_float_atomicadd_8x32_512)
+{
+    test_mscatter_mode<ScatterAtomicOp::Add, ScatterOOB::Undefined, float, int32_t, 8, 32, 512>();
+}
+
+TEST_F(MSCATTERTest, case_int32_atomicadd_skip_8x16_256)
+{
+    test_mscatter_mode<ScatterAtomicOp::Add, ScatterOOB::Skip, int32_t, int32_t, 8, 16, 256>();
 }

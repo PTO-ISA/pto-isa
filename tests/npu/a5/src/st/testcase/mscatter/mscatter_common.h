@@ -13,4 +13,20 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 #include <cstdint>
 
+enum class ScatterAtomicOp : uint8_t
+{
+    None = 0,
+    Add = 1,
+    Max = 2,
+    Min = 3
+};
+
+enum class ScatterOOB : uint8_t
+{
+    Undefined = 0,
+    Skip = 1,
+    Clamp = 2,
+    Wrap = 3
+};
+
 #endif // MSCATTER_COMMON_H

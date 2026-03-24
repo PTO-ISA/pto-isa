@@ -47,11 +47,16 @@ Element-indexed gather:
 
 ## C++ Intrinsic
 
-Declared in `include/pto/npu/a5/MGather.hpp`:
+Declared in `include/pto/common/pto_instr.hpp` and `include/pto/npu/a5/MGather.hpp`:
 
 ```cpp
-template <GatherOOB Mode = GatherOOB::Undefined, typename TileDst, typename GlobalTable, typename TileIdx>
-PTO_INTERNAL void MGATHER(TileDst& dst, GlobalTable& table, TileIdx& indices);
+// Default mode (GatherOOB::Undefined)
+template <typename TileDst, typename GlobalData, typename TileInd, typename... WaitEvents>
+PTO_INST RecordEvent MGATHER(TileDst& dst, GlobalData& src, TileInd& indexes, WaitEvents&... events);
+
+// Explicit OOB mode
+template <GatherOOB Mode, typename TileDst, typename GlobalData, typename TileInd, typename... WaitEvents>
+PTO_INST RecordEvent MGATHER(TileDst& dst, GlobalData& src, TileInd& indexes, WaitEvents&... events);
 ```
 
 **Parameters:**
@@ -197,3 +202,25 @@ void example_manual() {
 - [`TLOAD`](../../../../../../../docs/isa/TLOAD.md): Contiguous block transfer from GM to Tile
 - [`TGATHER`](../../../../../../../docs/isa/TGATHER.md): Index-based gather within tiles (UB-to-UB)
 - [`MSCATTER`](../mscatter/MSCATTER.md): Indexed scatter from Tile to GM (inverse operation)
+
+## Test Cases
+
+| Case | Data Type | Table Size | Output Size | Mode | Description |
+|------|-----------|------------|-------------|------|-------------|
+| case_half_16x64_8x32 | half | 16×64 | 8×32 | Undefined | Default mode |
+| case_half_16x128_8x64 | half | 16×128 | 8×64 | Undefined | Default mode |
+| case_half_32x128_16x64 | half | 32×128 | 16×64 | Undefined | Default mode |
+| case_half_16x256_8x128 | half | 16×256 | 8×128 | Undefined | Default mode |
+| case_half_64x64_32x32 | half | 64×64 | 32×32 | Undefined | Default mode |
+| case_float_8x64_4x32 | float | 8×64 | 4×32 | Undefined | Default mode |
+| case_float_16x64_8x32 | float | 16×64 | 8×32 | Undefined | Default mode |
+| case_float_32x64_16x32 | float | 32×64 | 16×32 | Undefined | Default mode |
+| case_float_16x16_8x8 | float | 16×16 | 8×8 | Undefined | Default mode |
+| case_int32_8x32_4x16 | int32 | 8×32 | 4×16 | Undefined | Default mode |
+| case_int32_16x64_8x32 | int32 | 16×64 | 8×32 | Undefined | Default mode |
+| case_int32_32x32_16x16 | int32 | 32×32 | 16×16 | Undefined | Default mode |
+| case_uint8_16x64_8x32 | uint8 | 16×64 | 8×32 | Undefined | Default mode |
+| case_uint8_32x64_16x32 | uint8 | 32×64 | 16×32 | Undefined | Default mode |
+| case_float_clamp_16x64_8x32 | float | 16×64 | 8×32 | Clamp | OOB indices clamped to table bounds |
+| case_int32_wrap_16x64_8x32 | int32 | 16×64 | 8×32 | Wrap | OOB indices wrapped via modulo |
+| case_half_zero_16x64_8x32 | half | 16×64 | 8×32 | Zero | OOB indices return zero |
