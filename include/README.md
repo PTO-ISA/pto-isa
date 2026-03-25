@@ -112,6 +112,8 @@ This table tracks per-instruction backend availability:
 | [`TROWEXPANDSUB`](../docs/isa/TROWEXPANDSUB.md) | Yes | TODO | Yes | Yes | Yes |
 | [`TROWMAX`](../docs/isa/TROWMAX.md) | Yes | Yes | Yes | Yes | Yes |
 | [`TROWMIN`](../docs/isa/TROWMIN.md) | Yes | TODO | Yes | Yes | Yes |
+| [`TROWARGMAX`](../docs/isa/TROWARGMAX.md) | TODO | TODO | Yes | Yes | Yes |
+| [`TROWARGMIN`](../docs/isa/TROWARGMIN.md) | TODO | TODO | Yes | Yes | Yes |
 | [`TROWSUM`](../docs/isa/TROWSUM.md) | Yes | TODO | Yes | Yes | Yes |
 | [`TROWPROD`](../docs/isa/TROWPROD.md) | TODO | TODO | Yes | Yes | Yes |
 | [`TRSQRT`](../docs/isa/TRSQRT.md) | Yes | TODO | Yes | Yes | Yes |

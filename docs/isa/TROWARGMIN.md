@@ -1,0 +1,145 @@
+# TROWARGMIN
+
+
+## Tile Operation Diagram
+
+![TROWMIN tile operation](../figures/isa/TROWMIN.svg)
+
+## Introduction
+
+Get the column index of the minimum element for each row.
+
+## Math Interpretation
+
+Let `R = src.GetValidRow()` and `C = src.GetValidCol()`. For `0 <= i < R`:
+
+$$ \mathrm{dst}_{i,0} = \min_{0 \le j < C} j_{i} $$
+
+## Assembly Syntax
+
+PTO-AS form: see `docs/grammar/PTO-AS.md`.
+
+Synchronous form:
+
+```text
+%dst = trowargmin %src : !pto.tile<...> -> !pto.tile<...>
+```
+Lowering may introduce internal scratch tiles; the C++ intrinsic requires an explicit `tmp` operand.
+
+### IR Level 1 (SSA)
+
+```text
+%dst = pto.trowargmin %src, %tmp : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### IR Level 2 (DPS)
+
+```text
+pto.trowargmin ins(%src, %tmp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+```
+## C++ Intrinsic
+
+Declared in `include/pto/common/pto_instr.hpp`:
+
+```cpp
+template <typename TileDataOut, typename TileDataIn, typename TileDataTmp, typename... WaitEvents>
+PTO_INST RecordEvent TROWARGMIN(TileDataOut& dst, TileDataIn& src, TileDataTmp& tmp, WaitEvents&... events);
+```
+
+## Constraints
+
+Implementation checks (NPU):
+
+- A2A3:
+  - Tile location: `dst` and `src` must be `TileType::Vec`.
+  - Tile layout of `src`: ND fractal (`isRowMajor` and `SLayout::NoneBox`).
+  - Tile layout of `dst`:
+    - Only support DN layout Tile of 1D, e.g., `Tile<TileType::Vec, T, ROWS, 1, BLayout::ColMajor, ValidRows, 1>`
+    - ROWS muse be 32b aligned.
+  - Source data types: `half` or `float`.
+  - Destination data types: `uint32_t`.
+  - Runtime valid checks:
+    - `srcValidCol != 0` and `srcValidRow != 0`.
+- A5:
+  - Source data types: `half` or `float`.
+  - Destination data types: `uint32_t`.
+  - No explicit runtime assertions on `validRow/validCol` in the implementation; the loops use `src.GetValidRow()` and `src.GetValidCol()`.
+  - `tmp` temporary tile is not used, only for compatibility use.
+
+### About temporary tile `tmp` for A3
+
+* Temporary tile is not used when `srcValidCol <= ElementPerRepeat`, used when `srcValidCol > ElementPerRepeat`.
+* `tmp` tile's rows is the same as `src`.
+* Simply set `tmp` tile size the same as `src` when `src` is small.
+* Use the following equation to get the minimum stride required by `tmp` tile, so as to save UB space:
+
+$$ stride = \frac{validCol / elementPerRepeat * 2 + elementPerBlock - 1}{elementPerBlock} * elementPerBlock + \frac{validCol / elementPerRepeat + elementPerBlock - 1}{elementPerBlock} * elementPerBlock $$
+
+## Examples
+
+### Auto
+
+```cpp
+#include <pto/pto-inst.hpp>
+
+using namespace pto;
+
+void example_auto() {
+  using SrcT = Tile<TileType::Vec, float, 16, 16>;
+  using DstT = Tile<TileType::Vec, uint32_t, 16, 1, BLayout::ColMajor>;
+  using TmpT = Tile<TileType::Vec, float, 16, 16>;
+  SrcT src;
+  DstT dst;
+  TmpT tmp;
+  TROWARGMIN(dst, src, tmp);
+}
+```
+
+### Manual
+
+```cpp
+#include <pto/pto-inst.hpp>
+
+using namespace pto;
+
+void example_manual() {
+  using SrcT = Tile<TileType::Vec, float, 16, 16>;
+  using DstT = Tile<TileType::Vec, uint32_t, 16, 1, BLayout::ColMajor>;
+  using TmpT = Tile<TileType::Vec, float, 16, 16>;
+  SrcT src;
+  DstT dst;
+  TmpT tmp;
+  TASSIGN(src, 0x1000);
+  TASSIGN(dst, 0x2000);
+  TASSIGN(tmp, 0x3000);
+  TROWARGMIN(dst, src, tmp);
+}
+```
+
+## ASM Form Examples
+
+### Auto Mode
+
+```text
+# Auto mode: compiler/runtime-managed placement and scheduling.
+%dst = pto.trowargmin %src, %tmp : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### Manual Mode
+
+```text
+# Manual mode: bind resources explicitly before issuing the instruction.
+# Optional for tile operands:
+# pto.tassign %arg0, @tile(0x1000)
+# pto.tassign %arg1, @tile(0x2000)
+%dst = pto.trowargmin %src, %tmp : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+### PTO Assembly Form
+
+```text
+%dst = trowargmin %src : !pto.tile<...> -> !pto.tile<...>
+# IR Level 2 (DPS)
+pto.trowargmin ins(%src, %tmp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+```
+

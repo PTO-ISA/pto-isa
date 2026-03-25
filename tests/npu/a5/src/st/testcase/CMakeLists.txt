@@ -123,7 +123,9 @@ set(ALL_TESTCASES
     trowsum
     trowprod
     trowmax
+    trowargmax
     trowmin
+    trowargmin
     tcolsum
     tcolprod
     tcolmax

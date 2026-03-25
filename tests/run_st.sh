@@ -168,6 +168,12 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tconcat -g TCONCATTest.case_half_16x128_16x64_16x64_16x63_16x64
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tconcat -g TCONCATTest.case_int16_32x256_32x128_32x128_32x127_32x128
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tconcat -g TCONCATTest.case_int32_64x128_64x64_64x64_64x64_64x64
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmax -g TROWARGMAXTest.case_uint32_float_16x1_13x16_13x13
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmax -g TROWARGMAXTest.case_uint32_float_8x1_3x4096_3x4095
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmax -g TROWARGMAXTest.case_uint32_float_8x1_2x16384_2x16381
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmin -g TROWARGMINTest.case_uint32_float_16x1_13x16_13x13
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmin -g TROWARGMINTest.case_uint32_float_8x1_3x4096_3x4095
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmin -g TROWARGMINTest.case_uint32_float_8x1_2x16384_2x16381
 
   elif [ "$ENABLE_ALL" = "true" ]; then            # 所有用例
     python3 tests/script/build_st.py $ARGS -v a3 -t all
@@ -248,6 +254,8 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tquant
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tdequant
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tconcat
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmax
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmin
   fi
 fi
 
@@ -323,6 +331,8 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowexpanddiv -g TRowExpandDivTest.case_fp32_40_64
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowmax -g TROWMAXTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowmin -g TROWMINTest.case1
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t trowargmax -g TROWARGMAXTest.case_uint32_float_64x1_32x128_32x128
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t trowargmin -g TROWARGMINTest.case_uint32_float_64x1_32x128_32x128
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowsum -g TROWSUMTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowprod -g TROWPRODTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trsqrt -g TRSQRTTest.case1
@@ -438,6 +448,8 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowexpanddiv
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowmax
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowmin
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t trowargmax
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t trowargmin
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowsum
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trowprod
     python3 tests/script/run_st.py $ARGS -w -v a5 -t trsqrt

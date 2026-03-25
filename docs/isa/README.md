@@ -77,6 +77,8 @@ This directory contains the per-instruction reference for the PTO Tile Lib ISA.
 - [TCOLMAX](TCOLMAX.md) - Reduce each column by taking the maximum across rows.
 - [TROWMAX](TROWMAX.md) - Reduce each row by taking the maximum across columns.
 - [TROWMIN](TROWMIN.md) - Reduce each row by taking the minimum across columns.
+- [TROWARGMAX](TROWARGMAX.md) - Get the column index of the maximum element for each row.
+- [TROWARGMIN](TROWARGMIN.md) - Get the column index of the minimum element for each row.
 - [TROWEXPAND](TROWEXPAND.md) - Broadcast the first element of each source row across the destination row.
 - [TROWEXPANDDIV](TROWEXPANDDIV.md) - Row-wise broadcast divide: divide each row of `src0` by a per-row scalar vector `src1`.
 - [TROWEXPANDMUL](TROWEXPANDMUL.md) - Row-wise broadcast multiply: multiply each row of `src0` by a per-row scalar vector `src1`.
