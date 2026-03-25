@@ -116,7 +116,7 @@ enum class CastMode
 
 // PyTorch alignment for edge cases (inf, -inf, nan, overflow)
 // 1 = PyTorch-compatible (uses NonSatTorch), 0 = standard (faster)
-#define EDGE_CASE_ALIGN_ENABLE 0
+#define EDGE_CASE_ALIGN_ENABLE 1
 
 #define FOR_ROWS                                     \
     for (uint16_t row = 0; row < validRows; row++) { \
@@ -3039,6 +3039,21 @@ PTO_INTERNAL void TCVT_IMPL(TileDataD &dst, TileDataS &src, RoundMode mode)
         // All other conversions: default to ON (native TCVT saturation)
         TCVT_IMPL(dst, src, mode, SaturationMode::ON);
     }
+}
+
+// ============================================================================
+// TCVT_IMPL Overloads with tmp buffer (unused in A5, for API compatibility)
+// ============================================================================
+template <typename TileDataD, typename TileDataS, typename TmpTileData>
+PTO_INTERNAL void TCVT_IMPL(TileDataD &dst, TileDataS &src, TmpTileData &tmp, RoundMode mode, SaturationMode satMode)
+{
+    TCVT_IMPL(dst, src, mode, satMode);
+}
+
+template <typename TileDataD, typename TileDataS, typename TmpTileData>
+PTO_INTERNAL void TCVT_IMPL(TileDataD &dst, TileDataS &src, TmpTileData &tmp, RoundMode mode)
+{
+    TCVT_IMPL(dst, src, mode);
 }
 
 } // namespace pto
