@@ -64,6 +64,20 @@ PTO_INTERNAL void TSCATTER_IMPL(TileDataD &dst, TileDataS &src, TileDataI &idx)
 
     unsigned validRow = idx.GetValidRow();
     unsigned validCol = idx.GetValidCol();
+
+    // Initialize dst UB buffer
+    __ubuf__ TD *dstPtr = dst.data();
+    set_mask_count();
+    set_vector_mask(0, TileDataD::Cols);
+    for (int i = 0; i < TileDataD::Rows; i++) {
+        unsigned offset = i * TileDataD::Cols;
+        vector_dup((__ubuf__ int16_t *)(dstPtr + offset), static_cast<int16_t>(0), 1, 1, 1, 8, 8);
+    }
+    set_mask_norm();
+    set_vector_mask(-1, -1);
+
+    PtoSetWaitFlag<PIPE_V, PIPE_S>();
+
     TScatterImpl<TileDataD, TileDataS, TileDataI>(dst.data(), src.data(), idx.data(), validRow, validCol);
 }
 } // namespace pto
