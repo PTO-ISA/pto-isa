@@ -87,7 +87,7 @@ __global__ AICORE void runTQuant(__gm__ uint8_t __out__ *out_e8m0, __gm__ uint8_
         // TMOV fp8 ND→NZ: reuse fp8Tile (int8_t RowMajor at 0x25100)
         constexpr int virtualRow = PTO_CEIL(validRows, FRACTAL_NZ_ROW) + 1; // NZ + 1 for reducing bank conflict
         using DstNZ_int8 = Tile<TileType::Vec, int8_t, virtualRow, paddedCols, BLayout::ColMajor, validRows, paddedCols,
-                                SLayout::RowMajor>;
+                                SLayout::RowMajor, 512, PadValue::Null, CompactMode::RowPlusOne>;
         DstNZ_int8 fp8TileNZ;
         IdxGlobal idxGlobal(idx);
         IdxTile idxTile(1, idxCount);

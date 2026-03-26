@@ -35,13 +35,18 @@ PTO_INTERNAL void TQUANT_IMPL(TileDataOut &dst, TileDataSrc &src, TileDataPara &
     } else if constexpr (quant_type == QuantType::INT8_ASYM) {
         static_assert(std::is_same<U, uint8_t>::value, "Fix: Quant INT8 asym: Out data type has to be uint8");
     }
-    using TileDataCvtF16 = Tile<TileType::Vec, half, TileDataSrc::Rows, TileDataSrc::Cols, BLayout::RowMajor, -1, -1>;
+
+    constexpr int blockElem = static_cast<int>(BLOCK_BYTE_SIZE / sizeof(half));
+    constexpr int PadColsSrc = ((((TileDataSrc::Cols) + (blockElem)-1) / (blockElem)) * (blockElem));
+    using TileDataCvtF16 = Tile<TileType::Vec, half, TileDataSrc::Rows, PadColsSrc, BLayout::RowMajor, -1, -1>;
     using TileDataCvtS32 =
         Tile<TileType::Vec, int32_t, TileDataSrc::Rows, TileDataSrc::Cols, BLayout::RowMajor, -1, -1>;
 
     TROWEXPANDMUL_IMPL(src, src, scale);
+    pipe_barrier(PIPE_V);
     if constexpr (quant_type == QuantType::INT8_ASYM) {
         TROWEXPANDADD_IMPL(src, src, *offset);
+        pipe_barrier(PIPE_V);
     }
 
     TileDataCvtF16 src_f16(src.GetValidRow(), src.GetValidCol());
@@ -53,9 +58,13 @@ PTO_INTERNAL void TQUANT_IMPL(TileDataOut &dst, TileDataSrc &src, TileDataPara &
     TRESHAPE_IMPL(src_f16, src);
     TRESHAPE_IMPL(src_s32, src);
 #endif
-    TCVT_IMPL(src_s32, src, RoundMode::CAST_RINT);     // fp32->s32
+    TCVT_IMPL(src_s32, src, RoundMode::CAST_RINT); // fp32->s32
+    pipe_barrier(PIPE_V);
     TCVT_IMPL(src_f16, src_s32, RoundMode::CAST_RINT); // s32->fp16 (exact since values are now integers)
+    pipe_barrier(PIPE_V);
     TCVT_IMPL(dst, src_f16, RoundMode::CAST_RINT, SaturationMode::ON);
+    pipe_barrier(PIPE_V);
+    pipe_barrier(PIPE_V);
 }
 } // namespace pto
 #endif // TQUANT_HPP
