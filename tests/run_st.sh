@@ -92,8 +92,10 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolsum -g TCOLSUMTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolprod -g TCOLPRODTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trowprod -g TROWPRODTest.case1
-    python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolmax -g TCOLMAXTest.case1
-    python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolmin -g TCOLMINTest.case1
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolmax -g TCOLCMAXTest.case01
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolargmax -g TCOLARGMAXTest.case1
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolmin -g TCOLCMINTest.case01
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolargmin -g TCOLARGMINTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trem -g TREMTest.case_float_16x64_16x128_16x128_16x64
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tfmod -g TFMODTest.case_float_16x64_16x128_16x128_16x64
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trems -g TREMSTest.case1
@@ -190,7 +192,9 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolprod
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trowprod
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolmax
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolargmax
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolmin
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t tcolargmin
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trem
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trems
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tfmod
@@ -293,7 +297,9 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolexpandmax -g TColExpandMaxTest.case_fp32_32_32_1_32
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolexpandmin -g TColExpandMinTest.case_fp16_4_256_1_256
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolmax -g TCOLMAXTest.case01
+    python3 tests/script/run_st.py $ARGS -w -v a6 -t tcolmin -g TCOLCMAXTest.case01
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolmin -g TCOLMINTest.case01
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolmin -g TCOLCMINTest.case01
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolsum -g TCOLSUMTest.case01
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolprod -g TCOLPRODTest.case01
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcvt -g TCVTTest.case_fp16_fp32_2x64
@@ -418,7 +424,9 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolexpandmax
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolexpandmin
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolmax
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolargmax
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolmin
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolargmin
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolsum
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcolprod
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcvt

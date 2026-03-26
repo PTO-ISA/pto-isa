@@ -170,7 +170,9 @@ taxpy
 tgatherb
 tci
 tcolmax
+tcolargmax
 tcolmin
+tcolargmin
 texpands
 texpands_mat
 tcolsum

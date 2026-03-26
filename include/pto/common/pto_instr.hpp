@@ -1068,6 +1068,22 @@ PTO_INST RecordEvent TCOLMAX(TileDataOut &dst, TileDataIn &src, WaitEvents &... 
 }
 
 template <typename TileDataOut, typename TileDataIn, typename TileDataTmp, typename... WaitEvents>
+PTO_INST RecordEvent TCOLARGMAX(TileDataOut &dst, TileDataIn &src, TileDataTmp &tmp, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MAP_INSTR_IMPL(TCOLARGMAX, dst, src, tmp);
+    return {};
+}
+
+template <typename TileDataOut, typename TileDataIn, typename TileDataTmp, typename... WaitEvents>
+PTO_INST RecordEvent TCOLARGMIN(TileDataOut &dst, TileDataIn &src, TileDataTmp &tmp, WaitEvents &... events)
+{
+    TSYNC(events...);
+    MAP_INSTR_IMPL(TCOLARGMIN, dst, src, tmp);
+    return {};
+}
+
+template <typename TileDataOut, typename TileDataIn, typename TileDataTmp, typename... WaitEvents>
 PTO_INST RecordEvent TROWMAX(TileDataOut &dst, TileDataIn &src, TileDataTmp &tmp, WaitEvents &... events)
 {
     TSYNC(events...);
