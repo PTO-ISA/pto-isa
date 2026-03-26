@@ -23,18 +23,23 @@ PTO_INTERNAL void runTRemS(__gm__ T *out, __gm__ T *src, T scalar)
     using GlobalData = GlobalTensor<T, DynDim2Shape, DynDim2Stride>;
     using srcTileData = Tile<TileType::Vec, T, row, col, BLayout::RowMajor, -1, -1>;
     using dstTileData = Tile<TileType::Vec, T, dstTileRow, dstTileCol, BLayout::RowMajor, -1, -1>;
-    GlobalData srcGlobal(src, DynDim2Shape(validRow, validCol), DynDim2Stride(row, col));
+    using tmpTileData = Tile<TileType::Vec, T, 1, dstTileCol, BLayout::RowMajor, -1, -1>;
+
     GlobalData dstGlobal(out, DynDim2Shape(validRow, validCol), DynDim2Stride(dstTileRow, dstTileCol));
-    srcTileData srcTile(validRow, validCol);
+    GlobalData srcGlobal(src, DynDim2Shape(validRow, validCol), DynDim2Stride(row, col));
     dstTileData dstTile(validRow, validCol);
+    srcTileData srcTile(validRow, validCol);
+    tmpTileData tmpTile(1, validCol);
+
     TASSIGN(srcTile, 0x0);
     TASSIGN(dstTile, row * col * sizeof(T));
+    TASSIGN(tmpTile, row * col * sizeof(T) + dstTileRow * dstTileCol * sizeof(T));
 
     Event<Op::TLOAD, Op::TREMS> event0;
     Event<Op::TREMS, Op::TSTORE_VEC> event1;
 
     event0 = TLOAD(srcTile, srcGlobal);
-    event1 = TREMS(dstTile, srcTile, scalar, event0);
+    event1 = TREMS(dstTile, srcTile, scalar, tmpTile, event0);
     TSTORE(dstGlobal, dstTile, event1);
     out = dstGlobal.data();
 }

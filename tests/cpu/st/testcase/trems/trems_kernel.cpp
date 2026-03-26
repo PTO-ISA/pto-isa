@@ -22,12 +22,13 @@ AICORE void runTRems(__gm__ T __out__ *out, __gm__ T __in__ *src, __gm__ T __in_
     using TileData = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
     TileData srcTile(kTRows_, kTCols_);
     TileData dstTile(kTRows_, kTCols_);
+    TileData tmpTile(1, kTCols_);
 
     GlobalData srcGlobal(src);
     GlobalData dstGlobal(out);
 
     TLOAD(srcTile, srcGlobal);
-    TREMS(dstTile, srcTile, scalar[0]);
+    TREMS(dstTile, srcTile, scalar[0], tmpTile);
     TSTORE(dstGlobal, dstTile);
     out = dstGlobal.data();
 }

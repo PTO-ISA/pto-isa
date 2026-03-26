@@ -11,8 +11,8 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <pto/pto-inst.hpp>
 #include <acl/acl.h>
 
-using namespace std;
 using namespace pto;
+using namespace std;
 
 template <typename T, int dstTileRow, int dstTileCol, int row, int validRow, int col, int validCol>
 PTO_INTERNAL void runTRemS(__gm__ T *out, __gm__ T *src, T scalar)
@@ -20,19 +20,25 @@ PTO_INTERNAL void runTRemS(__gm__ T *out, __gm__ T *src, T scalar)
     using DynDim2Shape = Shape<1, 1, 1, -1, -1>;
     using DynDim2Stride = pto::Stride<1, 1, -1, -1, 1>;
     using GlobalData = GlobalTensor<T, DynDim2Shape, DynDim2Stride>;
+
     using srcTileData = Tile<TileType::Vec, T, row, col, BLayout::RowMajor, -1, -1>;
     using dstTileData = Tile<TileType::Vec, T, dstTileRow, dstTileCol, BLayout::RowMajor, -1, -1>;
+    using tmpTileData = Tile<TileType::Vec, T, 1, dstTileCol, BLayout::RowMajor, -1, -1>;
+
     GlobalData srcGlobal(src, DynDim2Shape(validRow, validCol), DynDim2Stride(row, col));
     GlobalData dstGlobal(out, DynDim2Shape(validRow, validCol), DynDim2Stride(dstTileRow, dstTileCol));
     srcTileData srcTile(validRow, validCol);
     dstTileData dstTile(validRow, validCol);
+    tmpTileData tmpTile(1, validCol);
+
     TASSIGN(srcTile, 0x0);
     TASSIGN(dstTile, row * col * sizeof(T));
+    TASSIGN(tmpTile, row * col * sizeof(T) + dstTileRow * dstTileCol * sizeof(T));
     TLOAD(dstTile, dstGlobal);
     TLOAD(srcTile, srcGlobal);
     set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
     wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-    TREMS(dstTile, srcTile, scalar);
+    TREMS(dstTile, srcTile, scalar, tmpTile);
     set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
     wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
     TSTORE(dstGlobal, dstTile);

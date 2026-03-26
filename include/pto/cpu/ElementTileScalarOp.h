@@ -118,6 +118,13 @@ PTO_INTERNAL void TREMS_IMPL(tile_shape &dst, tile_shape &src, typename tile_sha
 }
 
 template <typename tile_shape>
+PTO_INTERNAL void TREMS_IMPL(tile_shape &dst, tile_shape &src, typename tile_shape::DType scalar, tile_shape &tmp)
+{
+    (void)tmp;
+    TREMS_IMPL(dst, src, scalar);
+}
+
+template <typename tile_shape>
 PTO_INTERNAL void TMAXS_IMPL(tile_shape &dst, tile_shape &src, typename tile_shape::DType scalar)
 {
     unsigned row = dst.GetValidRow();

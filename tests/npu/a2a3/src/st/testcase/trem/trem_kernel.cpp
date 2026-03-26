@@ -32,12 +32,17 @@ __global__ AICORE void runTRem(__gm__ T __out__ *out, __gm__ T __in__ *src0, __g
     using TileDataDst = Tile<TileType::Vec, T, dstTileH, dstTileW, BLayout::RowMajor, -1, -1>;
     using TileDataSrc0 = Tile<TileType::Vec, T, src0TileH, src0TileW, BLayout::RowMajor, -1, -1>;
     using TileDataSrc1 = Tile<TileType::Vec, T, src1TileH, src1TileW, BLayout::RowMajor, -1, -1>;
+    // tmp buffer only needs 1 row since it's reused for each row iteration
+    using TileDataTmp = Tile<TileType::Vec, T, 1, dstTileW, BLayout::RowMajor, -1, -1>;
     TileDataDst dstTile(vRows, vCols);
     TileDataSrc0 src0Tile(vRows, vCols);
     TileDataSrc1 src1Tile(vRows, vCols);
+    TileDataTmp tmpTile(1, vCols);
     TASSIGN(src0Tile, 0x0);
     TASSIGN(src1Tile, src0TileH * src0TileW * sizeof(T));
     TASSIGN(dstTile, src0TileH * src0TileW * sizeof(T) + src1TileH * src1TileW * sizeof(T));
+    TASSIGN(tmpTile,
+            src0TileH * src0TileW * sizeof(T) + src1TileH * src1TileW * sizeof(T) + dstTileH * dstTileW * sizeof(T));
 
     TLOAD(src0Tile, src0Global);
     TLOAD(src1Tile, src1Global);
@@ -45,7 +50,7 @@ __global__ AICORE void runTRem(__gm__ T __out__ *out, __gm__ T __in__ *src0, __g
     set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
     wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
 #endif
-    TREM<TileDataDst, TileDataSrc0, TileDataSrc1>(dstTile, src0Tile, src1Tile);
+    TREM<TileDataDst, TileDataSrc0, TileDataSrc1, TileDataTmp>(dstTile, src0Tile, src1Tile, tmpTile);
 #ifndef __PTO_AUTO__
     set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
     wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);

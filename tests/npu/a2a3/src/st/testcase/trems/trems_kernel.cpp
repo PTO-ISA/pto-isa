@@ -26,10 +26,13 @@ PTO_INTERNAL void runTREMS(__gm__ T *out, __gm__ T *src, T scalar)
 
     using dstTileData = Tile<TileType::Vec, T, dstTileRow, dstTileCol, BLayout::RowMajor, -1, -1>;
     using srcTileData = Tile<TileType::Vec, T, row, col, BLayout::RowMajor, -1, -1>;
+    using tmpTileData = Tile<TileType::Vec, T, 1, dstTileCol, BLayout::RowMajor, -1, -1>;
     srcTileData srcTile(validRow, validCol);
     dstTileData dstTile(validRow, validCol);
+    tmpTileData tmpTile(1, validCol);
     TASSIGN(srcTile, 0x0);
     TASSIGN(dstTile, row * col * sizeof(T));
+    TASSIGN(tmpTile, row * col * sizeof(T) + dstTileRow * dstTileCol * sizeof(T));
 
     TLOAD(srcTile, srcGlobal);
 
@@ -38,7 +41,7 @@ PTO_INTERNAL void runTREMS(__gm__ T *out, __gm__ T *src, T scalar)
     wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
 #endif
 
-    TREMS(dstTile, srcTile, scalar);
+    TREMS(dstTile, srcTile, scalar, tmpTile);
 
 #ifndef __PTO_AUTO__
     set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
