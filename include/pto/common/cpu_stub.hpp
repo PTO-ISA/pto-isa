@@ -77,6 +77,11 @@ static inline void aclrtMallocHost(void **p, size_t sz)
 #define wait_flag(a, b, c)
 #define __cce_get_tile_ptr(x) x
 
+#if defined(__CPU_SIM)
+#define set_mask_norm(...)
+#define set_vector_mask(...)
+#endif
+
 typedef int event_t;
 #define EVENT_ID0 0
 
