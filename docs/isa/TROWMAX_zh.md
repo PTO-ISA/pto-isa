@@ -66,8 +66,8 @@ PTO_INST RecordEvent TROWMAX(TileDataOut &dst, TileDataIn &src, TileDataTmp &tmp
     - Tile location: `dst` and `src` must be `TileType::Vec`.
     - Tile 布局 of `src`: ND fractal (`isRowMajor` and `SLayout::NoneBox`).
     - Tile 布局 of `dst`:
-    - **推荐**: DN layout Tile of 1D, e.g., `Tile<TileType::Vec, T, ROWS, 1, BLayout::ColMajor, ValidRows, 1>`
-    - **将移除**: ND layout Tile of 2D, e.g., `Tile<TileType::Vec, T, ROWS, COLS, BLayout::RowMajor, ValidRows, 1>`
+        - **紧凑模式**：DN 布局的一维 Tile，例如 `Tile<TileType::Vec, T, ROWS, 1, BLayout::ColMajor, ValidRows, 1>`，此时ROWS要做到32b对齐。
+        - **传统模式**：ND 布局的二维 Tile，例如 `Tile<TileType::Vec, T, ROWS, COLS, BLayout::RowMajor, ValidRows, 1>`。
     - 数据类型: `half` or `float`.
     - 数据类型一致性: `dst.DType == src.DType`.
     - 运行期有效区域检查:
