@@ -46,9 +46,9 @@ PTO_INTERNAL void PrintValue(T &val, int col)
     if (col > 0)
         cce::printf(" ");
     if constexpr (std::is_same_v<T, float> || std::is_same_v<T, half>) {
-        cce::printf("%6.2f", static_cast<float>(val));
+        cce::printf("%8.2f", static_cast<float>(val));
     } else if constexpr (std::is_integral_v<T>) {
-        cce::printf("%6d", static_cast<int>(val));
+        cce::printf("%8d", static_cast<int>(val));
     } else {
         static_assert(sizeof(T) == 0, "Unsupported data type for Print.");
     }
@@ -70,9 +70,10 @@ PTO_INTERNAL void PrintTileRow(__ubuf__ typename TileDataIn::DType *src, int row
 PTO_INTERNAL void PrintHorizontalSeparator(int totalCols, int validCols)
 {
     for (int j = 0; j < totalCols; ++j) {
-        if (j > 0)
+        if (j > 0) {
             cce::printf(" ");
-        cce::printf("------"); // 8 dashes to match %8 width
+        }
+        cce::printf("--------"); // 8 dashes to match %8 width
 
         if (j == validCols - 1 && validCols > 0 && validCols < totalCols) {
             cce::printf("|");
@@ -199,8 +200,108 @@ PTO_INTERNAL void TPRINT_IMPL(T &src)
         TPrintGlobalTensorImpl<T>(src);
         return;
     } else {
-        static_assert(sizeof(T) == 0, "TPRINT: Only Tile and GlobalTensor are supported.");
+        static_assert(sizeof(T) == 0, "TPRINT: Only Vec Tile and GlobalTensor are supported without tmp buffer.");
     }
+}
+
+template <typename GlobalData, typename TileData>
+__tf__ PTO_INTERNAL void TPrintCopyAcc2GM(typename GlobalData::DType __out__ *tmp,
+                                          typename TileData::TileDType __in__ src)
+{
+    using T = typename TileData::DType;
+    __cc__ T *srcAddr = (__cc__ T *)__cce_get_tile_ptr(src);
+    __gm__ T *tmpAddr = reinterpret_cast<__gm__ T *>(tmp);
+
+    constexpr uint16_t c0 = 16;
+    constexpr uint8_t nz2ndEn = 1;
+    constexpr uint16_t ndNum = 1;
+    uint16_t srcStride = TileData::Rows;
+    uint16_t srcNdStride = TileData::Numel * c0;
+    uint16_t dstNdStride = TileData::Numel;
+    if constexpr (TileData::Compact == CompactMode::Normal) {
+        srcStride = (TileData::Rows + FRACTAL_NZ_ROW - 1) / FRACTAL_NZ_ROW * FRACTAL_NZ_ROW;
+        srcNdStride = srcStride * TileData::Cols * c0;
+    }
+
+    uint64_t xmReg = ((TileData::Cols & 0xfff) << 4) | (static_cast<uint64_t>(TileData::Rows & 0xffff) << 16) |
+                     (static_cast<uint64_t>(TileData::Cols & 0xffffffff) << 32);
+    uint64_t xtReg = srcStride | ((static_cast<uint64_t>(QuantMode_t::NoQuant >> SHIFT_BLOCK_BYTE) & 0x1) << 29) |
+                     ((static_cast<uint64_t>(STPhase::Unspecified) & 0x3) << 32) |
+                     ((static_cast<uint64_t>(QuantMode_t::NoQuant) & 0x1f) << 34) |
+                     ((static_cast<uint64_t>(ReluPreMode::NoRelu) & 0x7) << 39) |
+                     ((static_cast<uint64_t>(nz2ndEn) & 0x1) << 43);
+    uint64_t config = ndNum | (static_cast<uint64_t>(srcNdStride & 0xffff) << 16) |
+                      (static_cast<uint64_t>(dstNdStride & 0xffff) << 32);
+    set_nd_para(config);
+    copy_matrix_cc_to_gm(tmpAddr, srcAddr, xmReg, xtReg);
+}
+
+#ifdef PTO_NPU_ARCH_A2A3
+template <typename GlobalData, typename TileData>
+__tf__ PTO_INTERNAL void TPrintCopyMat2GM(typename GlobalData::DType __out__ *tmp,
+                                          typename TileData::TileDType __in__ src)
+{
+    using T = typename TileData::DType;
+    __cbuf__ T *srcAddr = (__cbuf__ T *)__cce_get_tile_ptr(src);
+    __gm__ T *tmpAddr = reinterpret_cast<__gm__ T *>(tmp);
+
+    uint16_t lenBurst = (TileData::Numel * sizeof(T)) >> SHIFT_BLOCK_BYTE;
+    copy_cbuf_to_gm(tmpAddr, srcAddr, (uint8_t)0, 1, lenBurst, 0, 0);
+}
+#endif
+
+template <typename TileData, typename GlobalData>
+PTO_INTERNAL void TPrintMatOrAccTileByTmp(GlobalData &tmp, int validRows, int validCols)
+{
+    using T = typename GlobalData::DType;
+    using ElemType = typename GlobalData::RawDType;
+
+    T *dataPtr = tmp.data();
+
+    cce::printf("=== [TPRINT Tile] Data Type: %s, Layout: %s, TileType: %s ===\n", GetDTypeName<ElemType>(),
+                GetLayoutName(TileData::BFractal, TileData::SFractal), GetTileTypeName<TileData::Loc>());
+    cce::printf("  Shape: [%d, %d], Valid Shape: [%d, %d]\n", TileData::Rows, TileData::Cols, validRows, validCols);
+    for (int i = 0; i < TileData::Rows; ++i) {
+        for (int j = 0; j < TileData::Cols; ++j) {
+            ElemType val = *(dataPtr + i * TileData::Cols + j);
+            PrintValue(val, j);
+            if (j == validCols - 1 && validCols > 0 && validCols < TileData::Cols) {
+                cce::printf("|");
+            }
+        }
+        cce::printf("\n");
+        if (i == validRows - 1 && validRows > 0 && validRows < TileData::Rows) {
+            PrintHorizontalSeparator(TileData::Cols, validCols);
+            cce::printf("\n");
+        }
+    }
+}
+
+template <typename TileData, typename GlobalData>
+PTO_INTERNAL void TPRINT_IMPL(TileData &src, GlobalData &tmp)
+{
+    pipe_barrier(PIPE_ALL);
+    static_assert(is_tile_data_v<TileData>, "Fix: TPRINT First parameter must be Tile type.");
+    static_assert(is_global_data_v<GlobalData>, "Fix: TPRINT Second parameter must be GlobalTensor type.");
+
+    if constexpr (TileData::Loc == TileType::Mat) {
+#ifdef PTO_NPU_ARCH_A2A3
+        TPrintCopyMat2GM<GlobalData, TileData>(tmp.data(), src.data());
+#else
+        static_assert(sizeof(TileData) == 0, "Fix: TPRINT Mat Tile is not supported in A5.");
+#endif
+    } else if constexpr (TileData::Loc == TileType::Acc) {
+        TPrintCopyAcc2GM<GlobalData, TileData>(tmp.data(), src.data());
+    } else if constexpr (TileData::Loc == TileType::Vec) {
+        TPRINT_IMPL(src);
+    } else {
+        static_assert(sizeof(TileData) == 0, "Fix: TPRINT TileType must be Mat / Vec / Acc.");
+    }
+    pipe_barrier(PIPE_ALL);
+    int validRows = src.GetValidRow();
+    int validCols = src.GetValidCol();
+    TPrintMatOrAccTileByTmp<TileData, GlobalData>(tmp, validRows, validCols);
+    pipe_barrier(PIPE_ALL);
 }
 } // namespace pto
 

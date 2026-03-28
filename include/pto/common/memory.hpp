@@ -155,6 +155,35 @@ PTO_INTERNAL constexpr const __gm__ char *GetLayoutName(BLayout bType, SLayout s
     }
 }
 
+template <TileType type>
+PTO_INTERNAL constexpr const __gm__ char *GetTileTypeName() noexcept
+{
+    switch (type) {
+        case TileType::Vec:
+            return "Vec";
+        case TileType::Mat:
+            return "Mat";
+        case TileType::Left:
+            return "Left";
+        case TileType::Right:
+            return "Right";
+        case TileType::Acc:
+            return "Acc";
+        case TileType::Bias:
+            return "Bias";
+        case TileType::Scaling:
+            return "Scaling";
+        case TileType::ScaleLeft:
+            return "ScaleLeft";
+        case TileType::ScaleRight:
+            return "ScaleRight";
+        case TileType::Ctrl:
+            return "Ctrl";
+        default:
+            return "Unknown";
+    }
+}
+
 } // namespace pto
 
 #endif
