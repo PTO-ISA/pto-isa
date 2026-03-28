@@ -91,6 +91,62 @@ PTO_INTERNAL AsyncEvent TPUT_ASYNC_SDMA_IMPL(GlobalDstData &dstGlobalData, Globa
     return AsyncEvent(eventHandle, DmaEngine::SDMA);
 }
 
+// ============================================================================
+// TPUT_ASYNC_MTE_FALLBACK: Synchronous MTE fallback for platforms where SDMA
+// does not support PUT direction (e.g. A5).
+//
+// Uses the session's UB scratch buffer (tmpBuf) as staging to perform a
+// chunked GM → UB → GM transfer via MTE2/MTE3 pipelines. The operation
+// completes synchronously; the returned AsyncEvent has handle=0 (already done).
+// ============================================================================
+
+template <typename GlobalDstData, typename GlobalSrcData>
+PTO_INTERNAL AsyncEvent TPUT_ASYNC_MTE_FALLBACK(GlobalDstData &dstGlobalData, GlobalSrcData &srcGlobalData,
+                                                const sdma::SdmaExecContext &execCtx)
+{
+    (void)TPutAsyncCheckTensorCompatibility<GlobalDstData, GlobalSrcData>();
+
+    if (!TPutAsyncIsFlatContiguous1D(srcGlobalData)) {
+        return AsyncEvent(0, DmaEngine::SDMA);
+    }
+
+    const uint32_t totalElems = TPutAsyncGetTotalElemCount(srcGlobalData);
+    using T = typename GlobalSrcData::RawDType;
+    const uint64_t totalBytes = static_cast<uint64_t>(totalElems) * sizeof(T);
+    if (totalBytes == 0) {
+        return AsyncEvent(0, DmaEngine::SDMA);
+    }
+
+    __ubuf__ uint8_t *ubBuf = execCtx.tmpBuf.addr;
+    const uint32_t ubSize = execCtx.tmpBuf.size;
+    PTO_ASSERT(ubBuf != nullptr && ubSize > 0, "TPUT_ASYNC MTE fallback: tmpBuf is invalid");
+
+    __gm__ uint8_t *srcPtr = reinterpret_cast<__gm__ uint8_t *>(srcGlobalData.data());
+    __gm__ uint8_t *dstPtr = reinterpret_cast<__gm__ uint8_t *>(dstGlobalData.data());
+
+    uint64_t offset = 0;
+    while (offset < totalBytes) {
+        const uint64_t remaining = totalBytes - offset;
+        const uint32_t chunkBytes = static_cast<uint32_t>((remaining < ubSize) ? remaining : ubSize);
+
+        copy_gm_to_ubuf_align_v2(reinterpret_cast<__ubuf__ uint8_t *>(ubBuf),
+                                 reinterpret_cast<__gm__ uint8_t *>(srcPtr + offset), 0, 1, chunkBytes, 0, 0, false, 0,
+                                 chunkBytes, chunkBytes);
+        set_flag(PIPE_MTE2, PIPE_MTE3, execCtx.syncId);
+        wait_flag(PIPE_MTE2, PIPE_MTE3, execCtx.syncId);
+
+        copy_ubuf_to_gm_align_v2(reinterpret_cast<__gm__ uint8_t *>(dstPtr + offset),
+                                 reinterpret_cast<__ubuf__ uint8_t *>(ubBuf), 0, 1, chunkBytes, 0, chunkBytes,
+                                 chunkBytes);
+        set_flag(PIPE_MTE3, PIPE_MTE2, execCtx.syncId);
+        wait_flag(PIPE_MTE3, PIPE_MTE2, execCtx.syncId);
+
+        offset += chunkBytes;
+    }
+
+    return AsyncEvent(0, DmaEngine::SDMA);
+}
+
 } // namespace detail
 
 // ============================================================================
@@ -102,7 +158,11 @@ PTO_INTERNAL AsyncEvent TPUT_ASYNC_IMPL(GlobalDstData &dstGlobalData, GlobalSrcD
                                         const AsyncSession &session)
 {
     if constexpr (engine == DmaEngine::SDMA) {
+#ifdef PTO_NPU_ARCH_A5
+        return detail::TPUT_ASYNC_MTE_FALLBACK(dstGlobalData, srcGlobalData, session.sdmaSession.execCtx);
+#else
         return detail::TPUT_ASYNC_SDMA_IMPL(dstGlobalData, srcGlobalData, session.sdmaSession.execCtx);
+#endif
     } else {
         PTO_ASSERT(false, "TPUT_ASYNC: only SDMA engine is implemented currently");
         return AsyncEvent(0, engine);

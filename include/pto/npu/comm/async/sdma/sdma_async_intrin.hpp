@@ -60,9 +60,14 @@ PTO_INTERNAL void SetValue(__gm__ uint8_t *addr, UbTmpBuf &tmpBuf, uint32_t sync
     *ubPtr = x;
     pipe_barrier(PIPE_ALL);
 
-    // Copy from UB to GM: 1 burst, sizeof(T) bytes, no gaps
+#ifdef PTO_NPU_ARCH_A5
+    copy_ubuf_to_gm_align_v2(reinterpret_cast<__gm__ uint8_t *>(addr), reinterpret_cast<__ubuf__ uint8_t *>(ubPtr), 0,
+                             1, static_cast<uint32_t>(sizeof(T)), 0, static_cast<uint32_t>(sizeof(T)),
+                             static_cast<uint32_t>(sizeof(T)));
+#else
     copy_ubuf_to_gm_align_b32((__gm__ void *)addr, (__ubuf__ void *)ubPtr, 0, 1, static_cast<uint32_t>(sizeof(T)), 0, 0,
                               0, 0);
+#endif
     set_flag(PIPE_MTE3, PIPE_MTE2, syncId);
     wait_flag(PIPE_MTE3, PIPE_MTE2, syncId);
 }
@@ -72,9 +77,14 @@ PTO_INTERNAL T GetValue(__gm__ uint8_t *addr, UbTmpBuf &tmpBuf)
 {
     __ubuf__ T *ubPtr = reinterpret_cast<__ubuf__ T *>(tmpBuf.addr);
 
-    // Copy from GM to UB: 1 burst, sizeof(T) bytes, no gaps
+#ifdef PTO_NPU_ARCH_A5
+    copy_gm_to_ubuf_align_v2(reinterpret_cast<__ubuf__ uint8_t *>(ubPtr), reinterpret_cast<__gm__ uint8_t *>(addr), 0,
+                             1, static_cast<uint32_t>(sizeof(T)), 0, 0, false, 0, static_cast<uint32_t>(sizeof(T)),
+                             static_cast<uint32_t>(sizeof(T)));
+#else
     copy_gm_to_ubuf_align_b32((__ubuf__ void *)ubPtr, (__gm__ void *)addr, 0, 1, static_cast<uint32_t>(sizeof(T)), 0, 0,
                               0, 0);
+#endif
     pipe_barrier(PIPE_ALL);
 
     return *ubPtr;
