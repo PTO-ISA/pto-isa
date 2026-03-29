@@ -265,6 +265,11 @@ using TRandomCounter = uint32_t[PTO_RANDOM_COUNTER_SIZE];
 } // namespace pto
 
 #if defined(__CPU_SIM) || defined(__COSTMODEL)
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 14
+typedef __fp16 half;
+typedef __fp16 aclFloat16;
+typedef __fp16 bfloat16_t;
+#else
 typedef _Float16 half;
 typedef _Float16 aclFloat16;
 // Note: clang version should be >=15 and gcc version should be >=14
@@ -276,6 +281,7 @@ typedef std::bfloat16_t bfloat16_t;
 // macOS libc++ (and some other toolchains) may not ship <stdfloat> yet.
 // For CPU simulation, a best-effort 16-bit float type is sufficient.
 typedef _Float16 bfloat16_t;
+#endif
 #endif
 #endif
 

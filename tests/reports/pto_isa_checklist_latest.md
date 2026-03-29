@@ -1,0 +1,153 @@
+# PTO ISA Checklist
+
+- 指令总数: `139`
+- 文档覆盖: `120`
+- Public intrinsic 覆盖: `135`
+- CPU SIM 实现存在: `134`
+- A3 NPU 实现存在: `124`
+- CPU testcase 覆盖: `124`
+- A3 NPU testcase 覆盖: `121`
+- CPU runtime pass: `8`
+- A3 NPU runtime pass: `5`
+
+| Instruction | Source | CPU Impl | CPU Run | A3 Impl | A3 Run | CPU Test | NPU Test |
+|---|---|---:|---|---:|---|---|---|
+| TABS | manifest+public | yes | not_run | yes | not_run | tabs | tabs |
+| TADD | manifest+public | yes | not_run | yes | not_run | tadd | tadd |
+| TADDC | manifest+public | yes | not_run | no | impl_missing | taddc | - |
+| TADDS | manifest+public | yes | not_run | yes | not_run | tadds | tadds |
+| TADDSC | manifest+public | yes | not_run | no | impl_missing | taddsc | - |
+| TAND | manifest+public | yes | not_run | yes | not_run | tand | tand |
+| TANDS | manifest+public | yes | not_run | yes | not_run | tands | tands |
+| TASSIGN | manifest+public | yes | not_run | yes | not_run | tabs | tassign |
+| TAXPY | public_only | yes | not_run | yes | not_run | tcpu_missing_ops | taxpy |
+| TBROADCAST | public_only | yes | not_run | yes | not_run | tbroadcast | comm/tbroadcast |
+| TCI | manifest+public | yes | not_run | yes | not_run | tci | tci |
+| TCMP | manifest+public | yes | not_run | yes | not_run | tcmp | tcmp |
+| TCMPS | manifest+public | yes | not_run | yes | not_run | tcmps | tcmps |
+| TCOLEXPAND | manifest+public | yes | not_run | yes | not_run | tcolexpand | tcolexpand |
+| TCOLEXPANDADD | manifest+public | yes | not_run | yes | not_run | tcolexpandop | tcolexpandadd |
+| TCOLEXPANDDIV | manifest+public | yes | not_run | yes | not_run | tcolexpandop | tcolexpanddiv |
+| TCOLEXPANDEXPDIF | manifest+public | yes | not_run | yes | not_run | tcolexpandop | tcolexpandexpdif |
+| TCOLEXPANDMAX | manifest+public | yes | not_run | yes | not_run | tcolexpandop | tcolexpandmax |
+| TCOLEXPANDMIN | manifest+public | yes | not_run | yes | not_run | tcolexpandop | tcolexpandmin |
+| TCOLEXPANDMUL | manifest+public | yes | not_run | yes | not_run | tcolexpandop | tcolexpandmul |
+| TCOLEXPANDSUB | manifest+public | yes | not_run | yes | not_run | tcolexpandop | tcolexpandsub |
+| TCOLMAX | manifest+public | yes | not_run | yes | not_run | tcolmax | tcolmax |
+| TCOLMIN | manifest+public | yes | not_run | yes | not_run | tcolmin | tcolmin |
+| TCOLPROD | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tcolprod |
+| TCOLSUM | manifest+public | yes | not_run | yes | not_run | tcolsum | tcolsum |
+| TCONCAT | public_only | yes | not_run | yes | not_run | tcpu_missing_ops | tgather |
+| TCVT | manifest+public | yes | not_run | yes | not_run | tcvt | tcvt |
+| TDEQUANT | public_only | yes | not_run | yes | not_run | tcpu_missing_ops | tdequant |
+| TDIV | manifest+public | yes | not_run | yes | not_run | tdiv | tdiv |
+| TDIVS | manifest+public | yes | not_run | yes | not_run | tdivs | tdivs |
+| TEXP | manifest+public | yes | not_run | yes | not_run | texp | texp |
+| TEXPANDS | manifest+public | yes | not_run | yes | not_run | texpands | texpands |
+| TEXTRACT | manifest+public | yes | not_run | yes | not_run | textract | textract |
+| TEXTRACT_FP | manifest+public | yes | not_covered | yes | not_run | - | tmov_acc2mat |
+| TFILLPAD | manifest+public | yes | not_run | yes | not_run | tfillpad | tfillpad |
+| TFILLPAD_EXPAND | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tfillpad |
+| TFILLPAD_INPLACE | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tfillpad |
+| TFMOD | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tfmod |
+| TFMODS | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tfmods |
+| TFREE | public_only | yes | pass | yes | not_covered | tpushpop | - |
+| TGATHER | manifest+public | yes | not_run | yes | not_run | tgather | tgather |
+| TGATHERB | manifest+public | yes | not_run | yes | not_run | tgatherb | tgatherb |
+| TGEMV | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tmatmul |
+| TGEMV_ACC | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tmatmul |
+| TGEMV_BIAS | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tmatmul |
+| TGEMV_MX | manifest+public | yes | not_covered | no | impl_missing | - | - |
+| TGET | public_only | yes | not_run | yes | not_run | tget | comm/tget |
+| TGET_ASYNC | public_only | yes | not_covered | yes | not_run | - | comm/tget_async |
+| TGET_SCALE_ADDR | manifest+public | yes | not_run | no | impl_missing | tcpu_missing_ops | - |
+| THISTOGRAM | public_only | no | impl_missing | no | impl_missing | - | - |
+| TIMG2COL | manifest+public | no | impl_missing | yes | pass | - | timg2col |
+| TINSERT | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tmov_acc2mat |
+| TINSERT_FP | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tmov_acc2mat |
+| TLOAD | manifest+public | yes | not_run | yes | not_run | tload | tload |
+| TLOG | manifest+public | yes | not_run | yes | not_run | tlog | tlog |
+| TLRELU | manifest+public | yes | not_run | yes | not_run | tlrelu | tlrelu |
+| TMATMUL | manifest+public | yes | not_run | yes | not_run | tmatmul | tmatmul |
+| TMATMUL_ACC | manifest+public | yes | not_run | yes | not_run | tmatmul | tfa |
+| TMATMUL_BIAS | manifest+public | yes | not_run | yes | not_run | tmatmul | tmatmul |
+| TMATMUL_MX | manifest+public | yes | not_covered | no | impl_missing | - | - |
+| TMAX | manifest+public | yes | not_run | yes | not_run | tmax | tmax |
+| TMAXS | manifest+public | yes | not_run | yes | not_run | tmaxs | tmaxs |
+| TMIN | manifest+public | yes | not_run | yes | not_run | tmin | tmin |
+| TMINS | manifest+public | yes | not_run | yes | not_covered | tmins | - |
+| TMOV | manifest+public | yes | not_run | yes | not_run | tmov | tmov |
+| TMOV_FP | manifest+public | yes | not_covered | yes | not_run | - | tmov_acc2mat |
+| TMRGSORT | manifest+public | yes | not_run | yes | not_run | tmrgsort | tmrgsort |
+| TMUL | manifest+public | yes | not_run | yes | not_run | tmul | tmul |
+| TMULS | manifest+public | yes | not_run | yes | not_run | tmuls | tmuls |
+| TNEG | manifest+public | yes | not_run | yes | not_run | tneg | tneg |
+| TNOT | manifest+public | yes | not_run | yes | not_run | tnot | tnot |
+| TNOTIFY | public_only | yes | not_run | yes | not_run | tnotify | comm/tnotify |
+| TOR | manifest+public | yes | not_run | yes | not_run | tor | tor |
+| TORS | manifest+public | yes | not_run | yes | not_run | tors | tors |
+| TPACK | public_only | yes | not_covered | no | impl_missing | - | - |
+| TPARTADD | manifest+public | yes | not_run | yes | not_run | tpartadd | tpartadd |
+| TPARTMAX | manifest+public | yes | not_run | yes | not_run | tpartmax | tpartmax |
+| TPARTMIN | manifest+public | yes | not_run | yes | not_run | tpartmin | tpartmin |
+| TPARTMUL | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tpartmul |
+| TPOP | public_only | yes | pass | yes | not_run | tpushpop | tpushpop_cv |
+| TPREFETCH | manifest+public | yes | not_run | yes | not_covered | tprefetch | - |
+| TPRELU | manifest+public | yes | not_run | yes | not_run | tprelu | tprelu |
+| TPRINT | manifest+public | yes | not_run | yes | not_covered | tcpu_missing_ops | - |
+| TPUSH | public_only | yes | pass | yes | not_run | tpushpop | tpushpop_cv |
+| TPUT | public_only | yes | not_run | yes | not_run | tput | comm/tput |
+| TPUT_ASYNC | public_only | yes | not_covered | yes | not_run | - | comm/tput_async |
+| TQUANT | manifest+public | yes | pass | yes | pass | tquant | tquant |
+| TRANDOM | public_only | no | impl_missing | no | impl_missing | - | - |
+| TRECIP | manifest+public | yes | not_run | no | impl_missing | trecip | trecip |
+| TREDUCE | public_only | yes | not_run | yes | not_run | treduce | comm/treduce |
+| TRELU | manifest+public | yes | not_run | yes | not_run | trelu | trelu |
+| TREM | manifest+public | yes | not_run | yes | not_run | trem | trem |
+| TREMS | manifest+public | yes | not_run | yes | not_run | trems | trems |
+| TRESHAPE | manifest+public | yes | not_run | yes | not_run | treshape | tfa |
+| TROWARGMAX | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | trowargmax |
+| TROWARGMIN | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | trowargmin |
+| TROWEXPAND | manifest+public | yes | not_run | yes | not_run | trowexpand | trowexpand |
+| TROWEXPANDADD | manifest+public | yes | not_run | yes | not_run | trowexpandop | trowexpandadd |
+| TROWEXPANDDIV | manifest+public | yes | not_run | yes | not_run | trowexpandop | trowexpanddiv |
+| TROWEXPANDEXPDIF | manifest+public | yes | not_run | yes | not_run | trowexpandop | trowexpandexpdif |
+| TROWEXPANDMAX | manifest+public | yes | not_run | yes | not_run | trowexpandop | trowexpandmax |
+| TROWEXPANDMIN | manifest+public | yes | not_run | yes | not_run | trowexpandop | trowexpandmin |
+| TROWEXPANDMUL | manifest+public | yes | not_run | yes | not_run | trowexpandop | trowexpandmul |
+| TROWEXPANDSUB | manifest+public | yes | not_run | yes | not_run | trowexpandop | trowexpandsub |
+| TROWMAX | manifest+public | yes | not_run | yes | not_run | trowmax | trowmax |
+| TROWMIN | manifest+public | yes | not_run | yes | not_run | trowmin | trowmin |
+| TROWPROD | public_only | yes | not_run | yes | not_run | tcpu_missing_ops | trowprod |
+| TROWSUM | manifest+public | yes | not_run | yes | not_run | trowsum | trowsum |
+| TRSQRT | manifest+public | yes | not_run | yes | not_run | trsqrt | trsqrt |
+| TSCATTER | manifest+public | yes | not_run | yes | not_run | tscatter | tscatter |
+| TSEL | manifest+public | yes | not_run | yes | not_run | tsel | tsel |
+| TSELS | manifest+public | yes | not_run | yes | not_run | tsels | tsels |
+| TSETFMATRIX | manifest+public | yes | pass | yes | pass | timg2col_config | timg2col |
+| TSETHF32MODE | manifest | no | impl_missing | no | impl_missing | - | - |
+| TSETTF32MODE | manifest | no | impl_missing | no | impl_missing | - | - |
+| TSET_IMG2COL_PADDING | manifest+public | yes | pass | yes | pass | timg2col_config | timg2col |
+| TSET_IMG2COL_RPT | manifest+public | yes | pass | yes | pass | timg2col_config | timg2col |
+| TSHL | manifest+public | yes | not_run | yes | not_run | tshl | tshl |
+| TSHLS | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tshls |
+| TSHR | manifest+public | yes | not_run | yes | not_run | tshr | tshr |
+| TSHRS | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tshrs |
+| TSORT32 | manifest+public | yes | not_run | yes | not_run | tsort32 | tsort32 |
+| TSQRT | manifest+public | yes | not_run | yes | not_run | tsqrt | tsqrt |
+| TSTORE | manifest+public | yes | not_run | yes | not_run | tstore | tstore |
+| TSTORE_FP | manifest+public | yes | not_covered | yes | not_run | - | tmov |
+| TSUB | manifest+public | yes | not_run | yes | not_run | tsub | tsub |
+| TSUBC | manifest+public | yes | not_run | no | impl_missing | tsubc | - |
+| TSUBS | manifest+public | yes | not_run | yes | not_run | tsubs | tsubs |
+| TSUBSC | manifest+public | yes | not_run | no | impl_missing | tsubsc | - |
+| TSUBVIEW | manifest+public | yes | not_run | yes | not_run | tcpu_missing_ops | tmrgsort |
+| TSYNC | manifest+public | yes | pass | yes | not_run | tpushpop | tpushpop_cv |
+| TTEST | public_only | yes | not_run | yes | not_run | ttest | comm/ttest |
+| TTRANS | manifest+public | yes | not_run | yes | not_run | ttrans | ttrans |
+| TTRI | manifest+public | yes | not_run | yes | not_run | ttri | ttri |
+| TWAIT | public_only | yes | not_run | yes | not_run | twait | comm/twait |
+| TXOR | manifest+public | yes | not_run | yes | not_run | txor | txor |
+| TXORS | manifest+public | yes | not_run | yes | not_run | txors | txors |
+| MGATHER | manifest | yes | not_covered | no | impl_missing | - | - |
+| MSCATTER | manifest | yes | not_covered | no | impl_missing | - | - |

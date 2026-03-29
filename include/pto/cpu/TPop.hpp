@@ -43,6 +43,19 @@ PTO_INTERNAL void TPOP_IMPL(TileData &tile, Pipe &pipe)
     pipe.cons.free();
 }
 
+template <typename Pipe, TileSplitAxis Split>
+PTO_INTERNAL void TFREE_IMPL(Pipe &pipe)
+{
+    (void)Split;
+    pipe.cons.free();
+}
+
+template <typename Pipe>
+PTO_INTERNAL void TFREE_IMPL(Pipe &pipe)
+{
+    pipe.cons.free();
+}
+
 } // namespace pto
 
 #endif

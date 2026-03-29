@@ -138,3 +138,33 @@ TEST_F(TPushPopTest, multicore_float_64_128_Vec)
 {
     testPushPopMultiCore<float, 64, 128, TileType::Vec>();
 }
+
+TEST_F(TPushPopTest, tfree_discards_waited_slot)
+{
+    constexpr int FiFoDepth = 4;
+    constexpr int FiFoPeriod = 1;
+    constexpr int LocalDepth = 0;
+    using PPipe =
+        TPipe<1, float, FIFOType::GM_FIFO, FiFoDepth, FiFoPeriod, LocalDepth, TSyncOpType::TSTORE_C2GM, TSyncOpType::TLOAD>;
+    using PPTile = Tile<TileType::Vec, float, 64, 128>;
+
+    std::vector<float> fifoStorage(PPTile::Numel * PPipe::DataFiFo::fifoDepth, 0.0f);
+    PPipe::reset_for_cpu_sim();
+    PPipe pipe(fifoStorage.data(), 0x0);
+
+    PPTile first;
+    PPTile second;
+    PPTile dst;
+    fillTile<float, 64, 128, TileType::Vec>(first, 0);
+    fillTile<float, 64, 128, TileType::Vec>(second, 1);
+    std::fill(dst.data(), dst.data() + dst.Numel, 0.0f);
+
+    TPUSH(first, pipe);
+    pipe.cons.wait();
+    TFREE(pipe);
+    TPUSH(second, pipe);
+    TPOP(dst, pipe);
+
+    const auto expected = makeExpected<float, 64, 128, TileType::Vec>(1);
+    EXPECT_TRUE(ResultCmp(expected, dst.data(), 0));
+}

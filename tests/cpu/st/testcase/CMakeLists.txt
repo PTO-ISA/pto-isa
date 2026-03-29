@@ -115,6 +115,8 @@ tput
 tnotify
 twait
 tloadconv
+timg2col_config
+tquant
 treduce
 treshape
 tpushpop

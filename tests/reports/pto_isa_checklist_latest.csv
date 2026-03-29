@@ -1,0 +1,353 @@
+instruction,source,category,doc_present,public_intrinsic,cpu_impl,a3_impl,cpu_representative_test,cpu_representative_kind,cpu_runtime_status,cpu_runtime_reason,cpu_covering_tests,npu_representative_test,npu_representative_kind,npu_runtime_status,npu_runtime_reason,npu_covering_tests,summary_zh
+TABS,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tabs,direct,not_run,,"[""tabs""]",tabs,direct,not_run,,"[""tabs""]",Tile 的逐元素绝对值。
+TADD,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tadd,direct,not_run,,"[""hashfind"", ""tadd""]",tadd,direct,not_run,,"[""tadd"", ""taddplus"", ""tfa"", ""tpushpop_cv""]",两个 Tile 的逐元素加法。
+TADDC,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,no,taddc,direct,not_run,,"[""taddc""]",,none,impl_missing,,[],三元逐元素加法：`src0 + src1 + src2`。
+TADDS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tadds,direct,not_run,,"[""hashfind"", ""tadds""]",tadds,direct,not_run,,"[""tadds""]",Tile 与标量的逐元素加法。
+TADDSC,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,no,taddsc,direct,not_run,,"[""taddsc""]",,none,impl_missing,,[],与标量和第二个 Tile 的融合逐元素加法：`src0 + scalar + src1`。
+TAND,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tand,direct,not_run,,"[""hashfind"", ""tand""]",tand,direct,not_run,,"[""tand""]",两个 Tile 的逐元素按位与。
+TANDS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tands,direct,not_run,,"[""hashfind"", ""tands""]",tands,direct,not_run,,"[""tands""]",Tile 与标量的逐元素按位与。
+TASSIGN,manifest+public,Manual / Resource Binding,yes,yes,yes,yes,tabs,indirect,not_run,,"[""tabs"", ""tadd"", ""tadds"", ""tcmps"", ""tcolmax"", ""tcolmin"", ""tcolsum"", ""tcvt"", ""tdiv"", ""tdivs"", ""texp"", ""texpands"", ""textract"", ""tfillpad"", ""tgather"", ""tgatherb"", ""tget"", ""tmatmul"", ""tmax"", ""tmins"", ""tmrgsort"", ""tmul"", ""tmuls"", ""tput"", ""treduce"", ""trowmax"", ""trowmin"", ""trowsum"", ""tsel"", ""tsels"", ""tsort32"", ""tsqrt"", ""tstore"", ""tsub"", ""ttrans""]",tassign,direct,not_run,,"[""comm/tbroadcast"", ""comm/tgather"", ""comm/tget"", ""comm/tget_async"", ""comm/tput"", ""comm/tput_async"", ""comm/treduce"", ""comm/tscatter"", ""tabs"", ""tadd"", ""taddplus"", ""tadds"", ""tand"", ""tands"", ""tassign"", ""taxpy"", ""tci"", ""tcmp"", ""tcmps"", ""tcolexpand"", ""tcolexpandadd"", ""tcolexpanddiv"", ""tcolexpandexpdif"", ""tcolexpandmax"", ""tcolexpandmin"", ""tcolexpandmul"", ""tcolexpandsub"", ""tcolmax"", ""tcolmin"", ""tcolprod"", ""tcolsum"", ""tconcat"", ""tcvt"", ""tdequant"", ""tdiv"", ""tdivs"", ""texp"", ""texpands"", ""texpands_mat"", ""textract"", ""tfa"", ""tfillpad"", ""tfmod"", ""tfmods"", ""tgather"", ""tgatherb"", ""timg2col"", ""tload"", ""tload_gm2mat"", ""tlog"", ""tlrelu"", ""tmatmul"", ""tmax"", ""tmaxs"", ""tmin"", ""tmins"", ""tmov"", ""tmov_acc2mat"", ""tmov_vect"", ""tmrgsort"", ""tmul"", ""tmuls"", ""tneg"", ""tnot"", ""tor"", ""tors"", ""tpartadd"", ""tpartmax"", ""tpartmin"", ""tpartmul"", ""tprelu"", ""tpushpop_cv"", ""tpushpop_vc"", ""tquant"", ""trecip"", ""trelu"", ""trem"", ""trems"", ""trowargmax"", ""trowargmin"", ""trowexpand"", ""trowexpandadd"", ""trowexpanddiv"", ""trowexpandexpdif"", ""trowexpandmax"", ""trowexpandmin"", ""trowexpandmul"", ""trowexpandsub"", ""trowmax"", ""trowmin"", ""trowprod"", ""trowsum"", ""trsqrt"", ""tscatter"", ""tsel"", ""tsels"", ""tshl"", ""tshls"", ""tshr"", ""tshrs"", ""tsort32"", ""tsqrt"", ""tstore"", ""tstore_acc2gm"", ""tstore_mat2gm"", ""tsub"", ""tsubs"", ""ttrans"", ""ttrans_conv"", ""ttri"", ""txor"", ""txors""]",将 Tile 对象绑定到实现定义的片上地址（手动放置）。
+TAXPY,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",taxpy,direct,not_run,,"[""taxpy""]",
+TBROADCAST,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tbroadcast,direct,not_run,,"[""tbroadcast""]",comm/tbroadcast,indirect,not_run,,"[""comm/tbroadcast""]",
+TCI,manifest+public,Complex,yes,yes,yes,yes,tci,direct,not_run,,"[""tci""]",tci,direct,not_run,,"[""tci""]",生成连续整数序列到目标 Tile 中。
+TCMP,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tcmp,direct,not_run,,"[""hashfind"", ""tcmp""]",tcmp,direct,not_run,,"[""tcmp""]",比较两个 Tile 并写入一个打包的谓词掩码。
+TCMPS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tcmps,direct,not_run,,"[""tcmps""]",tcmps,direct,not_run,,"[""tcmps""]",将 Tile 与标量比较并写入逐元素比较结果。
+TCOLEXPAND,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolexpand,direct,not_run,,"[""tcolexpand""]",tcolexpand,direct,not_run,,"[""tcolexpand""]",将每个源列的第一个元素广播到目标列中。
+TCOLEXPANDADD,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolexpandop,aggregate,not_run,,"[""tcolexpandop""]",tcolexpandadd,direct,not_run,,"[""tcolexpandadd""]",列广播加法：对每一列加上每列标量向量。
+TCOLEXPANDDIV,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolexpandop,aggregate,not_run,,"[""tcolexpandop""]",tcolexpanddiv,direct,not_run,,"[""tcolexpanddiv""]",列广播除法：将每一列除以一个每列标量向量。
+TCOLEXPANDEXPDIF,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolexpandop,aggregate,not_run,,"[""tcolexpandop""]",tcolexpandexpdif,direct,not_run,,"[""tcolexpandexpdif""]",列指数差运算：计算 exp(src0 - src1)，其中 src1 为每列标量。
+TCOLEXPANDMAX,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolexpandop,aggregate,not_run,,"[""tcolexpandop""]",tcolexpandmax,direct,not_run,,"[""tcolexpandmax""]",列广播最大值：与每列标量向量取最大值。
+TCOLEXPANDMIN,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolexpandop,aggregate,not_run,,"[""tcolexpandop""]",tcolexpandmin,direct,not_run,,"[""tcolexpandmin""]",列广播最小值：与每列标量向量取最小值。
+TCOLEXPANDMUL,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolexpandop,aggregate,not_run,,"[""tcolexpandop""]",tcolexpandmul,direct,not_run,,"[""tcolexpandmul""]",列广播乘法：将每一列乘以一个每列标量向量。
+TCOLEXPANDSUB,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolexpandop,aggregate,not_run,,"[""tcolexpandop""]",tcolexpandsub,direct,not_run,,"[""tcolexpandsub""]",列广播减法：从每一列中减去一个每列标量向量。
+TCOLMAX,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolmax,direct,not_run,,"[""tcolmax""]",tcolmax,direct,not_run,,"[""tcolmax""]",通过取行间最大值来归约每一列。
+TCOLMIN,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolmin,direct,not_run,,"[""tcolmin""]",tcolmin,direct,not_run,,"[""tcolmin""]",通过取行间最小值来归约每一列。
+TCOLPROD,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tcolprod,direct,not_run,,"[""tcolprod""]",通过跨行乘积来归约每一列。
+TCOLSUM,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcolsum,direct,not_run,,"[""tcolsum""]",tcolsum,direct,not_run,,"[""tcolsum""]",通过对行求和来归约每一列。
+TCONCAT,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tgather,indirect,not_run,,"[""tgather""]",
+TCVT,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tcvt,direct,not_run,,"[""hashfind"", ""tcvt""]",tcvt,direct,not_run,,"[""tcvt"", ""tfa""]",带指定舍入模式的逐元素类型转换。
+TDEQUANT,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tdequant,direct,not_run,,"[""tdequant"", ""tpushpop_vc""]",
+TDIV,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tdiv,direct,not_run,,"[""tdiv""]",tdiv,direct,not_run,,"[""tdiv""]",两个 Tile 的逐元素除法。
+TDIVS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tdivs,direct,not_run,,"[""tdivs""]",tdivs,direct,not_run,,"[""tdivs""]",与标量的逐元素除法（Tile/标量 或 标量/Tile）。
+TEXP,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,texp,direct,not_run,,"[""texp"", ""tflashattn""]",texp,direct,not_run,,"[""texp"", ""tfa""]",逐元素指数运算。
+TEXPANDS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,texpands,direct,not_run,,"[""hashfind"", ""texpands"", ""tscatter""]",texpands,direct,not_run,,"[""texpands"", ""texpands_mat""]",将标量广播到目标 Tile 中。
+TEXTRACT,manifest+public,Data Movement / Layout,yes,yes,yes,yes,textract,direct,not_run,,"[""textract"", ""tmatmul""]",textract,direct,not_run,,"[""textract"", ""tfa"", ""timg2col"", ""tmatmul"", ""tmov_acc2mat""]",从源 Tile 中提取子 Tile。
+TEXTRACT_FP,manifest+public,Data Movement / Layout,yes,yes,yes,yes,,none,not_covered,,[],tmov_acc2mat,indirect,not_run,,"[""tmov_acc2mat""]",带 fp/缩放 Tile 的提取（向量量化参数）。
+TFILLPAD,manifest+public,Data Movement / Layout,yes,yes,yes,yes,tfillpad,direct,not_run,,"[""tfillpad""]",tfillpad,direct,not_run,,"[""tfillpad"", ""tmatmul""]",复制 Tile 并在有效区域外使用编译时填充值进行填充。
+TFILLPAD_EXPAND,manifest+public,Data Movement / Layout,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops"", ""tfillpad""]",tfillpad,indirect,not_run,,"[""tfillpad""]",填充/填充时允许目标大于源。
+TFILLPAD_INPLACE,manifest+public,Data Movement / Layout,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops"", ""tfillpad""]",tfillpad,indirect,not_run,,"[""tfillpad""]",原地填充/填充变体。
+TFMOD,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tfmod,direct,not_run,,"[""tfmod""]",两个 Tile 的逐元素余数，余数符号与被除数相同。
+TFMODS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tfmods,direct,not_run,,"[""tfmods""]","与标量的逐元素余数：`fmod(src, scalar)`。"
+TFREE,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tpushpop,shared,pass,"pass in 0.07s
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+[       OK ] TPushPopTest.multicore_float_64_128_Vec (13 ms)
+[ RUN      ] TPushPopTest.tfree_discards_waited_slot
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+[       OK ] TPushPopTest.tfree_discards_waited_slot (0 ms)
+[----------] 10 tests from TPushPopTest (71 ms total)
+
+[----------] Global test environment tear-down
+[==========] 10 tests from 1 test suite ran. (71 ms total)
+[  PASSED  ] 10 tests.","[""tpushpop""]",,none,not_covered,,[],
+TGATHER,manifest+public,Complex,yes,yes,yes,yes,tgather,direct,not_run,,"[""tgather""]",tgather,direct,not_run,,"[""comm/tgather"", ""tgather""]",使用索引 Tile 或编译时掩码模式来收集/选择元素。
+TGATHERB,manifest+public,Complex,yes,yes,yes,yes,tgatherb,direct,not_run,,"[""tgatherb""]",tgatherb,direct,not_run,,"[""tgatherb""]",使用字节偏移量收集元素。
+TGEMV,manifest+public,Matrix Multiply,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tmatmul,indirect,not_run,,"[""tmatmul""]",通用矩阵-向量乘法，生成累加器/输出 Tile。
+TGEMV_ACC,manifest+public,Matrix Multiply,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tmatmul,indirect,not_run,,"[""tmatmul""]",带显式累加器输入/输出 Tile 的 GEMV。
+TGEMV_BIAS,manifest+public,Matrix Multiply,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tmatmul,indirect,not_run,,"[""tmatmul""]",带偏置加法的 GEMV。
+TGEMV_MX,manifest+public,Matrix Multiply,yes,yes,yes,no,,none,not_covered,,[],,none,impl_missing,,[],带缩放 Tile 的 GEMV 变体，支持混合精度/量化矩阵向量计算。
+TGET,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tget,direct,not_run,,"[""tget""]",comm/tget,indirect,not_run,,"[""comm/tget""]",
+TGET_ASYNC,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,,none,not_covered,,[],comm/tget_async,indirect,not_run,,"[""comm/tget_async""]",
+TGET_SCALE_ADDR,manifest+public,Manual / Resource Binding,yes,yes,yes,no,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",,none,impl_missing,,[],将输出tile的片上内存值绑定为扩展后的输入tile内存的值。
+THISTOGRAM,public_only,Undocumented Public Intrinsic,no,yes,no,no,,none,impl_missing,,[],,none,impl_missing,,[],
+TIMG2COL,manifest+public,Data Movement / Layout,yes,yes,no,yes,,none,impl_missing,,[],timg2col,direct,pass,"pass in 32.99s
+keFiles/timg2col.dir/main.cpp.o
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/timg2col/CMakeFiles/timg2col.dir/main.cpp.o -MF CMakeFiles/timg2col.dir/main.cpp.o.d -o CMakeFiles/timg2col.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/timg2col/main.cpp
+[100%] Linking CXX executable ../../bin/timg2col
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && /usr/bin/cmake -E cmake_link_script CMakeFiles/timg2col.dir/link.txt --verbose=1
+bisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/timg2col.dir/main.cpp.o -o ../../bin/timg2col   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtimg2col_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a 
+make[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+[100%] Built target timg2col
+make[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0
+
+run command: cp testcase/timg2col/gen_data.py build/gen_data.py
+run command: /usr/bin/python3 gen_data.py
+
+run command: ./timg2col
+run command: ./timg2col","[""timg2col""]",用于类卷积工作负载的图像到列变换。
+TINSERT,manifest+public,Data Movement / Layout,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tmov_acc2mat,indirect,not_run,,"[""tmov_acc2mat""]","在 (indexRow, indexCol) 偏移处将子 Tile 插入到目标 Tile 中。"
+TINSERT_FP,manifest+public,Data Movement / Layout,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tmov_acc2mat,indirect,not_run,,"[""tmov_acc2mat""]",带 fp/缩放 Tile 的插入（向量量化参数）。
+TLOAD,manifest+public,Memory (GM <-> Tile),yes,yes,yes,yes,tload,direct,not_run,,"[""hashfind"", ""mgather"", ""mscatter"", ""tabs"", ""tadd"", ""taddc"", ""tadds"", ""taddsc"", ""tand"", ""tands"", ""tcmp"", ""tcmps"", ""tcolexpand"", ""tcolexpandop"", ""tcolmax"", ""tcolmin"", ""tcolsum"", ""tcvt"", ""tdiv"", ""tdivs"", ""texp"", ""textract"", ""tfillpad"", ""tflashattn"", ""tgather"", ""tgatherb"", ""tload"", ""tloadconv"", ""tlog"", ""tlrelu"", ""tmatmul"", ""tmax"", ""tmaxs"", ""tmin"", ""tmins"", ""tmov"", ""tmrgsort"", ""tmul"", ""tmuls"", ""tneg"", ""tnot"", ""tor"", ""tors"", ""tpartadd"", ""tpartmax"", ""tpartmin"", ""tprefetch"", ""tprelu"", ""tpushpop"", ""tpushpop_cv"", ""trecip"", ""trelu"", ""trem"", ""trems"", ""trowexpand"", ""trowexpandop"", ""trowmax"", ""trowmin"", ""trowsum"", ""trsqrt"", ""tscatter"", ""tsel"", ""tsels"", ""tshl"", ""tshr"", ""tsort32"", ""tsqrt"", ""tstore"", ""tsub"", ""tsubc"", ""tsubs"", ""tsubsc"", ""ttrans"", ""txor"", ""txors""]",tload,direct,not_run,,"[""comm/tgather"", ""comm/tget"", ""comm/tput"", ""comm/treduce"", ""comm/tscatter"", ""tabs"", ""tadd"", ""taddplus"", ""tadds"", ""tand"", ""tands"", ""taxpy"", ""tcmp"", ""tcmps"", ""tcolexpand"", ""tcolexpandadd"", ""tcolexpanddiv"", ""tcolexpandexpdif"", ""tcolexpandmax"", ""tcolexpandmin"", ""tcolexpandmul"", ""tcolexpandsub"", ""tcolmax"", ""tcolmin"", ""tcolprod"", ""tcolsum"", ""tconcat"", ""tcvt"", ""tdequant"", ""tdiv"", ""tdivs"", ""texp"", ""textract"", ""tfa"", ""tfillpad"", ""tfmod"", ""tfmods"", ""tgather"", ""tgatherb"", ""timg2col"", ""tload"", ""tload_gm2mat"", ""tlog"", ""tlrelu"", ""tmatmul"", ""tmax"", ""tmaxs"", ""tmin"", ""tmins"", ""tmov"", ""tmov_acc2mat"", ""tmov_vect"", ""tmrgsort"", ""tmul"", ""tmuls"", ""tneg"", ""tnot"", ""tor"", ""tors"", ""tpartadd"", ""tpartmax"", ""tpartmin"", ""tpartmul"", ""tprelu"", ""tpushpop_cv"", ""tpushpop_vc"", ""tquant"", ""trecip"", ""trelu"", ""trem"", ""trems"", ""trowargmax"", ""trowargmin"", ""trowexpand"", ""trowexpandadd"", ""trowexpanddiv"", ""trowexpandexpdif"", ""trowexpandmax"", ""trowexpandmin"", ""trowexpandmul"", ""trowexpandsub"", ""trowmax"", ""trowmin"", ""trowprod"", ""trowsum"", ""trsqrt"", ""tscatter"", ""tsel"", ""tsels"", ""tshl"", ""tshls"", ""tshr"", ""tshrs"", ""tsort32"", ""tsqrt"", ""tstore"", ""tstore_acc2gm"", ""tstore_mat2gm"", ""tsub"", ""tsubs"", ""ttrans"", ""ttrans_conv"", ""txor"", ""txors""]",从 GlobalTensor (GM) 加载数据到 Tile。
+TLOG,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tlog,direct,not_run,,"[""tlog""]",tlog,direct,not_run,,"[""tlog""]",Tile 的逐元素自然对数。
+TLRELU,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tlrelu,direct,not_run,,"[""tlrelu""]",tlrelu,direct,not_run,,"[""tlrelu""]",带标量斜率的 Leaky ReLU。
+TMATMUL,manifest+public,Matrix Multiply,yes,yes,yes,yes,tmatmul,direct,not_run,,"[""tflashattn"", ""tmatmul""]",tmatmul,direct,not_run,,"[""textract"", ""tfa"", ""timg2col"", ""tmatmul"", ""tmov"", ""tmov_acc2mat"", ""tpushpop_cv"", ""tpushpop_vc"", ""tstore_acc2gm""]",矩阵乘法 (GEMM)，生成累加器/输出 Tile。
+TMATMUL_ACC,manifest+public,Matrix Multiply,yes,yes,yes,yes,tmatmul,indirect,not_run,,"[""tmatmul""]",tfa,indirect,not_run,,"[""tfa"", ""timg2col"", ""tmatmul"", ""tpushpop_vc""]",带累加器输入的矩阵乘法（融合累加）。
+TMATMUL_BIAS,manifest+public,Matrix Multiply,yes,yes,yes,yes,tmatmul,indirect,not_run,,"[""tmatmul""]",tmatmul,indirect,not_run,,"[""tmatmul"", ""tmov""]",带偏置加法的矩阵乘法。
+TMATMUL_MX,manifest+public,Matrix Multiply,yes,yes,yes,no,,none,not_covered,,[],,none,impl_missing,,[],带额外缩放 Tile 的矩阵乘法 (GEMM)，用于支持目标上的混合精度/量化矩阵乘法。
+TMAX,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tmax,direct,not_run,,"[""tmax""]",tmax,direct,not_run,,"[""tfa"", ""tmax""]",两个 Tile 的逐元素最大值。
+TMAXS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tmaxs,direct,not_run,,"[""tmaxs""]",tmaxs,direct,not_run,,"[""tmaxs""]","Tile 与标量的逐元素最大值：`max(src, scalar)`。"
+TMIN,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tmin,direct,not_run,,"[""tmin""]",tmin,direct,not_run,,"[""tmin"", ""tmins""]",两个 Tile 的逐元素最小值。
+TMINS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tmins,direct,not_run,,"[""tmins""]",,none,not_covered,,[],Tile 与标量的逐元素最小值。
+TMOV,manifest+public,Data Movement / Layout,yes,yes,yes,yes,tmov,direct,not_run,,"[""hashfind"", ""textract"", ""tflashattn"", ""tmatmul"", ""tmov""]",tmov,direct,not_run,,"[""textract"", ""timg2col"", ""tmatmul"", ""tmov"", ""tmov_acc2mat"", ""tmov_vect"", ""tmrgsort"", ""tpushpop_cv"", ""tpushpop_vc"", ""tstore_acc2gm""]",在 Tile 之间移动/复制，可选应用实现定义的转换模式。
+TMOV_FP,manifest+public,Data Movement / Layout,yes,yes,yes,yes,,none,not_covered,,[],tmov_acc2mat,indirect,not_run,,"[""tmov_acc2mat""]",使用缩放 (`fp`) Tile 作为向量量化参数，将累加器 Tile 移动/转换到目标 Tile。
+TMRGSORT,manifest+public,Complex,yes,yes,yes,yes,tmrgsort,direct,not_run,,"[""tmrgsort""]",tmrgsort,direct,not_run,,"[""tmrgsort""]",用于多个已排序列表的归并排序（实现定义的元素格式和布局）。
+TMUL,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tmul,direct,not_run,,"[""hashfind"", ""tmul""]",tmul,direct,not_run,,"[""tfa"", ""tmul""]",两个 Tile 的逐元素乘法。
+TMULS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tmuls,direct,not_run,,"[""hashfind"", ""tflashattn"", ""tmuls""]",tmuls,direct,not_run,,"[""tfa"", ""tmuls""]",Tile 与标量的逐元素乘法。
+TNEG,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tneg,direct,not_run,,"[""tneg""]",tneg,direct,not_run,,"[""tneg""]",Tile 的逐元素取负。
+TNOT,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tnot,direct,not_run,,"[""tnot""]",tnot,direct,not_run,,"[""tnot""]",Tile 的逐元素按位取反。
+TNOTIFY,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tnotify,direct,not_run,,"[""tnotify""]",comm/tnotify,indirect,not_run,,"[""comm/tnotify"", ""comm/ttest"", ""comm/twait""]",
+TOR,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tor,direct,not_run,,"[""hashfind"", ""tor""]",tor,direct,not_run,,"[""tor""]",两个 Tile 的逐元素按位或。
+TORS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tors,direct,not_run,,"[""tors""]",tors,direct,not_run,,"[""tors""]",Tile 与标量的逐元素按位或。
+TPACK,public_only,Undocumented Public Intrinsic,no,yes,yes,no,,none,not_covered,,[],,none,impl_missing,,[],
+TPARTADD,manifest+public,Complex,yes,yes,yes,yes,tpartadd,direct,not_run,,"[""tpartadd""]",tpartadd,direct,not_run,,"[""tpartadd""]",部分逐元素加法，对不匹配的有效区域具有实现定义的处理方式。
+TPARTMAX,manifest+public,Complex,yes,yes,yes,yes,tpartmax,direct,not_run,,"[""tpartmax""]",tpartmax,direct,not_run,,"[""tpartmax""]",部分逐元素最大值，对不匹配的有效区域具有实现定义的处理方式。
+TPARTMIN,manifest+public,Complex,yes,yes,yes,yes,tpartmin,direct,not_run,,"[""tpartmin""]",tpartmin,direct,not_run,,"[""tpartmin""]",部分逐元素最小值，对不匹配的有效区域具有实现定义的处理方式。
+TPARTMUL,manifest+public,Complex,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tpartmul,direct,not_run,,"[""tpartmul""]",部分逐元素乘法，对有效区域不一致的处理为实现定义。
+TPOP,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tpushpop,shared,pass,"pass in 0.07s
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+[       OK ] TPushPopTest.multicore_float_64_128_Vec (13 ms)
+[ RUN      ] TPushPopTest.tfree_discards_waited_slot
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+[       OK ] TPushPopTest.tfree_discards_waited_slot (0 ms)
+[----------] 10 tests from TPushPopTest (71 ms total)
+
+[----------] Global test environment tear-down
+[==========] 10 tests from 1 test suite ran. (71 ms total)
+[  PASSED  ] 10 tests.","[""tpushpop"", ""tpushpop_cv""]",tpushpop_cv,shared,not_run,,"[""tpushpop_cv"", ""tpushpop_vc""]",
+TPREFETCH,manifest+public,Memory (GM <-> Tile),yes,yes,yes,yes,tprefetch,direct,not_run,,"[""tprefetch""]",,none,not_covered,,[],将数据从全局内存预取到 Tile 本地缓存/缓冲区（提示）。
+TPRELU,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tprelu,direct,not_run,,"[""tprelu""]",tprelu,direct,not_run,,"[""tprelu""]",带逐元素斜率 Tile 的逐元素参数化 ReLU (PReLU)。
+TPRINT,manifest+public,Complex,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",,none,not_covered,,[],调试/打印 Tile 中的元素（实现定义）。
+TPUSH,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tpushpop,shared,pass,"pass in 0.07s
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+[       OK ] TPushPopTest.multicore_float_64_128_Vec (13 ms)
+[ RUN      ] TPushPopTest.tfree_discards_waited_slot
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+[       OK ] TPushPopTest.tfree_discards_waited_slot (0 ms)
+[----------] 10 tests from TPushPopTest (71 ms total)
+
+[----------] Global test environment tear-down
+[==========] 10 tests from 1 test suite ran. (71 ms total)
+[  PASSED  ] 10 tests.","[""tpushpop"", ""tpushpop_cv""]",tpushpop_cv,shared,not_run,,"[""tpushpop_cv"", ""tpushpop_vc""]",
+TPUT,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tput,direct,not_run,,"[""tput""]",comm/tput,indirect,not_run,,"[""comm/tput""]",
+TPUT_ASYNC,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,,none,not_covered,,[],comm/tput_async,indirect,not_run,,"[""comm/tput_async""]",
+TQUANT,manifest+public,Complex,yes,yes,yes,yes,tquant,direct,pass,"pass in 0.00s
+Running main() from /home/yinzijun/opt/googletest-1.14.0/googletest/src/gtest_main.cc
+[==========] Running 2 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 2 tests from TQUANTCpuSim
+[ RUN      ] TQUANTCpuSim.int8_sym_per_row_scale
+[       OK ] TQUANTCpuSim.int8_sym_per_row_scale (0 ms)
+[ RUN      ] TQUANTCpuSim.int8_asym_per_row_scale_and_offset
+[       OK ] TQUANTCpuSim.int8_asym_per_row_scale_and_offset (0 ms)
+[----------] 2 tests from TQUANTCpuSim (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 2 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 2 tests.","[""tquant""]",tquant,direct,pass,"pass in 19.72s
+ing CXX object testcase/tquant/CMakeFiles/tquant.dir/main.cpp.o
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/tquant && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/tquant/CMakeFiles/tquant.dir/main.cpp.o -MF CMakeFiles/tquant.dir/main.cpp.o.d -o CMakeFiles/tquant.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/tquant/main.cpp
+[100%] Linking CXX executable ../../bin/tquant
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/tquant && /usr/bin/cmake -E cmake_link_script CMakeFiles/tquant.dir/link.txt --verbose=1
+bisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/tquant.dir/main.cpp.o -o ../../bin/tquant   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtquant_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a 
+make[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+[100%] Built target tquant
+make[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0
+
+run command: cp testcase/tquant/gen_data.py build/gen_data.py
+run command: /usr/bin/python3 gen_data.py
+
+run command: ./tquant
+run command: ./tquant","[""tquant""]",量化 Tile（例如 FP32 到 FP8），生成指数/缩放/最大值输出。
+TRANDOM,public_only,Undocumented Public Intrinsic,no,yes,no,no,,none,impl_missing,,[],,none,impl_missing,,[],
+TRECIP,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,no,trecip,direct,not_run,,"[""trecip""]",trecip,direct,impl_missing,,"[""trecip""]",Tile 的逐元素倒数。
+TREDUCE,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,treduce,direct,not_run,,"[""treduce""]",comm/treduce,indirect,not_run,,"[""comm/treduce""]",
+TRELU,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,trelu,direct,not_run,,"[""trelu""]",trelu,direct,not_run,,"[""trelu""]",Tile 的逐元素 ReLU。
+TREM,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,trem,direct,not_run,,"[""trem""]",trem,direct,not_run,,"[""trem""]",两个 Tile 的逐元素余数，余数符号与除数相同。
+TREMS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,trems,direct,not_run,,"[""trems""]",trems,direct,not_run,,"[""trems""]","与标量的逐元素余数：`remainder(src, scalar)`。"
+TRESHAPE,manifest+public,Data Movement / Layout,yes,yes,yes,yes,treshape,direct,not_run,,"[""treshape""]",tfa,indirect,not_run,,"[""tfa"", ""tfillpad"", ""tload"", ""tmrgsort"", ""trowmax"", ""trowmin"", ""trowsum""]",将 Tile 重新解释为另一种 Tile 类型/形状，同时保留底层字节。
+TROWARGMAX,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",trowargmax,direct,not_run,,"[""trowargmax""]",获取每行最大值对应列索引。
+TROWARGMIN,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",trowargmin,direct,not_run,,"[""trowargmin""]",获取每行最大值对应列索引。
+TROWEXPAND,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowexpand,direct,not_run,,"[""trowexpand""]",trowexpand,direct,not_run,,"[""trowexpand""]",将每个源行的第一个元素广播到目标行中。
+TROWEXPANDADD,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowexpandop,aggregate,not_run,,"[""trowexpandop""]",trowexpandadd,direct,not_run,,"[""trowexpandadd""]",行广播加法：加上一个每行标量向量。
+TROWEXPANDDIV,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowexpandop,aggregate,not_run,,"[""tflashattn"", ""trowexpandop""]",trowexpanddiv,direct,not_run,,"[""tfa"", ""trowexpanddiv""]",行广播除法：将 `src0` 的每一行除以一个每行标量向量 `src1`。
+TROWEXPANDEXPDIF,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowexpandop,aggregate,not_run,,"[""trowexpandop""]",trowexpandexpdif,direct,not_run,,"[""trowexpandexpdif""]",行指数差运算：计算 exp(src0 - src1)，其中 src1 为每行标量。
+TROWEXPANDMAX,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowexpandop,aggregate,not_run,,"[""trowexpandop""]",trowexpandmax,direct,not_run,,"[""trowexpandmax""]",行广播最大值：与每行标量向量取最大值。
+TROWEXPANDMIN,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowexpandop,aggregate,not_run,,"[""trowexpandop""]",trowexpandmin,direct,not_run,,"[""trowexpandmin""]",行广播最小值：与每行标量向量取最小值。
+TROWEXPANDMUL,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowexpandop,aggregate,not_run,,"[""trowexpandop""]",trowexpandmul,direct,not_run,,"[""tfa"", ""trowexpandmul""]",行广播乘法：将 `src0` 的每一行乘以一个每行标量向量 `src1`。
+TROWEXPANDSUB,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowexpandop,aggregate,not_run,,"[""tflashattn"", ""trowexpandop""]",trowexpandsub,direct,not_run,,"[""trowexpandsub""]",行广播减法：从 `src0` 的每一行中减去一个每行标量向量 `src1`。
+TROWMAX,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowmax,direct,not_run,,"[""tflashattn"", ""trowmax""]",trowmax,direct,not_run,,"[""tfa"", ""trowmax""]",通过取列间最大值来归约每一行。
+TROWMIN,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowmin,direct,not_run,,"[""trowmin""]",trowmin,direct,not_run,,"[""trowmin""]",通过取列间最小值来归约每一行。
+TROWPROD,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",trowprod,direct,not_run,,"[""trowprod""]",
+TROWSUM,manifest+public,Axis Reduce / Expand,yes,yes,yes,yes,trowsum,direct,not_run,,"[""tflashattn"", ""trowsum""]",trowsum,direct,not_run,,"[""tfa"", ""trowsum""]",通过对列求和来归约每一行。
+TRSQRT,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,trsqrt,direct,not_run,,"[""trsqrt""]",trsqrt,direct,not_run,,"[""trsqrt""]",逐元素倒数平方根。
+TSCATTER,manifest+public,Complex,yes,yes,yes,yes,tscatter,direct,not_run,,"[""tscatter""]",tscatter,direct,not_run,,"[""comm/tscatter"", ""tscatter""]",使用逐元素行索引将源 Tile 的行散播到目标 Tile 中。
+TSEL,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tsel,direct,not_run,,"[""tsel""]",tsel,direct,not_run,,"[""tsel""]",使用掩码 Tile 在两个 Tile 之间进行选择（逐元素选择）。
+TSELS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tsels,direct,not_run,,"[""tsels""]",tsels,direct,not_run,,"[""tsels""]",使用标量 `selectMode` 在两个源 Tile 中选择一个（全局选择）。
+TSETFMATRIX,manifest+public,Manual / Resource Binding,yes,yes,yes,yes,timg2col_config,indirect,pass,"pass in 0.00s
+Running main() from /home/yinzijun/opt/googletest-1.14.0/googletest/src/gtest_main.cc
+[==========] Running 3 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 3 tests from TIMG2COLConfigCpuSim
+[ RUN      ] TIMG2COLConfigCpuSim.tsetfmatrix_noop
+[       OK ] TIMG2COLConfigCpuSim.tsetfmatrix_noop (0 ms)
+[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop
+[       OK ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop (0 ms)
+[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop
+[       OK ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop (0 ms)
+[----------] 3 tests from TIMG2COLConfigCpuSim (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 3 tests.","[""timg2col_config""]",timg2col,shared,pass,"pass in 32.99s
+keFiles/timg2col.dir/main.cpp.o
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/timg2col/CMakeFiles/timg2col.dir/main.cpp.o -MF CMakeFiles/timg2col.dir/main.cpp.o.d -o CMakeFiles/timg2col.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/timg2col/main.cpp
+[100%] Linking CXX executable ../../bin/timg2col
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && /usr/bin/cmake -E cmake_link_script CMakeFiles/timg2col.dir/link.txt --verbose=1
+bisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/timg2col.dir/main.cpp.o -o ../../bin/timg2col   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtimg2col_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a 
+make[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+[100%] Built target timg2col
+make[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0
+
+run command: cp testcase/timg2col/gen_data.py build/gen_data.py
+run command: /usr/bin/python3 gen_data.py
+
+run command: ./timg2col
+run command: ./timg2col","[""timg2col""]",为类 IMG2COL 操作设置 FMATRIX 寄存器。
+TSETHF32MODE,manifest,Manual / Resource Binding,yes,no,no,no,,none,impl_missing,,[],,none,impl_missing,,[],设置 HF32 变换模式（实现定义）。
+TSETTF32MODE,manifest,Manual / Resource Binding,yes,no,no,no,,none,impl_missing,,[],,none,impl_missing,,[],设置 TF32 变换模式（实现定义）。
+TSET_IMG2COL_PADDING,manifest+public,Manual / Resource Binding,yes,yes,yes,yes,timg2col_config,indirect,pass,"pass in 0.00s
+Running main() from /home/yinzijun/opt/googletest-1.14.0/googletest/src/gtest_main.cc
+[==========] Running 3 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 3 tests from TIMG2COLConfigCpuSim
+[ RUN      ] TIMG2COLConfigCpuSim.tsetfmatrix_noop
+[       OK ] TIMG2COLConfigCpuSim.tsetfmatrix_noop (0 ms)
+[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop
+[       OK ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop (0 ms)
+[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop
+[       OK ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop (0 ms)
+[----------] 3 tests from TIMG2COLConfigCpuSim (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 3 tests.","[""timg2col_config""]",timg2col,shared,pass,"pass in 32.99s
+keFiles/timg2col.dir/main.cpp.o
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/timg2col/CMakeFiles/timg2col.dir/main.cpp.o -MF CMakeFiles/timg2col.dir/main.cpp.o.d -o CMakeFiles/timg2col.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/timg2col/main.cpp
+[100%] Linking CXX executable ../../bin/timg2col
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && /usr/bin/cmake -E cmake_link_script CMakeFiles/timg2col.dir/link.txt --verbose=1
+bisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/timg2col.dir/main.cpp.o -o ../../bin/timg2col   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtimg2col_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a 
+make[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+[100%] Built target timg2col
+make[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0
+
+run command: cp testcase/timg2col/gen_data.py build/gen_data.py
+run command: /usr/bin/python3 gen_data.py
+
+run command: ./timg2col
+run command: ./timg2col","[""timg2col""]",从 IMG2COL 配置 Tile 设置 IMG2COL 填充元数据。
+TSET_IMG2COL_RPT,manifest+public,Manual / Resource Binding,yes,yes,yes,yes,timg2col_config,indirect,pass,"pass in 0.00s
+Running main() from /home/yinzijun/opt/googletest-1.14.0/googletest/src/gtest_main.cc
+[==========] Running 3 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 3 tests from TIMG2COLConfigCpuSim
+[ RUN      ] TIMG2COLConfigCpuSim.tsetfmatrix_noop
+[       OK ] TIMG2COLConfigCpuSim.tsetfmatrix_noop (0 ms)
+[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop
+[       OK ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop (0 ms)
+[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop
+[       OK ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop (0 ms)
+[----------] 3 tests from TIMG2COLConfigCpuSim (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 3 tests.","[""timg2col_config""]",timg2col,shared,pass,"pass in 32.99s
+keFiles/timg2col.dir/main.cpp.o
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/timg2col/CMakeFiles/timg2col.dir/main.cpp.o -MF CMakeFiles/timg2col.dir/main.cpp.o.d -o CMakeFiles/timg2col.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/timg2col/main.cpp
+[100%] Linking CXX executable ../../bin/timg2col
+cd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && /usr/bin/cmake -E cmake_link_script CMakeFiles/timg2col.dir/link.txt --verbose=1
+bisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/timg2col.dir/main.cpp.o -o ../../bin/timg2col   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtimg2col_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a 
+make[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+[100%] Built target timg2col
+make[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'
+/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0
+
+run command: cp testcase/timg2col/gen_data.py build/gen_data.py
+run command: /usr/bin/python3 gen_data.py
+
+run command: ./timg2col
+run command: ./timg2col","[""timg2col""]",从 IMG2COL 配置 Tile 设置 IMG2COL 重复次数元数据。
+TSHL,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tshl,direct,not_run,,"[""tshl""]",tshl,direct,not_run,,"[""tshl""]",两个 Tile 的逐元素左移。
+TSHLS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tshls,direct,not_run,,"[""tshls""]",Tile 按标量逐元素左移。
+TSHR,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tshr,direct,not_run,,"[""hashfind"", ""tshr""]",tshr,direct,not_run,,"[""tshr""]",两个 Tile 的逐元素右移。
+TSHRS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tshrs,direct,not_run,,"[""tshrs""]",Tile 按标量逐元素右移。
+TSORT32,manifest+public,Complex,yes,yes,yes,yes,tsort32,direct,not_run,,"[""tsort32""]",tsort32,direct,not_run,,"[""tsort32""]",对固定大小的 32 元素块进行排序并生成索引映射。
+TSQRT,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tsqrt,direct,not_run,,"[""tsqrt""]",tsqrt,direct,not_run,,"[""tsqrt""]",逐元素平方根。
+TSTORE,manifest+public,Memory (GM <-> Tile),yes,yes,yes,yes,tstore,direct,not_run,,"[""hashfind"", ""mgather"", ""setgetval"", ""tabs"", ""tadd"", ""taddc"", ""tadds"", ""taddsc"", ""tand"", ""tands"", ""tci"", ""tcmp"", ""tcmps"", ""tcolexpand"", ""tcolexpandop"", ""tcolmax"", ""tcolmin"", ""tcolsum"", ""tcvt"", ""tdiv"", ""tdivs"", ""texp"", ""texpands"", ""textract"", ""tfillpad"", ""tflashattn"", ""tgather"", ""tgatherb"", ""tlog"", ""tlrelu"", ""tmatmul"", ""tmax"", ""tmaxs"", ""tmin"", ""tmins"", ""tmov"", ""tmrgsort"", ""tmul"", ""tmuls"", ""tneg"", ""tnot"", ""tor"", ""tors"", ""tpartadd"", ""tpartmax"", ""tpartmin"", ""tprefetch"", ""tprelu"", ""trecip"", ""trelu"", ""trem"", ""trems"", ""trowexpand"", ""trowexpandop"", ""trowmax"", ""trowmin"", ""trowsum"", ""trsqrt"", ""tscatter"", ""tsel"", ""tsels"", ""tshl"", ""tshr"", ""tsort32"", ""tsqrt"", ""tstore"", ""tsub"", ""tsubc"", ""tsubs"", ""tsubsc"", ""ttrans"", ""ttri"", ""txor"", ""txors""]",tstore,direct,not_run,,"[""comm/tgather"", ""comm/tget"", ""comm/tput"", ""comm/tscatter"", ""tabs"", ""tadd"", ""taddplus"", ""tadds"", ""tand"", ""tands"", ""taxpy"", ""tci"", ""tcmp"", ""tcmps"", ""tcolexpand"", ""tcolexpandadd"", ""tcolexpanddiv"", ""tcolexpandexpdif"", ""tcolexpandmax"", ""tcolexpandmin"", ""tcolexpandmul"", ""tcolexpandsub"", ""tcolmax"", ""tcolmin"", ""tcolprod"", ""tcolsum"", ""tconcat"", ""tcvt"", ""tdequant"", ""tdiv"", ""tdivs"", ""texp"", ""texpands"", ""texpands_mat"", ""textract"", ""tfa"", ""tfillpad"", ""tfmod"", ""tfmods"", ""tgather"", ""tgatherb"", ""timg2col"", ""tload"", ""tlog"", ""tlrelu"", ""tmatmul"", ""tmax"", ""tmaxs"", ""tmin"", ""tmins"", ""tmov"", ""tmov_acc2mat"", ""tmov_vect"", ""tmrgsort"", ""tmul"", ""tmuls"", ""tneg"", ""tnot"", ""tor"", ""tors"", ""tpartadd"", ""tpartmax"", ""tpartmin"", ""tpartmul"", ""tprelu"", ""tpushpop_cv"", ""tpushpop_vc"", ""tquant"", ""trecip"", ""trelu"", ""trem"", ""trems"", ""trowargmax"", ""trowargmin"", ""trowexpand"", ""trowexpandadd"", ""trowexpanddiv"", ""trowexpandexpdif"", ""trowexpandmax"", ""trowexpandmin"", ""trowexpandmul"", ""trowexpandsub"", ""trowmax"", ""trowmin"", ""trowprod"", ""trowsum"", ""trsqrt"", ""tscatter"", ""tsel"", ""tsels"", ""tshl"", ""tshls"", ""tshr"", ""tshrs"", ""tsort32"", ""tsqrt"", ""tstore"", ""tstore_acc2gm"", ""tstore_mat2gm"", ""tsub"", ""tsubs"", ""ttrans"", ""ttrans_conv"", ""ttri"", ""txor"", ""txors""]",将 Tile 中的数据存储到 GlobalTensor (GM)，可选使用原子写入或量化参数。
+TSTORE_FP,manifest+public,Memory (GM <-> Tile),yes,yes,yes,yes,,none,not_covered,,[],tmov,indirect,not_run,,"[""tmov"", ""tstore_acc2gm""]",使用缩放 (`fp`) Tile 作为向量量化参数，将累加器 Tile 存储到全局内存。
+TSUB,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,tsub,direct,not_run,,"[""hashfind"", ""tsub""]",tsub,direct,not_run,,"[""tfa"", ""tsub"", ""ttrans_conv""]",两个 Tile 的逐元素减法。
+TSUBC,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,no,tsubc,direct,not_run,,"[""tsubc""]",,none,impl_missing,,[],三元逐元素运算：`src0 - src1 + src2`。
+TSUBS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,tsubs,direct,not_run,,"[""tsubs""]",tsubs,direct,not_run,,"[""tsubs""]",从 Tile 中逐元素减去一个标量。
+TSUBSC,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,no,tsubsc,direct,not_run,,"[""tsubsc""]",,none,impl_missing,,[],融合逐元素运算：`src0 - scalar + src1`。
+TSUBVIEW,manifest+public,Manual / Resource Binding,yes,yes,yes,yes,tcpu_missing_ops,aggregate,not_run,,"[""tcpu_missing_ops""]",tmrgsort,indirect,not_run,,"[""tmrgsort""]",表达一个tile是另一个tile的subview。
+TSYNC,manifest+public,Synchronization,yes,yes,yes,yes,tpushpop,shared,pass,"pass in 0.07s
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+[       OK ] TPushPopTest.multicore_float_64_128_Vec (13 ms)
+[ RUN      ] TPushPopTest.tfree_discards_waited_slot
+max diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0
+[       OK ] TPushPopTest.tfree_discards_waited_slot (0 ms)
+[----------] 10 tests from TPushPopTest (71 ms total)
+
+[----------] Global test environment tear-down
+[==========] 10 tests from 1 test suite ran. (71 ms total)
+[  PASSED  ] 10 tests.","[""tpushpop"", ""tpushpop_cv""]",tpushpop_cv,shared,not_run,,"[""tpushpop_cv"", ""tpushpop_vc""]",同步 PTO 执行（等待事件或插入每操作流水线屏障）。
+TTEST,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,ttest,direct,not_run,,"[""ttest""]",comm/ttest,indirect,not_run,,"[""comm/ttest"", ""comm/twait""]",
+TTRANS,manifest+public,Data Movement / Layout,yes,yes,yes,yes,ttrans,direct,not_run,,"[""tflashattn"", ""ttrans""]",ttrans,direct,not_run,,"[""ttrans"", ""ttrans_conv""]",使用实现定义的临时 Tile 进行转置。
+TTRI,manifest+public,Complex,yes,yes,yes,yes,ttri,direct,not_run,,"[""ttri""]",ttri,direct,not_run,,"[""ttri""]",生成三角（下/上）掩码 Tile。
+TWAIT,public_only,Undocumented Public Intrinsic,no,yes,yes,yes,twait,direct,not_run,,"[""twait""]",comm/twait,indirect,not_run,,"[""comm/twait""]",
+TXOR,manifest+public,Elementwise (Tile-Tile),yes,yes,yes,yes,txor,direct,not_run,,"[""hashfind"", ""txor""]",txor,direct,not_run,,"[""txor""]",两个 Tile 的逐元素按位异或。
+TXORS,manifest+public,Tile-Scalar / Tile-Immediate,yes,yes,yes,yes,txors,direct,not_run,,"[""txors""]",txors,direct,not_run,,"[""txors""]",Tile 与标量的逐元素按位异或。
+MGATHER,manifest,Memory (GM <-> Tile),yes,no,yes,no,,none,not_covered,,[],,none,impl_missing,,[],使用逐元素索引从全局内存收集加载元素到 Tile 中。
+MSCATTER,manifest,Memory (GM <-> Tile),yes,no,yes,no,,none,not_covered,,[],,none,impl_missing,,[],使用逐元素索引将 Tile 中的元素散播存储到全局内存。

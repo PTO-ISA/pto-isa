@@ -1,0 +1,3876 @@
+{
+  "instruction_count": 139,
+  "rows": [
+    {
+      "instruction": "TABS",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "Tile 的逐元素绝对值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tabs"
+      ],
+      "cpu_representative_test": "tabs",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tabs"
+      ],
+      "npu_representative_test": "tabs",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TADD",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素加法。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tadd"
+      ],
+      "cpu_representative_test": "tadd",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tadd",
+        "taddplus",
+        "tfa",
+        "tpushpop_cv"
+      ],
+      "npu_representative_test": "tadd",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TADDC",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "三元逐元素加法：`src0 + src1 + src2`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [
+        "taddc"
+      ],
+      "cpu_representative_test": "taddc",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TADDS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 与标量的逐元素加法。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tadds"
+      ],
+      "cpu_representative_test": "tadds",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tadds"
+      ],
+      "npu_representative_test": "tadds",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TADDSC",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "与标量和第二个 Tile 的融合逐元素加法：`src0 + scalar + src1`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [
+        "taddsc"
+      ],
+      "cpu_representative_test": "taddsc",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TAND",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素按位与。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tand"
+      ],
+      "cpu_representative_test": "tand",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tand"
+      ],
+      "npu_representative_test": "tand",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TANDS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 与标量的逐元素按位与。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tands"
+      ],
+      "cpu_representative_test": "tands",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tands"
+      ],
+      "npu_representative_test": "tands",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TASSIGN",
+      "source": "manifest+public",
+      "category": "Manual / Resource Binding",
+      "summary_zh": "将 Tile 对象绑定到实现定义的片上地址（手动放置）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tabs",
+        "tadd",
+        "tadds",
+        "tcmps",
+        "tcolmax",
+        "tcolmin",
+        "tcolsum",
+        "tcvt",
+        "tdiv",
+        "tdivs",
+        "texp",
+        "texpands",
+        "textract",
+        "tfillpad",
+        "tgather",
+        "tgatherb",
+        "tget",
+        "tmatmul",
+        "tmax",
+        "tmins",
+        "tmrgsort",
+        "tmul",
+        "tmuls",
+        "tput",
+        "treduce",
+        "trowmax",
+        "trowmin",
+        "trowsum",
+        "tsel",
+        "tsels",
+        "tsort32",
+        "tsqrt",
+        "tstore",
+        "tsub",
+        "ttrans"
+      ],
+      "cpu_representative_test": "tabs",
+      "cpu_representative_kind": "indirect",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tbroadcast",
+        "comm/tgather",
+        "comm/tget",
+        "comm/tget_async",
+        "comm/tput",
+        "comm/tput_async",
+        "comm/treduce",
+        "comm/tscatter",
+        "tabs",
+        "tadd",
+        "taddplus",
+        "tadds",
+        "tand",
+        "tands",
+        "tassign",
+        "taxpy",
+        "tci",
+        "tcmp",
+        "tcmps",
+        "tcolexpand",
+        "tcolexpandadd",
+        "tcolexpanddiv",
+        "tcolexpandexpdif",
+        "tcolexpandmax",
+        "tcolexpandmin",
+        "tcolexpandmul",
+        "tcolexpandsub",
+        "tcolmax",
+        "tcolmin",
+        "tcolprod",
+        "tcolsum",
+        "tconcat",
+        "tcvt",
+        "tdequant",
+        "tdiv",
+        "tdivs",
+        "texp",
+        "texpands",
+        "texpands_mat",
+        "textract",
+        "tfa",
+        "tfillpad",
+        "tfmod",
+        "tfmods",
+        "tgather",
+        "tgatherb",
+        "timg2col",
+        "tload",
+        "tload_gm2mat",
+        "tlog",
+        "tlrelu",
+        "tmatmul",
+        "tmax",
+        "tmaxs",
+        "tmin",
+        "tmins",
+        "tmov",
+        "tmov_acc2mat",
+        "tmov_vect",
+        "tmrgsort",
+        "tmul",
+        "tmuls",
+        "tneg",
+        "tnot",
+        "tor",
+        "tors",
+        "tpartadd",
+        "tpartmax",
+        "tpartmin",
+        "tpartmul",
+        "tprelu",
+        "tpushpop_cv",
+        "tpushpop_vc",
+        "tquant",
+        "trecip",
+        "trelu",
+        "trem",
+        "trems",
+        "trowargmax",
+        "trowargmin",
+        "trowexpand",
+        "trowexpandadd",
+        "trowexpanddiv",
+        "trowexpandexpdif",
+        "trowexpandmax",
+        "trowexpandmin",
+        "trowexpandmul",
+        "trowexpandsub",
+        "trowmax",
+        "trowmin",
+        "trowprod",
+        "trowsum",
+        "trsqrt",
+        "tscatter",
+        "tsel",
+        "tsels",
+        "tshl",
+        "tshls",
+        "tshr",
+        "tshrs",
+        "tsort32",
+        "tsqrt",
+        "tstore",
+        "tstore_acc2gm",
+        "tstore_mat2gm",
+        "tsub",
+        "tsubs",
+        "ttrans",
+        "ttrans_conv",
+        "ttri",
+        "txor",
+        "txors"
+      ],
+      "npu_representative_test": "tassign",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TAXPY",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "taxpy"
+      ],
+      "npu_representative_test": "taxpy",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TBROADCAST",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tbroadcast"
+      ],
+      "cpu_representative_test": "tbroadcast",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tbroadcast"
+      ],
+      "npu_representative_test": "comm/tbroadcast",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCI",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "生成连续整数序列到目标 Tile 中。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tci"
+      ],
+      "cpu_representative_test": "tci",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tci"
+      ],
+      "npu_representative_test": "tci",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCMP",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "比较两个 Tile 并写入一个打包的谓词掩码。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tcmp"
+      ],
+      "cpu_representative_test": "tcmp",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcmp"
+      ],
+      "npu_representative_test": "tcmp",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCMPS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "将 Tile 与标量比较并写入逐元素比较结果。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcmps"
+      ],
+      "cpu_representative_test": "tcmps",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcmps"
+      ],
+      "npu_representative_test": "tcmps",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLEXPAND",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "将每个源列的第一个元素广播到目标列中。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolexpand"
+      ],
+      "cpu_representative_test": "tcolexpand",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolexpand"
+      ],
+      "npu_representative_test": "tcolexpand",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLEXPANDADD",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "列广播加法：对每一列加上每列标量向量。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolexpandop"
+      ],
+      "cpu_representative_test": "tcolexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolexpandadd"
+      ],
+      "npu_representative_test": "tcolexpandadd",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLEXPANDDIV",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "列广播除法：将每一列除以一个每列标量向量。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolexpandop"
+      ],
+      "cpu_representative_test": "tcolexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolexpanddiv"
+      ],
+      "npu_representative_test": "tcolexpanddiv",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLEXPANDEXPDIF",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "列指数差运算：计算 exp(src0 - src1)，其中 src1 为每列标量。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolexpandop"
+      ],
+      "cpu_representative_test": "tcolexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolexpandexpdif"
+      ],
+      "npu_representative_test": "tcolexpandexpdif",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLEXPANDMAX",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "列广播最大值：与每列标量向量取最大值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolexpandop"
+      ],
+      "cpu_representative_test": "tcolexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolexpandmax"
+      ],
+      "npu_representative_test": "tcolexpandmax",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLEXPANDMIN",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "列广播最小值：与每列标量向量取最小值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolexpandop"
+      ],
+      "cpu_representative_test": "tcolexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolexpandmin"
+      ],
+      "npu_representative_test": "tcolexpandmin",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLEXPANDMUL",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "列广播乘法：将每一列乘以一个每列标量向量。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolexpandop"
+      ],
+      "cpu_representative_test": "tcolexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolexpandmul"
+      ],
+      "npu_representative_test": "tcolexpandmul",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLEXPANDSUB",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "列广播减法：从每一列中减去一个每列标量向量。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolexpandop"
+      ],
+      "cpu_representative_test": "tcolexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolexpandsub"
+      ],
+      "npu_representative_test": "tcolexpandsub",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLMAX",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "通过取行间最大值来归约每一列。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolmax"
+      ],
+      "cpu_representative_test": "tcolmax",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolmax"
+      ],
+      "npu_representative_test": "tcolmax",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLMIN",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "通过取行间最小值来归约每一列。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolmin"
+      ],
+      "cpu_representative_test": "tcolmin",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolmin"
+      ],
+      "npu_representative_test": "tcolmin",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLPROD",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "通过跨行乘积来归约每一列。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolprod"
+      ],
+      "npu_representative_test": "tcolprod",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCOLSUM",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "通过对行求和来归约每一列。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcolsum"
+      ],
+      "cpu_representative_test": "tcolsum",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcolsum"
+      ],
+      "npu_representative_test": "tcolsum",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCONCAT",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tgather"
+      ],
+      "npu_representative_test": "tgather",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TCVT",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "带指定舍入模式的逐元素类型转换。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tcvt"
+      ],
+      "cpu_representative_test": "tcvt",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tcvt",
+        "tfa"
+      ],
+      "npu_representative_test": "tcvt",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TDEQUANT",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tdequant",
+        "tpushpop_vc"
+      ],
+      "npu_representative_test": "tdequant",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TDIV",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素除法。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tdiv"
+      ],
+      "cpu_representative_test": "tdiv",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tdiv"
+      ],
+      "npu_representative_test": "tdiv",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TDIVS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "与标量的逐元素除法（Tile/标量 或 标量/Tile）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tdivs"
+      ],
+      "cpu_representative_test": "tdivs",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tdivs"
+      ],
+      "npu_representative_test": "tdivs",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TEXP",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "逐元素指数运算。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "texp",
+        "tflashattn"
+      ],
+      "cpu_representative_test": "texp",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "texp",
+        "tfa"
+      ],
+      "npu_representative_test": "texp",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TEXPANDS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "将标量广播到目标 Tile 中。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "texpands",
+        "tscatter"
+      ],
+      "cpu_representative_test": "texpands",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "texpands",
+        "texpands_mat"
+      ],
+      "npu_representative_test": "texpands",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TEXTRACT",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "从源 Tile 中提取子 Tile。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "textract",
+        "tmatmul"
+      ],
+      "cpu_representative_test": "textract",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "textract",
+        "tfa",
+        "timg2col",
+        "tmatmul",
+        "tmov_acc2mat"
+      ],
+      "npu_representative_test": "textract",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TEXTRACT_FP",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "带 fp/缩放 Tile 的提取（向量量化参数）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmov_acc2mat"
+      ],
+      "npu_representative_test": "tmov_acc2mat",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TFILLPAD",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "复制 Tile 并在有效区域外使用编译时填充值进行填充。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tfillpad"
+      ],
+      "cpu_representative_test": "tfillpad",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfillpad",
+        "tmatmul"
+      ],
+      "npu_representative_test": "tfillpad",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TFILLPAD_EXPAND",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "填充/填充时允许目标大于源。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops",
+        "tfillpad"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfillpad"
+      ],
+      "npu_representative_test": "tfillpad",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TFILLPAD_INPLACE",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "原地填充/填充变体。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops",
+        "tfillpad"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfillpad"
+      ],
+      "npu_representative_test": "tfillpad",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TFMOD",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素余数，余数符号与被除数相同。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfmod"
+      ],
+      "npu_representative_test": "tfmod",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TFMODS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "与标量的逐元素余数：`fmod(src, scalar)`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfmods"
+      ],
+      "npu_representative_test": "tfmods",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TFREE",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tpushpop"
+      ],
+      "cpu_representative_test": "tpushpop",
+      "cpu_representative_kind": "shared",
+      "cpu_runtime_status": "pass",
+      "cpu_runtime_reason": "pass in 0.07s\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\n[       OK ] TPushPopTest.multicore_float_64_128_Vec (13 ms)\n[ RUN      ] TPushPopTest.tfree_discards_waited_slot\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\n[       OK ] TPushPopTest.tfree_discards_waited_slot (0 ms)\n[----------] 10 tests from TPushPopTest (71 ms total)\n\n[----------] Global test environment tear-down\n[==========] 10 tests from 1 test suite ran. (71 ms total)\n[  PASSED  ] 10 tests.",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "not_covered",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGATHER",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "使用索引 Tile 或编译时掩码模式来收集/选择元素。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tgather"
+      ],
+      "cpu_representative_test": "tgather",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tgather",
+        "tgather"
+      ],
+      "npu_representative_test": "tgather",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGATHERB",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "使用字节偏移量收集元素。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tgatherb"
+      ],
+      "cpu_representative_test": "tgatherb",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tgatherb"
+      ],
+      "npu_representative_test": "tgatherb",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGEMV",
+      "source": "manifest+public",
+      "category": "Matrix Multiply",
+      "summary_zh": "通用矩阵-向量乘法，生成累加器/输出 Tile。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmatmul"
+      ],
+      "npu_representative_test": "tmatmul",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGEMV_ACC",
+      "source": "manifest+public",
+      "category": "Matrix Multiply",
+      "summary_zh": "带显式累加器输入/输出 Tile 的 GEMV。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmatmul"
+      ],
+      "npu_representative_test": "tmatmul",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGEMV_BIAS",
+      "source": "manifest+public",
+      "category": "Matrix Multiply",
+      "summary_zh": "带偏置加法的 GEMV。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmatmul"
+      ],
+      "npu_representative_test": "tmatmul",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGEMV_MX",
+      "source": "manifest+public",
+      "category": "Matrix Multiply",
+      "summary_zh": "带缩放 Tile 的 GEMV 变体，支持混合精度/量化矩阵向量计算。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGET",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tget"
+      ],
+      "cpu_representative_test": "tget",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tget"
+      ],
+      "npu_representative_test": "comm/tget",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGET_ASYNC",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tget_async"
+      ],
+      "npu_representative_test": "comm/tget_async",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TGET_SCALE_ADDR",
+      "source": "manifest+public",
+      "category": "Manual / Resource Binding",
+      "summary_zh": "将输出tile的片上内存值绑定为扩展后的输入tile内存的值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "THISTOGRAM",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": false,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "impl_missing",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TIMG2COL",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "用于类卷积工作负载的图像到列变换。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": false,
+      "a3_impl": true,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "impl_missing",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "timg2col"
+      ],
+      "npu_representative_test": "timg2col",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "pass",
+      "npu_runtime_reason": "pass in 32.99s\nkeFiles/timg2col.dir/main.cpp.o\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/timg2col/CMakeFiles/timg2col.dir/main.cpp.o -MF CMakeFiles/timg2col.dir/main.cpp.o.d -o CMakeFiles/timg2col.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/timg2col/main.cpp\n[100%] Linking CXX executable ../../bin/timg2col\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && /usr/bin/cmake -E cmake_link_script CMakeFiles/timg2col.dir/link.txt --verbose=1\nbisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/timg2col.dir/main.cpp.o -o ../../bin/timg2col   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtimg2col_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a \nmake[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n[100%] Built target timg2col\nmake[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0\n\nrun command: cp testcase/timg2col/gen_data.py build/gen_data.py\nrun command: /usr/bin/python3 gen_data.py\n\nrun command: ./timg2col\nrun command: ./timg2col"
+    },
+    {
+      "instruction": "TINSERT",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "在 (indexRow, indexCol) 偏移处将子 Tile 插入到目标 Tile 中。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmov_acc2mat"
+      ],
+      "npu_representative_test": "tmov_acc2mat",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TINSERT_FP",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "带 fp/缩放 Tile 的插入（向量量化参数）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmov_acc2mat"
+      ],
+      "npu_representative_test": "tmov_acc2mat",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TLOAD",
+      "source": "manifest+public",
+      "category": "Memory (GM <-> Tile)",
+      "summary_zh": "从 GlobalTensor (GM) 加载数据到 Tile。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "mgather",
+        "mscatter",
+        "tabs",
+        "tadd",
+        "taddc",
+        "tadds",
+        "taddsc",
+        "tand",
+        "tands",
+        "tcmp",
+        "tcmps",
+        "tcolexpand",
+        "tcolexpandop",
+        "tcolmax",
+        "tcolmin",
+        "tcolsum",
+        "tcvt",
+        "tdiv",
+        "tdivs",
+        "texp",
+        "textract",
+        "tfillpad",
+        "tflashattn",
+        "tgather",
+        "tgatherb",
+        "tload",
+        "tloadconv",
+        "tlog",
+        "tlrelu",
+        "tmatmul",
+        "tmax",
+        "tmaxs",
+        "tmin",
+        "tmins",
+        "tmov",
+        "tmrgsort",
+        "tmul",
+        "tmuls",
+        "tneg",
+        "tnot",
+        "tor",
+        "tors",
+        "tpartadd",
+        "tpartmax",
+        "tpartmin",
+        "tprefetch",
+        "tprelu",
+        "tpushpop",
+        "tpushpop_cv",
+        "trecip",
+        "trelu",
+        "trem",
+        "trems",
+        "trowexpand",
+        "trowexpandop",
+        "trowmax",
+        "trowmin",
+        "trowsum",
+        "trsqrt",
+        "tscatter",
+        "tsel",
+        "tsels",
+        "tshl",
+        "tshr",
+        "tsort32",
+        "tsqrt",
+        "tstore",
+        "tsub",
+        "tsubc",
+        "tsubs",
+        "tsubsc",
+        "ttrans",
+        "txor",
+        "txors"
+      ],
+      "cpu_representative_test": "tload",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tgather",
+        "comm/tget",
+        "comm/tput",
+        "comm/treduce",
+        "comm/tscatter",
+        "tabs",
+        "tadd",
+        "taddplus",
+        "tadds",
+        "tand",
+        "tands",
+        "taxpy",
+        "tcmp",
+        "tcmps",
+        "tcolexpand",
+        "tcolexpandadd",
+        "tcolexpanddiv",
+        "tcolexpandexpdif",
+        "tcolexpandmax",
+        "tcolexpandmin",
+        "tcolexpandmul",
+        "tcolexpandsub",
+        "tcolmax",
+        "tcolmin",
+        "tcolprod",
+        "tcolsum",
+        "tconcat",
+        "tcvt",
+        "tdequant",
+        "tdiv",
+        "tdivs",
+        "texp",
+        "textract",
+        "tfa",
+        "tfillpad",
+        "tfmod",
+        "tfmods",
+        "tgather",
+        "tgatherb",
+        "timg2col",
+        "tload",
+        "tload_gm2mat",
+        "tlog",
+        "tlrelu",
+        "tmatmul",
+        "tmax",
+        "tmaxs",
+        "tmin",
+        "tmins",
+        "tmov",
+        "tmov_acc2mat",
+        "tmov_vect",
+        "tmrgsort",
+        "tmul",
+        "tmuls",
+        "tneg",
+        "tnot",
+        "tor",
+        "tors",
+        "tpartadd",
+        "tpartmax",
+        "tpartmin",
+        "tpartmul",
+        "tprelu",
+        "tpushpop_cv",
+        "tpushpop_vc",
+        "tquant",
+        "trecip",
+        "trelu",
+        "trem",
+        "trems",
+        "trowargmax",
+        "trowargmin",
+        "trowexpand",
+        "trowexpandadd",
+        "trowexpanddiv",
+        "trowexpandexpdif",
+        "trowexpandmax",
+        "trowexpandmin",
+        "trowexpandmul",
+        "trowexpandsub",
+        "trowmax",
+        "trowmin",
+        "trowprod",
+        "trowsum",
+        "trsqrt",
+        "tscatter",
+        "tsel",
+        "tsels",
+        "tshl",
+        "tshls",
+        "tshr",
+        "tshrs",
+        "tsort32",
+        "tsqrt",
+        "tstore",
+        "tstore_acc2gm",
+        "tstore_mat2gm",
+        "tsub",
+        "tsubs",
+        "ttrans",
+        "ttrans_conv",
+        "txor",
+        "txors"
+      ],
+      "npu_representative_test": "tload",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TLOG",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "Tile 的逐元素自然对数。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tlog"
+      ],
+      "cpu_representative_test": "tlog",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tlog"
+      ],
+      "npu_representative_test": "tlog",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TLRELU",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "带标量斜率的 Leaky ReLU。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tlrelu"
+      ],
+      "cpu_representative_test": "tlrelu",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tlrelu"
+      ],
+      "npu_representative_test": "tlrelu",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMATMUL",
+      "source": "manifest+public",
+      "category": "Matrix Multiply",
+      "summary_zh": "矩阵乘法 (GEMM)，生成累加器/输出 Tile。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tflashattn",
+        "tmatmul"
+      ],
+      "cpu_representative_test": "tmatmul",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "textract",
+        "tfa",
+        "timg2col",
+        "tmatmul",
+        "tmov",
+        "tmov_acc2mat",
+        "tpushpop_cv",
+        "tpushpop_vc",
+        "tstore_acc2gm"
+      ],
+      "npu_representative_test": "tmatmul",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMATMUL_ACC",
+      "source": "manifest+public",
+      "category": "Matrix Multiply",
+      "summary_zh": "带累加器输入的矩阵乘法（融合累加）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tmatmul"
+      ],
+      "cpu_representative_test": "tmatmul",
+      "cpu_representative_kind": "indirect",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "timg2col",
+        "tmatmul",
+        "tpushpop_vc"
+      ],
+      "npu_representative_test": "tfa",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMATMUL_BIAS",
+      "source": "manifest+public",
+      "category": "Matrix Multiply",
+      "summary_zh": "带偏置加法的矩阵乘法。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tmatmul"
+      ],
+      "cpu_representative_test": "tmatmul",
+      "cpu_representative_kind": "indirect",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmatmul",
+        "tmov"
+      ],
+      "npu_representative_test": "tmatmul",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMATMUL_MX",
+      "source": "manifest+public",
+      "category": "Matrix Multiply",
+      "summary_zh": "带额外缩放 Tile 的矩阵乘法 (GEMM)，用于支持目标上的混合精度/量化矩阵乘法。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMAX",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素最大值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tmax"
+      ],
+      "cpu_representative_test": "tmax",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "tmax"
+      ],
+      "npu_representative_test": "tmax",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMAXS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 与标量的逐元素最大值：`max(src, scalar)`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tmaxs"
+      ],
+      "cpu_representative_test": "tmaxs",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmaxs"
+      ],
+      "npu_representative_test": "tmaxs",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMIN",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素最小值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tmin"
+      ],
+      "cpu_representative_test": "tmin",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmin",
+        "tmins"
+      ],
+      "npu_representative_test": "tmin",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMINS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 与标量的逐元素最小值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tmins"
+      ],
+      "cpu_representative_test": "tmins",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "not_covered",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMOV",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "在 Tile 之间移动/复制，可选应用实现定义的转换模式。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "textract",
+        "tflashattn",
+        "tmatmul",
+        "tmov"
+      ],
+      "cpu_representative_test": "tmov",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "textract",
+        "timg2col",
+        "tmatmul",
+        "tmov",
+        "tmov_acc2mat",
+        "tmov_vect",
+        "tmrgsort",
+        "tpushpop_cv",
+        "tpushpop_vc",
+        "tstore_acc2gm"
+      ],
+      "npu_representative_test": "tmov",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMOV_FP",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "使用缩放 (`fp`) Tile 作为向量量化参数，将累加器 Tile 移动/转换到目标 Tile。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmov_acc2mat"
+      ],
+      "npu_representative_test": "tmov_acc2mat",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMRGSORT",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "用于多个已排序列表的归并排序（实现定义的元素格式和布局）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tmrgsort"
+      ],
+      "cpu_representative_test": "tmrgsort",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmrgsort"
+      ],
+      "npu_representative_test": "tmrgsort",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMUL",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素乘法。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tmul"
+      ],
+      "cpu_representative_test": "tmul",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "tmul"
+      ],
+      "npu_representative_test": "tmul",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TMULS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 与标量的逐元素乘法。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tflashattn",
+        "tmuls"
+      ],
+      "cpu_representative_test": "tmuls",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "tmuls"
+      ],
+      "npu_representative_test": "tmuls",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TNEG",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "Tile 的逐元素取负。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tneg"
+      ],
+      "cpu_representative_test": "tneg",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tneg"
+      ],
+      "npu_representative_test": "tneg",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TNOT",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "Tile 的逐元素按位取反。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tnot"
+      ],
+      "cpu_representative_test": "tnot",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tnot"
+      ],
+      "npu_representative_test": "tnot",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TNOTIFY",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tnotify"
+      ],
+      "cpu_representative_test": "tnotify",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tnotify",
+        "comm/ttest",
+        "comm/twait"
+      ],
+      "npu_representative_test": "comm/tnotify",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TOR",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素按位或。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tor"
+      ],
+      "cpu_representative_test": "tor",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tor"
+      ],
+      "npu_representative_test": "tor",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TORS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 与标量的逐元素按位或。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tors"
+      ],
+      "cpu_representative_test": "tors",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tors"
+      ],
+      "npu_representative_test": "tors",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPACK",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPARTADD",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "部分逐元素加法，对不匹配的有效区域具有实现定义的处理方式。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tpartadd"
+      ],
+      "cpu_representative_test": "tpartadd",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tpartadd"
+      ],
+      "npu_representative_test": "tpartadd",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPARTMAX",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "部分逐元素最大值，对不匹配的有效区域具有实现定义的处理方式。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tpartmax"
+      ],
+      "cpu_representative_test": "tpartmax",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tpartmax"
+      ],
+      "npu_representative_test": "tpartmax",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPARTMIN",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "部分逐元素最小值，对不匹配的有效区域具有实现定义的处理方式。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tpartmin"
+      ],
+      "cpu_representative_test": "tpartmin",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tpartmin"
+      ],
+      "npu_representative_test": "tpartmin",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPARTMUL",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "部分逐元素乘法，对有效区域不一致的处理为实现定义。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tpartmul"
+      ],
+      "npu_representative_test": "tpartmul",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPOP",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tpushpop",
+        "tpushpop_cv"
+      ],
+      "cpu_representative_test": "tpushpop",
+      "cpu_representative_kind": "shared",
+      "cpu_runtime_status": "pass",
+      "cpu_runtime_reason": "pass in 0.07s\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\n[       OK ] TPushPopTest.multicore_float_64_128_Vec (13 ms)\n[ RUN      ] TPushPopTest.tfree_discards_waited_slot\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\n[       OK ] TPushPopTest.tfree_discards_waited_slot (0 ms)\n[----------] 10 tests from TPushPopTest (71 ms total)\n\n[----------] Global test environment tear-down\n[==========] 10 tests from 1 test suite ran. (71 ms total)\n[  PASSED  ] 10 tests.",
+      "npu_covering_tests": [
+        "tpushpop_cv",
+        "tpushpop_vc"
+      ],
+      "npu_representative_test": "tpushpop_cv",
+      "npu_representative_kind": "shared",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPREFETCH",
+      "source": "manifest+public",
+      "category": "Memory (GM <-> Tile)",
+      "summary_zh": "将数据从全局内存预取到 Tile 本地缓存/缓冲区（提示）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tprefetch"
+      ],
+      "cpu_representative_test": "tprefetch",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "not_covered",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPRELU",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "带逐元素斜率 Tile 的逐元素参数化 ReLU (PReLU)。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tprelu"
+      ],
+      "cpu_representative_test": "tprelu",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tprelu"
+      ],
+      "npu_representative_test": "tprelu",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPRINT",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "调试/打印 Tile 中的元素（实现定义）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "not_covered",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPUSH",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tpushpop",
+        "tpushpop_cv"
+      ],
+      "cpu_representative_test": "tpushpop",
+      "cpu_representative_kind": "shared",
+      "cpu_runtime_status": "pass",
+      "cpu_runtime_reason": "pass in 0.07s\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\n[       OK ] TPushPopTest.multicore_float_64_128_Vec (13 ms)\n[ RUN      ] TPushPopTest.tfree_discards_waited_slot\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\n[       OK ] TPushPopTest.tfree_discards_waited_slot (0 ms)\n[----------] 10 tests from TPushPopTest (71 ms total)\n\n[----------] Global test environment tear-down\n[==========] 10 tests from 1 test suite ran. (71 ms total)\n[  PASSED  ] 10 tests.",
+      "npu_covering_tests": [
+        "tpushpop_cv",
+        "tpushpop_vc"
+      ],
+      "npu_representative_test": "tpushpop_cv",
+      "npu_representative_kind": "shared",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPUT",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tput"
+      ],
+      "cpu_representative_test": "tput",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tput"
+      ],
+      "npu_representative_test": "comm/tput",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TPUT_ASYNC",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tput_async"
+      ],
+      "npu_representative_test": "comm/tput_async",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TQUANT",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "量化 Tile（例如 FP32 到 FP8），生成指数/缩放/最大值输出。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tquant"
+      ],
+      "cpu_representative_test": "tquant",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "pass",
+      "cpu_runtime_reason": "pass in 0.00s\nRunning main() from /home/yinzijun/opt/googletest-1.14.0/googletest/src/gtest_main.cc\n[==========] Running 2 tests from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 2 tests from TQUANTCpuSim\n[ RUN      ] TQUANTCpuSim.int8_sym_per_row_scale\n[       OK ] TQUANTCpuSim.int8_sym_per_row_scale (0 ms)\n[ RUN      ] TQUANTCpuSim.int8_asym_per_row_scale_and_offset\n[       OK ] TQUANTCpuSim.int8_asym_per_row_scale_and_offset (0 ms)\n[----------] 2 tests from TQUANTCpuSim (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 2 tests from 1 test suite ran. (0 ms total)\n[  PASSED  ] 2 tests.",
+      "npu_covering_tests": [
+        "tquant"
+      ],
+      "npu_representative_test": "tquant",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "pass",
+      "npu_runtime_reason": "pass in 19.72s\ning CXX object testcase/tquant/CMakeFiles/tquant.dir/main.cpp.o\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/tquant && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/tquant/CMakeFiles/tquant.dir/main.cpp.o -MF CMakeFiles/tquant.dir/main.cpp.o.d -o CMakeFiles/tquant.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/tquant/main.cpp\n[100%] Linking CXX executable ../../bin/tquant\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/tquant && /usr/bin/cmake -E cmake_link_script CMakeFiles/tquant.dir/link.txt --verbose=1\nbisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/tquant.dir/main.cpp.o -o ../../bin/tquant   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtquant_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a \nmake[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n[100%] Built target tquant\nmake[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0\n\nrun command: cp testcase/tquant/gen_data.py build/gen_data.py\nrun command: /usr/bin/python3 gen_data.py\n\nrun command: ./tquant\nrun command: ./tquant"
+    },
+    {
+      "instruction": "TRANDOM",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": false,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "impl_missing",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TRECIP",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "Tile 的逐元素倒数。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [
+        "trecip"
+      ],
+      "cpu_representative_test": "trecip",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trecip"
+      ],
+      "npu_representative_test": "trecip",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TREDUCE",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "treduce"
+      ],
+      "cpu_representative_test": "treduce",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/treduce"
+      ],
+      "npu_representative_test": "comm/treduce",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TRELU",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "Tile 的逐元素 ReLU。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trelu"
+      ],
+      "cpu_representative_test": "trelu",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trelu"
+      ],
+      "npu_representative_test": "trelu",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TREM",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素余数，余数符号与除数相同。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trem"
+      ],
+      "cpu_representative_test": "trem",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trem"
+      ],
+      "npu_representative_test": "trem",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TREMS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "与标量的逐元素余数：`remainder(src, scalar)`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trems"
+      ],
+      "cpu_representative_test": "trems",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trems"
+      ],
+      "npu_representative_test": "trems",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TRESHAPE",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "将 Tile 重新解释为另一种 Tile 类型/形状，同时保留底层字节。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "treshape"
+      ],
+      "cpu_representative_test": "treshape",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "tfillpad",
+        "tload",
+        "tmrgsort",
+        "trowmax",
+        "trowmin",
+        "trowsum"
+      ],
+      "npu_representative_test": "tfa",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWARGMAX",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "获取每行最大值对应列索引。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowargmax"
+      ],
+      "npu_representative_test": "trowargmax",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWARGMIN",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "获取每行最大值对应列索引。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowargmin"
+      ],
+      "npu_representative_test": "trowargmin",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWEXPAND",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "将每个源行的第一个元素广播到目标行中。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trowexpand"
+      ],
+      "cpu_representative_test": "trowexpand",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowexpand"
+      ],
+      "npu_representative_test": "trowexpand",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWEXPANDADD",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "行广播加法：加上一个每行标量向量。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trowexpandop"
+      ],
+      "cpu_representative_test": "trowexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowexpandadd"
+      ],
+      "npu_representative_test": "trowexpandadd",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWEXPANDDIV",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "行广播除法：将 `src0` 的每一行除以一个每行标量向量 `src1`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tflashattn",
+        "trowexpandop"
+      ],
+      "cpu_representative_test": "trowexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "trowexpanddiv"
+      ],
+      "npu_representative_test": "trowexpanddiv",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWEXPANDEXPDIF",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "行指数差运算：计算 exp(src0 - src1)，其中 src1 为每行标量。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trowexpandop"
+      ],
+      "cpu_representative_test": "trowexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowexpandexpdif"
+      ],
+      "npu_representative_test": "trowexpandexpdif",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWEXPANDMAX",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "行广播最大值：与每行标量向量取最大值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trowexpandop"
+      ],
+      "cpu_representative_test": "trowexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowexpandmax"
+      ],
+      "npu_representative_test": "trowexpandmax",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWEXPANDMIN",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "行广播最小值：与每行标量向量取最小值。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trowexpandop"
+      ],
+      "cpu_representative_test": "trowexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowexpandmin"
+      ],
+      "npu_representative_test": "trowexpandmin",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWEXPANDMUL",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "行广播乘法：将 `src0` 的每一行乘以一个每行标量向量 `src1`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trowexpandop"
+      ],
+      "cpu_representative_test": "trowexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "trowexpandmul"
+      ],
+      "npu_representative_test": "trowexpandmul",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWEXPANDSUB",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "行广播减法：从 `src0` 的每一行中减去一个每行标量向量 `src1`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tflashattn",
+        "trowexpandop"
+      ],
+      "cpu_representative_test": "trowexpandop",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowexpandsub"
+      ],
+      "npu_representative_test": "trowexpandsub",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWMAX",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "通过取列间最大值来归约每一行。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tflashattn",
+        "trowmax"
+      ],
+      "cpu_representative_test": "trowmax",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "trowmax"
+      ],
+      "npu_representative_test": "trowmax",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWMIN",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "通过取列间最小值来归约每一行。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trowmin"
+      ],
+      "cpu_representative_test": "trowmin",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowmin"
+      ],
+      "npu_representative_test": "trowmin",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWPROD",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trowprod"
+      ],
+      "npu_representative_test": "trowprod",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TROWSUM",
+      "source": "manifest+public",
+      "category": "Axis Reduce / Expand",
+      "summary_zh": "通过对列求和来归约每一行。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tflashattn",
+        "trowsum"
+      ],
+      "cpu_representative_test": "trowsum",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "trowsum"
+      ],
+      "npu_representative_test": "trowsum",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TRSQRT",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "逐元素倒数平方根。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "trsqrt"
+      ],
+      "cpu_representative_test": "trsqrt",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "trsqrt"
+      ],
+      "npu_representative_test": "trsqrt",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSCATTER",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "使用逐元素行索引将源 Tile 的行散播到目标 Tile 中。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tscatter"
+      ],
+      "cpu_representative_test": "tscatter",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tscatter",
+        "tscatter"
+      ],
+      "npu_representative_test": "tscatter",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSEL",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "使用掩码 Tile 在两个 Tile 之间进行选择（逐元素选择）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tsel"
+      ],
+      "cpu_representative_test": "tsel",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tsel"
+      ],
+      "npu_representative_test": "tsel",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSELS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "使用标量 `selectMode` 在两个源 Tile 中选择一个（全局选择）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tsels"
+      ],
+      "cpu_representative_test": "tsels",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tsels"
+      ],
+      "npu_representative_test": "tsels",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSETFMATRIX",
+      "source": "manifest+public",
+      "category": "Manual / Resource Binding",
+      "summary_zh": "为类 IMG2COL 操作设置 FMATRIX 寄存器。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "timg2col_config"
+      ],
+      "cpu_representative_test": "timg2col_config",
+      "cpu_representative_kind": "indirect",
+      "cpu_runtime_status": "pass",
+      "cpu_runtime_reason": "pass in 0.00s\nRunning main() from /home/yinzijun/opt/googletest-1.14.0/googletest/src/gtest_main.cc\n[==========] Running 3 tests from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 3 tests from TIMG2COLConfigCpuSim\n[ RUN      ] TIMG2COLConfigCpuSim.tsetfmatrix_noop\n[       OK ] TIMG2COLConfigCpuSim.tsetfmatrix_noop (0 ms)\n[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop\n[       OK ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop (0 ms)\n[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop\n[       OK ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop (0 ms)\n[----------] 3 tests from TIMG2COLConfigCpuSim (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 3 tests from 1 test suite ran. (0 ms total)\n[  PASSED  ] 3 tests.",
+      "npu_covering_tests": [
+        "timg2col"
+      ],
+      "npu_representative_test": "timg2col",
+      "npu_representative_kind": "shared",
+      "npu_runtime_status": "pass",
+      "npu_runtime_reason": "pass in 32.99s\nkeFiles/timg2col.dir/main.cpp.o\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/timg2col/CMakeFiles/timg2col.dir/main.cpp.o -MF CMakeFiles/timg2col.dir/main.cpp.o.d -o CMakeFiles/timg2col.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/timg2col/main.cpp\n[100%] Linking CXX executable ../../bin/timg2col\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && /usr/bin/cmake -E cmake_link_script CMakeFiles/timg2col.dir/link.txt --verbose=1\nbisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/timg2col.dir/main.cpp.o -o ../../bin/timg2col   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtimg2col_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a \nmake[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n[100%] Built target timg2col\nmake[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0\n\nrun command: cp testcase/timg2col/gen_data.py build/gen_data.py\nrun command: /usr/bin/python3 gen_data.py\n\nrun command: ./timg2col\nrun command: ./timg2col"
+    },
+    {
+      "instruction": "TSETHF32MODE",
+      "source": "manifest",
+      "category": "Manual / Resource Binding",
+      "summary_zh": "设置 HF32 变换模式（实现定义）。",
+      "doc_present": true,
+      "public_intrinsic": false,
+      "cpu_impl": false,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "impl_missing",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSETTF32MODE",
+      "source": "manifest",
+      "category": "Manual / Resource Binding",
+      "summary_zh": "设置 TF32 变换模式（实现定义）。",
+      "doc_present": true,
+      "public_intrinsic": false,
+      "cpu_impl": false,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "impl_missing",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSET_IMG2COL_PADDING",
+      "source": "manifest+public",
+      "category": "Manual / Resource Binding",
+      "summary_zh": "从 IMG2COL 配置 Tile 设置 IMG2COL 填充元数据。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "timg2col_config"
+      ],
+      "cpu_representative_test": "timg2col_config",
+      "cpu_representative_kind": "indirect",
+      "cpu_runtime_status": "pass",
+      "cpu_runtime_reason": "pass in 0.00s\nRunning main() from /home/yinzijun/opt/googletest-1.14.0/googletest/src/gtest_main.cc\n[==========] Running 3 tests from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 3 tests from TIMG2COLConfigCpuSim\n[ RUN      ] TIMG2COLConfigCpuSim.tsetfmatrix_noop\n[       OK ] TIMG2COLConfigCpuSim.tsetfmatrix_noop (0 ms)\n[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop\n[       OK ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop (0 ms)\n[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop\n[       OK ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop (0 ms)\n[----------] 3 tests from TIMG2COLConfigCpuSim (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 3 tests from 1 test suite ran. (0 ms total)\n[  PASSED  ] 3 tests.",
+      "npu_covering_tests": [
+        "timg2col"
+      ],
+      "npu_representative_test": "timg2col",
+      "npu_representative_kind": "shared",
+      "npu_runtime_status": "pass",
+      "npu_runtime_reason": "pass in 32.99s\nkeFiles/timg2col.dir/main.cpp.o\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/timg2col/CMakeFiles/timg2col.dir/main.cpp.o -MF CMakeFiles/timg2col.dir/main.cpp.o.d -o CMakeFiles/timg2col.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/timg2col/main.cpp\n[100%] Linking CXX executable ../../bin/timg2col\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && /usr/bin/cmake -E cmake_link_script CMakeFiles/timg2col.dir/link.txt --verbose=1\nbisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/timg2col.dir/main.cpp.o -o ../../bin/timg2col   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtimg2col_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a \nmake[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n[100%] Built target timg2col\nmake[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0\n\nrun command: cp testcase/timg2col/gen_data.py build/gen_data.py\nrun command: /usr/bin/python3 gen_data.py\n\nrun command: ./timg2col\nrun command: ./timg2col"
+    },
+    {
+      "instruction": "TSET_IMG2COL_RPT",
+      "source": "manifest+public",
+      "category": "Manual / Resource Binding",
+      "summary_zh": "从 IMG2COL 配置 Tile 设置 IMG2COL 重复次数元数据。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "timg2col_config"
+      ],
+      "cpu_representative_test": "timg2col_config",
+      "cpu_representative_kind": "indirect",
+      "cpu_runtime_status": "pass",
+      "cpu_runtime_reason": "pass in 0.00s\nRunning main() from /home/yinzijun/opt/googletest-1.14.0/googletest/src/gtest_main.cc\n[==========] Running 3 tests from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 3 tests from TIMG2COLConfigCpuSim\n[ RUN      ] TIMG2COLConfigCpuSim.tsetfmatrix_noop\n[       OK ] TIMG2COLConfigCpuSim.tsetfmatrix_noop (0 ms)\n[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop\n[       OK ] TIMG2COLConfigCpuSim.tset_img2col_rpt_noop (0 ms)\n[ RUN      ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop\n[       OK ] TIMG2COLConfigCpuSim.tset_img2col_padding_noop (0 ms)\n[----------] 3 tests from TIMG2COLConfigCpuSim (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 3 tests from 1 test suite ran. (0 ms total)\n[  PASSED  ] 3 tests.",
+      "npu_covering_tests": [
+        "timg2col"
+      ],
+      "npu_representative_test": "timg2col",
+      "npu_representative_kind": "shared",
+      "npu_runtime_status": "pass",
+      "npu_runtime_reason": "pass in 32.99s\nkeFiles/timg2col.dir/main.cpp.o\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && bisheng -D_GLIBCXX_USE_CXX11_ABI=0 -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../../include -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/include -I/usr/local/Ascend/driver/kernel/inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/profiling -I/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/pkg_inc/runtime -I/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/../../../../common -fPIE -D_FORTIFY_SOURCE=2 -O2 -std=c++17 -Wno-macro-redefined -Wno-ignored-attributes -fstack-protector-strong -xc++ -include stdint.h -include stddef.h -std=gnu++17 -MD -MT testcase/timg2col/CMakeFiles/timg2col.dir/main.cpp.o -MF CMakeFiles/timg2col.dir/main.cpp.o.d -o CMakeFiles/timg2col.dir/main.cpp.o -c /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/testcase/timg2col/main.cpp\n[100%] Linking CXX executable ../../bin/timg2col\ncd /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/testcase/timg2col && /usr/bin/cmake -E cmake_link_script CMakeFiles/timg2col.dir/link.txt --verbose=1\nbisheng -s -Wl,-z,relro -Wl,-z,now CMakeFiles/timg2col.dir/main.cpp.o -o ../../bin/timg2col   -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib  -L/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib  -Wl,-rpath,/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/lib64:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/simulator/Ascend910B1/lib:/home/zhouruoyu/Ascend/cann-9.0.0-beta.1/tools/simulator/Ascend910B1/lib:/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/lib ../../lib/libtimg2col_kernel.so -lruntime -lstdc++ -lascendcl -lm -ltiling_api -lplatform -lc_sec -ldl -lnnopbase /usr/local/lib64/libgtest.a /usr/local/lib64/libgtest_main.a -lpthread /usr/local/lib64/libgtest.a \nmake[2]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n[100%] Built target timg2col\nmake[1]: Leaving directory '/home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build'\n/usr/bin/cmake -E cmake_progress_start /home/zhouruoyu/github/pto-isa/tests/npu/a2a3/src/st/build/CMakeFiles 0\n\nrun command: cp testcase/timg2col/gen_data.py build/gen_data.py\nrun command: /usr/bin/python3 gen_data.py\n\nrun command: ./timg2col\nrun command: ./timg2col"
+    },
+    {
+      "instruction": "TSHL",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素左移。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tshl"
+      ],
+      "cpu_representative_test": "tshl",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tshl"
+      ],
+      "npu_representative_test": "tshl",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSHLS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 按标量逐元素左移。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tshls"
+      ],
+      "npu_representative_test": "tshls",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSHR",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素右移。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tshr"
+      ],
+      "cpu_representative_test": "tshr",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tshr"
+      ],
+      "npu_representative_test": "tshr",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSHRS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 按标量逐元素右移。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tshrs"
+      ],
+      "npu_representative_test": "tshrs",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSORT32",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "对固定大小的 32 元素块进行排序并生成索引映射。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tsort32"
+      ],
+      "cpu_representative_test": "tsort32",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tsort32"
+      ],
+      "npu_representative_test": "tsort32",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSQRT",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "逐元素平方根。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tsqrt"
+      ],
+      "cpu_representative_test": "tsqrt",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tsqrt"
+      ],
+      "npu_representative_test": "tsqrt",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSTORE",
+      "source": "manifest+public",
+      "category": "Memory (GM <-> Tile)",
+      "summary_zh": "将 Tile 中的数据存储到 GlobalTensor (GM)，可选使用原子写入或量化参数。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "mgather",
+        "setgetval",
+        "tabs",
+        "tadd",
+        "taddc",
+        "tadds",
+        "taddsc",
+        "tand",
+        "tands",
+        "tci",
+        "tcmp",
+        "tcmps",
+        "tcolexpand",
+        "tcolexpandop",
+        "tcolmax",
+        "tcolmin",
+        "tcolsum",
+        "tcvt",
+        "tdiv",
+        "tdivs",
+        "texp",
+        "texpands",
+        "textract",
+        "tfillpad",
+        "tflashattn",
+        "tgather",
+        "tgatherb",
+        "tlog",
+        "tlrelu",
+        "tmatmul",
+        "tmax",
+        "tmaxs",
+        "tmin",
+        "tmins",
+        "tmov",
+        "tmrgsort",
+        "tmul",
+        "tmuls",
+        "tneg",
+        "tnot",
+        "tor",
+        "tors",
+        "tpartadd",
+        "tpartmax",
+        "tpartmin",
+        "tprefetch",
+        "tprelu",
+        "trecip",
+        "trelu",
+        "trem",
+        "trems",
+        "trowexpand",
+        "trowexpandop",
+        "trowmax",
+        "trowmin",
+        "trowsum",
+        "trsqrt",
+        "tscatter",
+        "tsel",
+        "tsels",
+        "tshl",
+        "tshr",
+        "tsort32",
+        "tsqrt",
+        "tstore",
+        "tsub",
+        "tsubc",
+        "tsubs",
+        "tsubsc",
+        "ttrans",
+        "ttri",
+        "txor",
+        "txors"
+      ],
+      "cpu_representative_test": "tstore",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/tgather",
+        "comm/tget",
+        "comm/tput",
+        "comm/tscatter",
+        "tabs",
+        "tadd",
+        "taddplus",
+        "tadds",
+        "tand",
+        "tands",
+        "taxpy",
+        "tci",
+        "tcmp",
+        "tcmps",
+        "tcolexpand",
+        "tcolexpandadd",
+        "tcolexpanddiv",
+        "tcolexpandexpdif",
+        "tcolexpandmax",
+        "tcolexpandmin",
+        "tcolexpandmul",
+        "tcolexpandsub",
+        "tcolmax",
+        "tcolmin",
+        "tcolprod",
+        "tcolsum",
+        "tconcat",
+        "tcvt",
+        "tdequant",
+        "tdiv",
+        "tdivs",
+        "texp",
+        "texpands",
+        "texpands_mat",
+        "textract",
+        "tfa",
+        "tfillpad",
+        "tfmod",
+        "tfmods",
+        "tgather",
+        "tgatherb",
+        "timg2col",
+        "tload",
+        "tlog",
+        "tlrelu",
+        "tmatmul",
+        "tmax",
+        "tmaxs",
+        "tmin",
+        "tmins",
+        "tmov",
+        "tmov_acc2mat",
+        "tmov_vect",
+        "tmrgsort",
+        "tmul",
+        "tmuls",
+        "tneg",
+        "tnot",
+        "tor",
+        "tors",
+        "tpartadd",
+        "tpartmax",
+        "tpartmin",
+        "tpartmul",
+        "tprelu",
+        "tpushpop_cv",
+        "tpushpop_vc",
+        "tquant",
+        "trecip",
+        "trelu",
+        "trem",
+        "trems",
+        "trowargmax",
+        "trowargmin",
+        "trowexpand",
+        "trowexpandadd",
+        "trowexpanddiv",
+        "trowexpandexpdif",
+        "trowexpandmax",
+        "trowexpandmin",
+        "trowexpandmul",
+        "trowexpandsub",
+        "trowmax",
+        "trowmin",
+        "trowprod",
+        "trowsum",
+        "trsqrt",
+        "tscatter",
+        "tsel",
+        "tsels",
+        "tshl",
+        "tshls",
+        "tshr",
+        "tshrs",
+        "tsort32",
+        "tsqrt",
+        "tstore",
+        "tstore_acc2gm",
+        "tstore_mat2gm",
+        "tsub",
+        "tsubs",
+        "ttrans",
+        "ttrans_conv",
+        "ttri",
+        "txor",
+        "txors"
+      ],
+      "npu_representative_test": "tstore",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSTORE_FP",
+      "source": "manifest+public",
+      "category": "Memory (GM <-> Tile)",
+      "summary_zh": "使用缩放 (`fp`) Tile 作为向量量化参数，将累加器 Tile 存储到全局内存。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmov",
+        "tstore_acc2gm"
+      ],
+      "npu_representative_test": "tmov",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSUB",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素减法。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "tsub"
+      ],
+      "cpu_representative_test": "tsub",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tfa",
+        "tsub",
+        "ttrans_conv"
+      ],
+      "npu_representative_test": "tsub",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSUBC",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "三元逐元素运算：`src0 - src1 + src2`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [
+        "tsubc"
+      ],
+      "cpu_representative_test": "tsubc",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSUBS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "从 Tile 中逐元素减去一个标量。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tsubs"
+      ],
+      "cpu_representative_test": "tsubs",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tsubs"
+      ],
+      "npu_representative_test": "tsubs",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSUBSC",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "融合逐元素运算：`src0 - scalar + src1`。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [
+        "tsubsc"
+      ],
+      "cpu_representative_test": "tsubsc",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSUBVIEW",
+      "source": "manifest+public",
+      "category": "Manual / Resource Binding",
+      "summary_zh": "表达一个tile是另一个tile的subview。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tcpu_missing_ops"
+      ],
+      "cpu_representative_test": "tcpu_missing_ops",
+      "cpu_representative_kind": "aggregate",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "tmrgsort"
+      ],
+      "npu_representative_test": "tmrgsort",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TSYNC",
+      "source": "manifest+public",
+      "category": "Synchronization",
+      "summary_zh": "同步 PTO 执行（等待事件或插入每操作流水线屏障）。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tpushpop",
+        "tpushpop_cv"
+      ],
+      "cpu_representative_test": "tpushpop",
+      "cpu_representative_kind": "shared",
+      "cpu_runtime_status": "pass",
+      "cpu_runtime_reason": "pass in 0.07s\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\n[       OK ] TPushPopTest.multicore_float_64_128_Vec (13 ms)\n[ RUN      ] TPushPopTest.tfree_discards_waited_slot\nmax diff: 0, diff threshold: 0, max diff ratio: 0, err count: 0, err threshold: 0, err count ratio: 0, act zero count: 0x0, act zero threshold: 0x1000, act zero ratio: 0\n[       OK ] TPushPopTest.tfree_discards_waited_slot (0 ms)\n[----------] 10 tests from TPushPopTest (71 ms total)\n\n[----------] Global test environment tear-down\n[==========] 10 tests from 1 test suite ran. (71 ms total)\n[  PASSED  ] 10 tests.",
+      "npu_covering_tests": [
+        "tpushpop_cv",
+        "tpushpop_vc"
+      ],
+      "npu_representative_test": "tpushpop_cv",
+      "npu_representative_kind": "shared",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TTEST",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "ttest"
+      ],
+      "cpu_representative_test": "ttest",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/ttest",
+        "comm/twait"
+      ],
+      "npu_representative_test": "comm/ttest",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TTRANS",
+      "source": "manifest+public",
+      "category": "Data Movement / Layout",
+      "summary_zh": "使用实现定义的临时 Tile 进行转置。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "tflashattn",
+        "ttrans"
+      ],
+      "cpu_representative_test": "ttrans",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "ttrans",
+        "ttrans_conv"
+      ],
+      "npu_representative_test": "ttrans",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TTRI",
+      "source": "manifest+public",
+      "category": "Complex",
+      "summary_zh": "生成三角（下/上）掩码 Tile。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "ttri"
+      ],
+      "cpu_representative_test": "ttri",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "ttri"
+      ],
+      "npu_representative_test": "ttri",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TWAIT",
+      "source": "public_only",
+      "category": "Undocumented Public Intrinsic",
+      "summary_zh": "",
+      "doc_present": false,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "twait"
+      ],
+      "cpu_representative_test": "twait",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "comm/twait"
+      ],
+      "npu_representative_test": "comm/twait",
+      "npu_representative_kind": "indirect",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TXOR",
+      "source": "manifest+public",
+      "category": "Elementwise (Tile-Tile)",
+      "summary_zh": "两个 Tile 的逐元素按位异或。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "hashfind",
+        "txor"
+      ],
+      "cpu_representative_test": "txor",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "txor"
+      ],
+      "npu_representative_test": "txor",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "TXORS",
+      "source": "manifest+public",
+      "category": "Tile-Scalar / Tile-Immediate",
+      "summary_zh": "Tile 与标量的逐元素按位异或。",
+      "doc_present": true,
+      "public_intrinsic": true,
+      "cpu_impl": true,
+      "a3_impl": true,
+      "cpu_covering_tests": [
+        "txors"
+      ],
+      "cpu_representative_test": "txors",
+      "cpu_representative_kind": "direct",
+      "cpu_runtime_status": "not_run",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [
+        "txors"
+      ],
+      "npu_representative_test": "txors",
+      "npu_representative_kind": "direct",
+      "npu_runtime_status": "not_run",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "MGATHER",
+      "source": "manifest",
+      "category": "Memory (GM <-> Tile)",
+      "summary_zh": "使用逐元素索引从全局内存收集加载元素到 Tile 中。",
+      "doc_present": true,
+      "public_intrinsic": false,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    },
+    {
+      "instruction": "MSCATTER",
+      "source": "manifest",
+      "category": "Memory (GM <-> Tile)",
+      "summary_zh": "使用逐元素索引将 Tile 中的元素散播存储到全局内存。",
+      "doc_present": true,
+      "public_intrinsic": false,
+      "cpu_impl": true,
+      "a3_impl": false,
+      "cpu_covering_tests": [],
+      "cpu_representative_test": null,
+      "cpu_representative_kind": "none",
+      "cpu_runtime_status": "not_covered",
+      "cpu_runtime_reason": "",
+      "npu_covering_tests": [],
+      "npu_representative_test": null,
+      "npu_representative_kind": "none",
+      "npu_runtime_status": "impl_missing",
+      "npu_runtime_reason": ""
+    }
+  ],
+  "counts": {
+    "doc_present": 120,
+    "public_intrinsic": 135,
+    "cpu_impl": 134,
+    "a3_impl": 124,
+    "cpu_test_covered": 124,
+    "npu_test_covered": 121,
+    "cpu_runtime_pass": 8,
+    "npu_runtime_pass": 5
+  }
+}
