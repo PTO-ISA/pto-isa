@@ -23,7 +23,8 @@ PTO_INTERNAL void TPOP_IMPL(Pipe &pipe, TileCons &tile)
     }
 
     const std::size_t slotIndex = static_cast<std::size_t>(pipe.cons.getTileId() % Pipe::RingFiFo::SLOT_NUM);
-    const std::size_t entryBase = slotIndex * Pipe::RingFiFo::SLOT_SIZE + static_cast<std::size_t>(pipe.cons.entryOffset);
+    const std::size_t entryBase =
+        slotIndex * Pipe::RingFiFo::SLOT_SIZE + static_cast<std::size_t>(pipe.cons.entryOffset);
 
     if (pipe.fifo.GM_SLOT_BUFFER != nullptr) {
         using T = typename TileCons::DType;
@@ -34,8 +35,8 @@ PTO_INTERNAL void TPOP_IMPL(Pipe &pipe, TileCons &tile)
             subOffset = static_cast<std::size_t>(get_subblockid()) * rows * cols * sizeof(T);
         }
         using GlobalData = GlobalTensor<T, Shape<1, 1, 1, rows, cols>, Stride<1, 1, 1, cols, 1>>;
-        auto *addr = reinterpret_cast<__gm__ T *>(reinterpret_cast<std::uintptr_t>(pipe.fifo.GM_SLOT_BUFFER) + entryBase +
-                                                  subOffset);
+        auto *addr = reinterpret_cast<__gm__ T *>(reinterpret_cast<std::uintptr_t>(pipe.fifo.GM_SLOT_BUFFER) +
+                                                  entryBase + subOffset);
         GlobalData globalData(addr);
         TLOAD_IMPL(tile, globalData);
     } else if constexpr (Pipe::is_c2v) {

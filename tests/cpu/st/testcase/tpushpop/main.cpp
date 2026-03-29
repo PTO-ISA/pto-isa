@@ -117,9 +117,9 @@ protected:
     {}
 };
 
-#define TPUSHPOP_TEST(T, rows, cols, srcLoc)             \
-    TEST_F(TPushPopTest, T##_##rows##_##cols##_##srcLoc) \
-    {                                                    \
+#define TPUSHPOP_TEST(T, rows, cols, srcLoc)                        \
+    TEST_F(TPushPopTest, T##_##rows##_##cols##_##srcLoc)            \
+    {                                                               \
         testPushPopSingleThread<T, rows, cols, TileType::srcLoc>(); \
     }
 

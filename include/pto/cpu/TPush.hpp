@@ -15,8 +15,8 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <cstdint>
 #include <mutex>
 #include <pto/common/fifo.hpp>
+
 #include <pto/cpu/TAssign.hpp>
-#include <pto/cpu/TInsert.hpp>
 #include <pto/cpu/TLoad.hpp>
 #include <pto/cpu/TMov.hpp>
 #include <pto/cpu/TStore.hpp>
@@ -269,7 +269,8 @@ PTO_INTERNAL void TPUSH_IMPL(Pipe &pipe, TileProd &tile)
     }
 
     const std::size_t slotIndex = static_cast<std::size_t>(pipe.prod.getTileId() % Pipe::RingFiFo::SLOT_NUM);
-    const std::size_t entryBase = slotIndex * Pipe::RingFiFo::SLOT_SIZE + static_cast<std::size_t>(pipe.prod.entryOffset);
+    const std::size_t entryBase =
+        slotIndex * Pipe::RingFiFo::SLOT_SIZE + static_cast<std::size_t>(pipe.prod.entryOffset);
 
     if (pipe.fifo.GM_SLOT_BUFFER != nullptr) {
         using T = typename TileProd::DType;
@@ -280,8 +281,8 @@ PTO_INTERNAL void TPUSH_IMPL(Pipe &pipe, TileProd &tile)
             subOffset = static_cast<std::size_t>(get_subblockid()) * rows * cols * sizeof(T);
         }
         using GlobalData = GlobalTensor<T, Shape<1, 1, 1, rows, cols>, Stride<1, 1, 1, cols, 1>>;
-        auto *addr = reinterpret_cast<__gm__ T *>(reinterpret_cast<std::uintptr_t>(pipe.fifo.GM_SLOT_BUFFER) + entryBase +
-                                                  subOffset);
+        auto *addr = reinterpret_cast<__gm__ T *>(reinterpret_cast<std::uintptr_t>(pipe.fifo.GM_SLOT_BUFFER) +
+                                                  entryBase + subOffset);
         GlobalData globalData(addr);
         TSTORE_IMPL(globalData, tile);
     } else if constexpr (Pipe::is_c2v) {
