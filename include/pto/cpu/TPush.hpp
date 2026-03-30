@@ -11,11 +11,15 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #ifndef TPUSH_HPP
 #define TPUSH_HPP
 
+#include <atomic>
 #include <array>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <mutex>
+#include <new>
+#include <thread>
 #include <pto/common/fifo.hpp>
 
 #include <pto/cpu/TAssign.hpp>
@@ -128,10 +132,44 @@ struct TPipe {
         std::array<uint32_t, SlotNum> remaining_consumers{};
     };
 
-    inline static SharedState shared_state{};
+    struct SharedStateStorage {
+        std::atomic<uint32_t> init_state{0};
+        alignas(SharedState) unsigned char payload[sizeof(SharedState)]{};
+    };
+
+    PTO_INTERNAL static void EnsureSharedStateInitialized(SharedStateStorage &storage)
+    {
+        uint32_t expected = 0;
+        if (storage.init_state.compare_exchange_strong(expected, 1, std::memory_order_acq_rel)) {
+            new (storage.payload) SharedState();
+            storage.init_state.store(2, std::memory_order_release);
+            return;
+        }
+        while (storage.init_state.load(std::memory_order_acquire) != 2) {
+            std::this_thread::yield();
+        }
+    }
+
+    PTO_INTERNAL static SharedState &GetSharedState()
+    {
+        if (auto hook = cpu_sim::ResolveSharedStorageHook(); hook != nullptr) {
+            char key[128] = {};
+            std::snprintf(key, sizeof(key), "pto-pipe-%llu-%u-%u-%u-%u-%u-%u",
+                          static_cast<unsigned long long>(get_task_cookie()), get_block_idx(), FlagID, DirType,
+                          SlotSize, SlotNum, LocalSlotNum);
+            auto *storage = reinterpret_cast<SharedStateStorage *>(hook(key, sizeof(SharedStateStorage)));
+            EnsureSharedStateInitialized(*storage);
+            return *std::launder(reinterpret_cast<SharedState *>(storage->payload));
+        }
+
+        static SharedStateStorage storage{};
+        EnsureSharedStateInitialized(storage);
+        return *std::launder(reinterpret_cast<SharedState *>(storage.payload));
+    }
 
     PTO_INTERNAL static void reset_for_cpu_sim()
     {
+        auto &shared_state = GetSharedState();
         std::lock_guard<std::mutex> lock(shared_state.mutex);
         shared_state.next_producer_slot = 0;
         shared_state.next_consumer_slot = 0;
@@ -197,9 +235,10 @@ struct TPipe {
         PTO_INTERNAL void allocate()
         {
             (void)Split;
-            std::unique_lock<std::mutex> lock(TPipe::shared_state.mutex);
-            TPipe::shared_state.cv.wait(lock, []() { return TPipe::shared_state.occupied < RingFiFo::SLOT_NUM; });
-            tileIndex = TPipe::shared_state.next_producer_slot;
+            auto &shared_state = TPipe::GetSharedState();
+            std::unique_lock<std::mutex> lock(shared_state.mutex);
+            shared_state.cv.wait(lock, [&shared_state]() { return shared_state.occupied < RingFiFo::SLOT_NUM; });
+            tileIndex = shared_state.next_producer_slot;
             subTileIndex = static_cast<int>(get_subblockid());
         }
 
@@ -207,18 +246,19 @@ struct TPipe {
         PTO_INTERNAL void record()
         {
             (void)Split;
+            auto &shared_state = TPipe::GetSharedState();
             {
-                std::lock_guard<std::mutex> lock(TPipe::shared_state.mutex);
+                std::lock_guard<std::mutex> lock(shared_state.mutex);
                 if constexpr (TPipe::is_c2v && Split != TileSplitAxis::TILE_NO_SPLIT) {
-                    TPipe::shared_state.remaining_consumers[static_cast<std::size_t>(tileIndex % RingFiFo::SLOT_NUM)] =
+                    shared_state.remaining_consumers[static_cast<std::size_t>(tileIndex % RingFiFo::SLOT_NUM)] =
                         cpu_pipe::GetSplitCount<Split>();
                 } else {
-                    TPipe::shared_state.remaining_consumers[static_cast<std::size_t>(tileIndex % RingFiFo::SLOT_NUM)] = 1;
+                    shared_state.remaining_consumers[static_cast<std::size_t>(tileIndex % RingFiFo::SLOT_NUM)] = 1;
                 }
-                TPipe::shared_state.next_producer_slot = (tileIndex + 1) % RingFiFo::SLOT_NUM;
-                ++TPipe::shared_state.occupied;
+                shared_state.next_producer_slot = (tileIndex + 1) % RingFiFo::SLOT_NUM;
+                ++shared_state.occupied;
             }
-            TPipe::shared_state.cv.notify_all();
+            shared_state.cv.notify_all();
         }
     };
 
@@ -276,9 +316,10 @@ struct TPipe {
         PTO_INTERNAL void wait()
         {
             (void)Split;
-            std::unique_lock<std::mutex> lock(TPipe::shared_state.mutex);
-            TPipe::shared_state.cv.wait(lock, []() { return TPipe::shared_state.occupied > 0; });
-            tileIndex = TPipe::shared_state.next_consumer_slot;
+            auto &shared_state = TPipe::GetSharedState();
+            std::unique_lock<std::mutex> lock(shared_state.mutex);
+            shared_state.cv.wait(lock, [&shared_state]() { return shared_state.occupied > 0; });
+            tileIndex = shared_state.next_consumer_slot;
             subTileIndex = static_cast<int>(get_subblockid());
         }
 
@@ -286,19 +327,20 @@ struct TPipe {
         PTO_INTERNAL void free()
         {
             (void)Split;
+            auto &shared_state = TPipe::GetSharedState();
             {
-                std::lock_guard<std::mutex> lock(TPipe::shared_state.mutex);
+                std::lock_guard<std::mutex> lock(shared_state.mutex);
                 const auto slotIndex = static_cast<std::size_t>(tileIndex % RingFiFo::SLOT_NUM);
-                auto &remaining = TPipe::shared_state.remaining_consumers[slotIndex];
+                auto &remaining = shared_state.remaining_consumers[slotIndex];
                 if (remaining > 1) {
                     --remaining;
                 } else {
                     remaining = 0;
-                    TPipe::shared_state.next_consumer_slot = (tileIndex + 1) % RingFiFo::SLOT_NUM;
-                    --TPipe::shared_state.occupied;
+                    shared_state.next_consumer_slot = (tileIndex + 1) % RingFiFo::SLOT_NUM;
+                    --shared_state.occupied;
                 }
             }
-            TPipe::shared_state.cv.notify_all();
+            shared_state.cv.notify_all();
         }
     };
 
@@ -348,7 +390,7 @@ PTO_INTERNAL void TPUSH_IMPL(Pipe &pipe, TileProd &tile)
             TASSIGN(slotTile, static_cast<uint64_t>(pipe.fifo.C2V_CONSUMER_BUF + entryBase));
             cpu_pipe::CopyTileWindow(slotTile, tile, 0, 0);
         } else {
-            auto &slotStorage = Pipe::shared_state.local_slot_storage[slotIndex];
+            auto &slotStorage = Pipe::GetSharedState().local_slot_storage[slotIndex];
             for (uint32_t splitIndex = 0; splitIndex < cpu_pipe::GetSplitCount<Split>(); ++splitIndex) {
                 auto *slotPtr = reinterpret_cast<T *>(slotStorage.data() +
                                                       splitIndex * Pipe::RingFiFo::SLOT_SIZE + pipe.prod.entryOffset);

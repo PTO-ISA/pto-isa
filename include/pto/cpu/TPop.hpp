@@ -52,7 +52,7 @@ PTO_INTERNAL void TPOP_IMPL(Pipe &pipe, TileCons &tile)
         } else {
             constexpr uint32_t splitCount = cpu_pipe::GetSplitCount<Split>();
             const uint32_t splitIndex = (get_subblockid() < splitCount) ? get_subblockid() : (splitCount - 1);
-            const auto &slotStorage = Pipe::shared_state.local_slot_storage[slotIndex];
+            const auto &slotStorage = Pipe::GetSharedState().local_slot_storage[slotIndex];
             const auto *slotPtr = reinterpret_cast<const T *>(slotStorage.data() +
                                                               splitIndex * Pipe::RingFiFo::SLOT_SIZE +
                                                               pipe.cons.entryOffset);
