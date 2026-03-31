@@ -16,6 +16,9 @@ Current checks:
 - `TSTORE` ND row-major path
 - `TSTORE` DN col-major path
 - `TADD` correctness against a host reference
+- GPU swizzle physical-layout smoke test
+- GPU swizzle `TLOAD`/`TSTORE` round-trip smoke test
+- GPU swizzle `TADD` round-trip smoke test
 - `sm121` float `TMATMUL` inline-PTX FMA fallback smoke test
 - `sm121` half `TMATMUL` tensor-core MMA tiled-path smoke test
 - `sm121` bfloat16 `TMATMUL` tensor-core MMA tiled-path smoke test

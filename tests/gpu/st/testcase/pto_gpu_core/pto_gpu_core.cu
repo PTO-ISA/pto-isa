@@ -174,6 +174,29 @@ std::vector<T> RefTAddRowMajor(const std::vector<T> &a, const std::vector<T> &b,
 }
 
 template <typename T>
+std::vector<T> RefGpuSwizzle128BRowMajor(const std::vector<T> &logical, int rows, int cols)
+{
+    constexpr int swizzleRows = 8;
+    const int swizzleCols = 128 / (swizzleRows * sizeof(T));
+    std::vector<T> out(logical.size(), T{});
+    const int chunksPerRow = cols / swizzleCols;
+    auto isPow2 = [](int v) { return v > 0 && ((v & (v - 1)) == 0); };
+    for (int r = 0; r < rows; ++r) {
+        const int rowBlock = r / swizzleRows;
+        const int rowInBlock = r % swizzleRows;
+        for (int c = 0; c < cols; ++c) {
+            const int chunk = c / swizzleCols;
+            const int colInChunk = c % swizzleCols;
+            const int permutedChunk = isPow2(chunksPerRow) ? ((chunk ^ (rowInBlock % chunksPerRow)) & (chunksPerRow - 1))
+                                                           : ((chunk + rowInBlock) % chunksPerRow);
+            const int physical = rowBlock * swizzleRows * cols + rowInBlock * cols + permutedChunk * swizzleCols + colInChunk;
+            out[physical] = logical[r * cols + c];
+        }
+    }
+    return out;
+}
+
+template <typename T>
 std::vector<T> RefMatmulF32(const std::vector<T> &a, const std::vector<T> &b, int m, int k, int n)
 {
     std::vector<T> out(m * n, T{});
@@ -257,8 +280,7 @@ bool ExpectVecEq(const std::vector<T> &expected, const std::vector<T> &actual, c
     }
     for (std::size_t i = 0; i < expected.size(); ++i) {
         if (expected[i] != actual[i]) {
-            std::cerr << label << ": mismatch at index " << i << ", expected " << expected[i] << ", got "
-                      << actual[i] << std::endl;
+            std::cerr << label << ": mismatch at index " << i << std::endl;
             return false;
         }
     }
@@ -392,6 +414,68 @@ __global__ void KernelTAdd(T *out, T *a, T *b, T sentinel)
     for (int i = 0; i < TRows * TCols; ++i) {
         out[i] = cStorage[i];
     }
+}
+
+template <typename T, int Rows, int Cols>
+__global__ void KernelTLoadGpuSwizzleRaw(T *out, T *src)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using Shape5 = pto::Shape<-1, -1, -1, -1, -1>;
+    using GlobalData = SimpleGlobal<T, pto::Layout::ND>;
+    using TileData = pto::TileVecGpuSwizzle<T, Rows, Cols>;
+    T storage[Rows * Cols];
+    TileData tile;
+    tile.data() = storage;
+    GlobalData global(src, 1, 1, 1, Rows, Cols, Rows * Cols, Rows * Cols, Rows * Cols, Cols, 1);
+    pto::TLOAD(tile, global);
+    for (int i = 0; i < Rows * Cols; ++i) {
+        out[i] = storage[i];
+    }
+}
+
+template <typename T, int Rows, int Cols>
+__global__ void KernelTLoadStoreGpuSwizzle(T *out, T *src)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using GlobalData = SimpleGlobal<T, pto::Layout::ND>;
+    using TileData = pto::TileVecGpuSwizzle<T, Rows, Cols>;
+    T storage[Rows * Cols];
+    TileData tile;
+    tile.data() = storage;
+    GlobalData srcGlobal(src, 1, 1, 1, Rows, Cols, Rows * Cols, Rows * Cols, Rows * Cols, Cols, 1);
+    GlobalData dstGlobal(out, 1, 1, 1, Rows, Cols, Rows * Cols, Rows * Cols, Rows * Cols, Cols, 1);
+    pto::TLOAD(tile, srcGlobal);
+    pto::TSTORE(dstGlobal, tile);
+}
+
+template <typename T, int Rows, int Cols>
+__global__ void KernelTAddGpuSwizzleRoundTrip(T *out, T *a, T *b)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using GlobalData = SimpleGlobal<T, pto::Layout::ND>;
+    using TileData = pto::TileVecGpuSwizzle<T, Rows, Cols>;
+    T aStorage[Rows * Cols];
+    T bStorage[Rows * Cols];
+    T cStorage[Rows * Cols];
+    TileData aTile;
+    TileData bTile;
+    TileData cTile;
+    aTile.data() = aStorage;
+    bTile.data() = bStorage;
+    cTile.data() = cStorage;
+    GlobalData aGlobal(a, 1, 1, 1, Rows, Cols, Rows * Cols, Rows * Cols, Rows * Cols, Cols, 1);
+    GlobalData bGlobal(b, 1, 1, 1, Rows, Cols, Rows * Cols, Rows * Cols, Rows * Cols, Cols, 1);
+    GlobalData outGlobal(out, 1, 1, 1, Rows, Cols, Rows * Cols, Rows * Cols, Rows * Cols, Cols, 1);
+    pto::TLOAD(aTile, aGlobal);
+    pto::TLOAD(bTile, bGlobal);
+    pto::TADD(cTile, aTile, bTile);
+    pto::TSTORE(outGlobal, cTile);
 }
 
 template <typename InputT, int M, int K, int N>
@@ -617,6 +701,80 @@ bool TestTAddMatchesReference()
     cudaFree(dB);
     cudaFree(dOut);
     return ExpectVecEq(expected, actual, "tadd");
+}
+
+bool TestGpuSwizzlePhysicalLayoutMatchesReference()
+{
+    constexpr int Rows = 16, Cols = 16;
+    std::vector<half> src(Rows * Cols);
+    for (int i = 0; i < Rows * Cols; ++i) {
+        src[i] = __float2half(static_cast<float>(i + 1));
+    }
+    auto expected = RefGpuSwizzle128BRowMajor(src, Rows, Cols);
+    half *dSrc = nullptr;
+    half *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dSrc, src.size() * sizeof(half)), "cudaMalloc dSrc swizzle")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(half)), "cudaMalloc dOut swizzle")) return false;
+    if (!CheckCuda(cudaMemcpy(dSrc, src.data(), src.size() * sizeof(half), cudaMemcpyHostToDevice), "copy src swizzle")) return false;
+    KernelTLoadGpuSwizzleRaw<half, Rows, Cols><<<1, 1>>>(dOut, dSrc);
+    if (!CheckCuda(cudaGetLastError(), "launch tload swizzle raw")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tload swizzle raw")) return false;
+    std::vector<half> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(half), cudaMemcpyDeviceToHost), "copy out swizzle")) return false;
+    cudaFree(dSrc);
+    cudaFree(dOut);
+    return ExpectVecEq(expected, actual, "gpu_swizzle_physical");
+}
+
+bool TestGpuSwizzleRoundTripMatchesReference()
+{
+    constexpr int Rows = 16, Cols = 16;
+    std::vector<half> src(Rows * Cols);
+    for (int i = 0; i < Rows * Cols; ++i) {
+        src[i] = __float2half(static_cast<float>((i % 23) - 11) * 0.25f);
+    }
+    half *dSrc = nullptr;
+    half *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dSrc, src.size() * sizeof(half)), "cudaMalloc dSrc swizzle rt")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, src.size() * sizeof(half)), "cudaMalloc dOut swizzle rt")) return false;
+    if (!CheckCuda(cudaMemcpy(dSrc, src.data(), src.size() * sizeof(half), cudaMemcpyHostToDevice), "copy src swizzle rt")) return false;
+    KernelTLoadStoreGpuSwizzle<half, Rows, Cols><<<1, 1>>>(dOut, dSrc);
+    if (!CheckCuda(cudaGetLastError(), "launch tloadstore swizzle")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tloadstore swizzle")) return false;
+    std::vector<half> actual(src.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(half), cudaMemcpyDeviceToHost), "copy out swizzle rt")) return false;
+    cudaFree(dSrc);
+    cudaFree(dOut);
+    return ExpectVecEq(src, actual, "gpu_swizzle_roundtrip");
+}
+
+bool TestGpuSwizzleTAddRoundTripMatchesReference()
+{
+    constexpr int Rows = 16, Cols = 16;
+    std::vector<half> a(Rows * Cols), b(Rows * Cols);
+    std::vector<half> expected(Rows * Cols);
+    for (int i = 0; i < Rows * Cols; ++i) {
+        a[i] = __float2half(static_cast<float>((i % 13) - 6) * 0.5f);
+        b[i] = __float2half(static_cast<float>((i % 7) - 3) * 0.25f);
+        expected[i] = __hadd(a[i], b[i]);
+    }
+    half *dA = nullptr;
+    half *dB = nullptr;
+    half *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(half)), "cudaMalloc dA swizzle add")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(half)), "cudaMalloc dB swizzle add")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(half)), "cudaMalloc dOut swizzle add")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(half), cudaMemcpyHostToDevice), "copy a swizzle add")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(half), cudaMemcpyHostToDevice), "copy b swizzle add")) return false;
+    KernelTAddGpuSwizzleRoundTrip<half, Rows, Cols><<<1, 1>>>(dOut, dA, dB);
+    if (!CheckCuda(cudaGetLastError(), "launch tadd swizzle")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tadd swizzle")) return false;
+    std::vector<half> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(half), cudaMemcpyDeviceToHost), "copy out swizzle add")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dOut);
+    return ExpectVecEq(expected, actual, "gpu_swizzle_tadd");
 }
 
 bool TestSm121FloatInlinePtxMatmulMatchesReference()
@@ -869,6 +1027,9 @@ int main()
     run("TLoadDnColMajorMatchesReference", &TestTLoadDnColMajorMatchesReference);
     run("TStoreNdAndDnMatchReference", &TestTStoreNdAndDnMatchReference);
     run("TAddMatchesReference", &TestTAddMatchesReference);
+    run("GpuSwizzlePhysicalLayoutMatchesReference", &TestGpuSwizzlePhysicalLayoutMatchesReference);
+    run("GpuSwizzleRoundTripMatchesReference", &TestGpuSwizzleRoundTripMatchesReference);
+    run("GpuSwizzleTAddRoundTripMatchesReference", &TestGpuSwizzleTAddRoundTripMatchesReference);
     run("Sm121FloatInlinePtxMatmulMatchesReference", &TestSm121FloatInlinePtxMatmulMatchesReference);
     run("Sm121HalfTensorCoreMatmulExtendedMatchesReference", &TestSm121HalfTensorCoreMatmulExtendedMatchesReference);
     run("Sm121Bfloat16TensorCoreMatmulExtendedMatchesReference", &TestSm121Bfloat16TensorCoreMatmulExtendedMatchesReference);

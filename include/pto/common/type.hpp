@@ -256,6 +256,7 @@ enum class TileLayoutCustom : uint8_t
     NZ,
     ZN,
     ZZ,
+    GPU_SWIZZLE_128B,
     NONE,
 };
 
