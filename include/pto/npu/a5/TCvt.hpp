@@ -554,7 +554,7 @@ inline AICORE void cast32to8_1D_NoPostUpdate(__ubuf__ DST *dst, __ubuf__ SRC *sr
 
     for (uint16_t i = 0; i < repeatTimes; ++i) {
         RegTensor<SRC> v_input;
-        DST_VEC v_output_p0, v_output;
+        DST_VEC v_output_p0;
         uint32_t cur_len = sReg;
         MaskReg preg_b32 = CreatePredicate<float>(sReg);
         MaskReg preg_b8 = CreatePredicate<uint8_t>(cur_len);
@@ -567,9 +567,9 @@ inline AICORE void cast32to8_1D_NoPostUpdate(__ubuf__ DST *dst, __ubuf__ SRC *sr
             vcvt(v_output_p0, v_input, preg_b32, RS_DISABLE, PART_P0);
         }
 
-        vselr((RegTensor<uint8_t> &)v_output, (RegTensor<uint8_t> &)v_output_p0, (RegTensor<uint8_t> &)v_idx);
-        mem_bar(VST_VST);
-        vsts((RegTensor<uint8_t> &)v_output, (__ubuf__ uint8_t *)dst, i * ELE_CNT_B32, NORM_B8, preg_b8);
+        // Reuse v_input's preg for vselr output — guaranteed non-overlapping with v_output_p0
+        vselr((RegTensor<uint8_t> &)v_input, (RegTensor<uint8_t> &)v_output_p0, (RegTensor<uint8_t> &)v_idx);
+        vsts((RegTensor<uint8_t> &)v_input, (__ubuf__ uint8_t *)dst, i * ELE_CNT_B32, NORM_B8, preg_b8);
         // sReg is decremented by the first CreatePredicate with POST_UPDATE
     }
 }
@@ -597,16 +597,17 @@ inline AICORE void cast32toH8_1D_NoPostUpdate(__ubuf__ hifloat8_t *dst, __ubuf__
 
     for (uint16_t i = 0; i < repeatTimes; ++i) {
         vector_f32 v_input;
-        vector_hif8 v_output_p0, v_output;
+        vector_hif8 v_output_p0;
         uint32_t cur_len = sReg;
         MaskReg preg_b32 = CreatePredicate<float>(sReg);
         MaskReg preg_b8 = CreatePredicate<uint8_t>(cur_len);
 
         vlds(v_input, src, i * ELE_CNT_B32, NORM);
         vcvt(v_output_p0, v_input, preg_b32, ROUND_A, RS_DISABLE, PART_P0);
-        vselr((RegTensor<uint8_t> &)v_output, (RegTensor<uint8_t> &)v_output_p0, (RegTensor<uint8_t> &)v_idx);
-        mem_bar(VST_VST);
-        vsts((RegTensor<uint8_t> &)v_output, (__ubuf__ uint8_t *)dst, i * ELE_CNT_B32, NORM_B8, preg_b8);
+        // Reuse v_input's preg for vselr output — guaranteed non-overlapping with v_output_p0
+        // since vcvt requires them as separate source/dest pregs
+        vselr((RegTensor<uint8_t> &)v_input, (RegTensor<uint8_t> &)v_output_p0, (RegTensor<uint8_t> &)v_idx);
+        vsts((RegTensor<uint8_t> &)v_input, (__ubuf__ uint8_t *)dst, i * ELE_CNT_B32, NORM_B8, preg_b8);
         // sReg is decremented by CreatePredicate with POST_UPDATE
     }
 }
@@ -1133,7 +1134,7 @@ inline AICORE void cast32to8(__ubuf__ DST *dst, __ubuf__ SRC *src, uint32_t vali
 
     FOR_ELEMENTS(ELE_CNT_B32)
     RegTensor<SRC> v_input;
-    DST_VEC v_output_p0, v_output;
+    DST_VEC v_output_p0;
     uint32_t preg_len = (idx == repeatTimes - 1) ? preg_len_tail : ELE_CNT_B32;
     MaskReg preg_b8 = CreatePredicate<uint8_t>(preg_len);
 
@@ -1146,10 +1147,9 @@ inline AICORE void cast32to8(__ubuf__ DST *dst, __ubuf__ SRC *src, uint32_t vali
         vcvt(v_output_p0, v_input, preg_b32, RS_DISABLE, PART_P0);
     }
 
-    // Select every 4th byte to compact the result
-    vselr((RegTensor<uint8_t> &)v_output, (RegTensor<uint8_t> &)v_output_p0, (RegTensor<uint8_t> &)v_idx);
-    mem_bar(VST_VST);
-    vsts((RegTensor<uint8_t> &)v_output, (__ubuf__ uint8_t *)dst, dstOffset, NORM_B8, preg_b8);
+    // Reuse v_input's preg for vselr output — guaranteed non-overlapping with v_output_p0
+    vselr((RegTensor<uint8_t> &)v_input, (RegTensor<uint8_t> &)v_output_p0, (RegTensor<uint8_t> &)v_idx);
+    vsts((RegTensor<uint8_t> &)v_input, (__ubuf__ uint8_t *)dst, dstOffset, NORM_B8, preg_b8);
     END_FOR_ELEMENTS
     END_FOR_ROWS
 }
@@ -1381,17 +1381,16 @@ inline AICORE void castData(__ubuf__ hifloat8_t *dst, __ubuf__ float *src, uint3
 
     FOR_ELEMENTS(ELE_CNT_B32)
     vector_f32 v_input;
-    vector_hif8 v_output_p0, v_output;
+    vector_hif8 v_output_p0;
     uint32_t preg_len = (idx == repeatTimes - 1) ? preg_len_tail : ELE_CNT_B32;
     MaskReg preg_b8 = CreatePredicate<uint8_t>(preg_len);
 
     vlds(v_input, src, srcOffset, NORM);
     vcvt(v_output_p0, v_input, preg_b32, ROUND_A, RS_DISABLE, PART_P0);
 
-    // Select every 4th byte to compact the result
-    vselr((RegTensor<uint8_t> &)v_output, (RegTensor<uint8_t> &)v_output_p0, (RegTensor<uint8_t> &)v_idx);
-    mem_bar(VST_VST);
-    vsts((RegTensor<uint8_t> &)v_output, (__ubuf__ uint8_t *)dst, dstOffset, NORM_B8, preg_b8);
+    // Reuse v_input's preg for vselr output — guaranteed non-overlapping with v_output_p0
+    vselr((RegTensor<uint8_t> &)v_input, (RegTensor<uint8_t> &)v_output_p0, (RegTensor<uint8_t> &)v_idx);
+    vsts((RegTensor<uint8_t> &)v_input, (__ubuf__ uint8_t *)dst, dstOffset, NORM_B8, preg_b8);
     END_FOR_ELEMENTS
     END_FOR_ROWS
 }
