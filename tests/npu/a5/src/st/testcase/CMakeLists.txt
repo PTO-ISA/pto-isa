@@ -238,7 +238,7 @@ if(NOT AUTO_MODE)
   # until rewritten to adapt to auto mode. texpands_mat currently has to
   # directly call CCE intrinsics in the kernel, which won't compile in auto
   # mode; besides the auto-sync won't work with raw CCE intrinsics
-  list(APPEND ALL_TESTCASES tpushpop_cv tpushpop_vc texpands_mat)
+  list(APPEND ALL_TESTCASES tpushpop_cv tpushpop_cv_nosplit tpushpop_vc texpands_mat)
 endif()
 
 if((TEST_CASE IN_LIST ALL_TESTCASES) OR (TEST_CASE STREQUAL "all"))

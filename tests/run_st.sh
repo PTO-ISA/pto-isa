@@ -183,6 +183,13 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmin -g TROWARGMINTest.case_uint32_float_16x1_13x16_13x13
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmin -g TROWARGMINTest.case_uint32_float_8x1_3x4096_3x4095
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmin -g TROWARGMINTest.case_uint32_float_8x1_2x16384_2x16381
+    if [ "$IS_AUTO_MODE" = "false" ]; then
+      # this testcase has to directly call CCE intrinsics now, which won't compile for auto mode;
+      # besides, auto-sync doesn't work with CCE intrisics      
+      python3 tests/script/run_st.py $ARGS -w -v a3 -t tpushpop_cv -g TPushPopCvTest.case1_half_single_tile
+      python3 tests/script/run_st.py $ARGS -w -v a3 -t tpushpop_vc -g TPushPopVcTest.case1_int8_single_k_tile
+      python3 tests/script/run_st.py $ARGS -w -v a3 -t tpushpop_cv_nosplit -g TPushPopCvNoSplitTest.case1_half_single_tile
+    fi
 
   elif [ "$ENABLE_ALL" = "true" ]; then            # 所有用例
     python3 tests/script/build_st.py $ARGS -v a3 -t all
@@ -268,6 +275,13 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tconcat
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmax
     python3 tests/script/run_st.py $ARGS -w -v a3 -t trowargmin
+    if [ "$IS_AUTO_MODE" = "false" ]; then
+      # this testcase has to directly call CCE intrinsics now, which won't compile for auto mode;
+      # besides, auto-sync doesn't work with CCE intrisics
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv_nosplit
+    fi
   fi
 fi
 
@@ -313,6 +327,9 @@ if [ "$ENABLE_A5" = "true" ]; then
       # this testcase has to directly call CCE intrinsics now, which won't compile for auto mode;
       # besides, auto-sync doesn't work with CCE intrisics
       python3 tests/script/run_st.py $ARGS -w -v a5 -t texpands_mat -g TEXPANDSTest.case1
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv -g TPushPopCvTest.case1_half_single_tile
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc -g TPushPopVcTest.case1_int8_single_k_tile
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv_nosplit -g TPushPopCvNoSplitTest.case1_half_single_tile
     fi
     python3 tests/script/run_st.py $ARGS -w -v a5 -t textract -g TEXTRACTTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tfillpad -g TFILLPADTest.case_float_GT_128_127_VT_128_128_BLK1_PADMAX_PADMAX
@@ -440,6 +457,9 @@ if [ "$ENABLE_A5" = "true" ]; then
       # this testcase has to directly call CCE intrinsics now, which won't compile for auto mode;
       # besides, auto-sync doesn't work with CCE intrisics
       python3 tests/script/run_st.py $ARGS -w -v a5 -t texpands_mat
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv_nosplit
     fi
     python3 tests/script/run_st.py $ARGS -w -v a5 -t textract
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tfillpad
