@@ -17,9 +17,9 @@ using namespace std;
 using namespace pto;
 
 template <typename GlobalData, typename TileData, int reshapeRow, int reshapeCol>
-AICORE inline void TSTORE_MAT2GM_CONVTILE(GlobalData &dst, TileData &src)
+__tf__ AICORE inline void TSTORE_MAT2GM_CONVTILE(GlobalData &dst, TileData &src)
 {
-    __cbuf__ typename TileData::DType *srcAddr = (__cbuf__ typename TileData::DType *)src.data();
+    __cbuf__ typename TileData::DType *srcAddr = __cce_get_tile_ptr(src.data());
     typename GlobalData::DType *dstAddr = dst.data();
 
     constexpr uint32_t blockSizeElem = BLOCK_BYTE_SIZE / sizeof(typename TileData::DType);
