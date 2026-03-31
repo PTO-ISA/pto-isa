@@ -4,9 +4,10 @@ Standalone CUDA smoke / correctness tests for the PTO NVIDIA GPU backend.
 
 ## What it covers today
 
-Current executable:
+Current executables:
 
-- `pto_gpu_core`
+- `pto_gpu_core` — correctness / smoke checks
+- `pto_gpu_perf` — lightweight GB10 matmul microbench
 
 Current checks:
 
@@ -20,6 +21,8 @@ Current checks:
 - `sm121` bfloat16 `TMATMUL` tensor-core MMA tiled-path smoke test
 - `sm121` half `TMATMUL_ACC` tensor-core fast-path smoke test
 - `sm121` bfloat16 `TMATMUL_BIAS` tensor-core fast-path smoke test
+- `sm121` half `TMATMUL_MX` API-path smoke test
+- `sm121` half `TGEMV_MX` API-path smoke test
 
 ## Build
 
@@ -30,9 +33,17 @@ cmake --build build/tests/gpu-st -j
 
 ## Run
 
+Correctness lane:
+
 ```bash
 cd build/tests/gpu-st
 ctest --output-on-failure
+```
+
+Perf microbench:
+
+```bash
+./build/tests/gpu-st/testcase/pto_gpu_perf/pto_gpu_perf
 ```
 
 ## Notes

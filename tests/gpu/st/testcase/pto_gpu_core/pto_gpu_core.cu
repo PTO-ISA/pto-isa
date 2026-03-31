@@ -444,6 +444,48 @@ __global__ void KernelTMATMUL_BIAS(float *out, InputT *a, InputT *b, float *bias
     pto::TMATMUL_BIAS(cTile, aTile, bTile, biasTile);
 }
 
+template <typename InputT, int M, int K, int N>
+__global__ void KernelTMATMUL_MX(float *out, InputT *a, float *aScale, InputT *b, float *bScale)
+{
+    using TileA = pto::Tile<pto::TileType::Vec, InputT, M, K, pto::BLayout::RowMajor, -1, -1>;
+    using TileB = pto::Tile<pto::TileType::Vec, InputT, K, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileC = pto::Tile<pto::TileType::Acc, float, M, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileScaleA = pto::Tile<pto::TileType::ScaleLeft, float, 1, K, pto::BLayout::RowMajor, -1, -1>;
+    using TileScaleB = pto::Tile<pto::TileType::ScaleRight, float, 1, N, pto::BLayout::RowMajor, -1, -1>;
+    TileA aTile(M, K);
+    TileB bTile(K, N);
+    TileC cTile(M, N);
+    TileScaleA aScaleTile(1, K);
+    TileScaleB bScaleTile(1, N);
+    aTile.data() = a;
+    bTile.data() = b;
+    cTile.data() = out;
+    aScaleTile.data() = aScale;
+    bScaleTile.data() = bScale;
+    pto::TMATMUL_MX(cTile, aTile, aScaleTile, bTile, bScaleTile);
+}
+
+template <typename InputT, int M, int K, int N>
+__global__ void KernelTGEMV_MX(float *out, InputT *a, float *aScale, InputT *b, float *bScale)
+{
+    using TileA = pto::Tile<pto::TileType::Vec, InputT, M, K, pto::BLayout::RowMajor, -1, -1>;
+    using TileB = pto::Tile<pto::TileType::Vec, InputT, K, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileC = pto::Tile<pto::TileType::Acc, float, M, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileScaleA = pto::Tile<pto::TileType::ScaleLeft, float, 1, K, pto::BLayout::RowMajor, -1, -1>;
+    using TileScaleB = pto::Tile<pto::TileType::ScaleRight, float, 1, N, pto::BLayout::RowMajor, -1, -1>;
+    TileA aTile(M, K);
+    TileB bTile(K, N);
+    TileC cTile(M, N);
+    TileScaleA aScaleTile(1, K);
+    TileScaleB bScaleTile(1, N);
+    aTile.data() = a;
+    bTile.data() = b;
+    cTile.data() = out;
+    aScaleTile.data() = aScale;
+    bScaleTile.data() = bScale;
+    pto::TGEMV_MX(cTile, aTile, aScaleTile, bTile, bScaleTile);
+}
+
 bool TestTLoadNdRowMajorMatchesReference()
 {
     constexpr int G0 = 1, G1 = 1, G2 = 1, G3 = 4, G4 = 7, TRows = 4, TCols = 8;
@@ -752,6 +794,64 @@ bool TestSm121Bfloat16TensorCoreMatmulBiasMatchesReference()
     return ExpectVecNear(expected, actual, "tmatmul_sm121_bias", 2e-2f);
 }
 
+bool TestSm121HalfTMATMUL_MXMatchesReference()
+{
+    constexpr int M = 16, K = 16, N = 16;
+    std::vector<half> a(M * K);
+    std::vector<half> b(K * N);
+    std::vector<float> aScale(K, 1.0f), bScale(N, 1.0f);
+    for (int i = 0; i < M * K; ++i) a[i] = __float2half(static_cast<float>((i % 13) - 6) * 0.25f);
+    for (int i = 0; i < K * N; ++i) b[i] = __float2half(static_cast<float>((i % 11) - 5) * 0.5f);
+    auto expected = RefMatmulToFloat(a, b, M, K, N);
+    half *dA = nullptr; half *dB = nullptr; float *dAS = nullptr; float *dBS = nullptr; float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(half)), "cudaMalloc dA mx")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(half)), "cudaMalloc dB mx")) return false;
+    if (!CheckCuda(cudaMalloc(&dAS, aScale.size() * sizeof(float)), "cudaMalloc dAS mx")) return false;
+    if (!CheckCuda(cudaMalloc(&dBS, bScale.size() * sizeof(float)), "cudaMalloc dBS mx")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut mx")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(half), cudaMemcpyHostToDevice), "copy a mx")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(half), cudaMemcpyHostToDevice), "copy b mx")) return false;
+    if (!CheckCuda(cudaMemcpy(dAS, aScale.data(), aScale.size() * sizeof(float), cudaMemcpyHostToDevice), "copy as mx")) return false;
+    if (!CheckCuda(cudaMemcpy(dBS, bScale.data(), bScale.size() * sizeof(float), cudaMemcpyHostToDevice), "copy bs mx")) return false;
+    if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out mx")) return false;
+    KernelTMATMUL_MX<half, M, K, N><<<1, 32>>>(dOut, dA, dAS, dB, dBS);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul_mx")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul_mx")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out mx")) return false;
+    cudaFree(dA); cudaFree(dB); cudaFree(dAS); cudaFree(dBS); cudaFree(dOut);
+    return ExpectVecNear(expected, actual, "tmatmul_mx", 1e-3f);
+}
+
+bool TestSm121HalfTGEMV_MXMatchesReference()
+{
+    constexpr int M = 16, K = 16, N = 16;
+    std::vector<half> a(M * K);
+    std::vector<half> b(K * N);
+    std::vector<float> aScale(K, 1.0f), bScale(N, 1.0f);
+    for (int i = 0; i < M * K; ++i) a[i] = __float2half(static_cast<float>((i % 9) - 4) * 0.375f);
+    for (int i = 0; i < K * N; ++i) b[i] = __float2half(static_cast<float>((i % 7) - 3) * 0.625f);
+    auto expected = RefMatmulToFloat(a, b, M, K, N);
+    half *dA = nullptr; half *dB = nullptr; float *dAS = nullptr; float *dBS = nullptr; float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(half)), "cudaMalloc dA gemv_mx")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(half)), "cudaMalloc dB gemv_mx")) return false;
+    if (!CheckCuda(cudaMalloc(&dAS, aScale.size() * sizeof(float)), "cudaMalloc dAS gemv_mx")) return false;
+    if (!CheckCuda(cudaMalloc(&dBS, bScale.size() * sizeof(float)), "cudaMalloc dBS gemv_mx")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut gemv_mx")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(half), cudaMemcpyHostToDevice), "copy a gemv_mx")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(half), cudaMemcpyHostToDevice), "copy b gemv_mx")) return false;
+    if (!CheckCuda(cudaMemcpy(dAS, aScale.data(), aScale.size() * sizeof(float), cudaMemcpyHostToDevice), "copy as gemv_mx")) return false;
+    if (!CheckCuda(cudaMemcpy(dBS, bScale.data(), bScale.size() * sizeof(float), cudaMemcpyHostToDevice), "copy bs gemv_mx")) return false;
+    if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out gemv_mx")) return false;
+    KernelTGEMV_MX<half, M, K, N><<<1, 32>>>(dOut, dA, dAS, dB, dBS);
+    if (!CheckCuda(cudaGetLastError(), "launch tgemv_mx")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tgemv_mx")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out gemv_mx")) return false;
+    cudaFree(dA); cudaFree(dB); cudaFree(dAS); cudaFree(dBS); cudaFree(dOut);
+    return ExpectVecNear(expected, actual, "tgemv_mx", 1e-3f);
+}
+
 } // namespace
 
 int main()
@@ -774,6 +874,8 @@ int main()
     run("Sm121Bfloat16TensorCoreMatmulExtendedMatchesReference", &TestSm121Bfloat16TensorCoreMatmulExtendedMatchesReference);
     run("Sm121HalfTensorCoreMatmulAccMatchesReference", &TestSm121HalfTensorCoreMatmulAccMatchesReference);
     run("Sm121Bfloat16TensorCoreMatmulBiasMatchesReference", &TestSm121Bfloat16TensorCoreMatmulBiasMatchesReference);
+    run("Sm121HalfTMATMUL_MXMatchesReference", &TestSm121HalfTMATMUL_MXMatchesReference);
+    run("Sm121HalfTGEMV_MXMatchesReference", &TestSm121HalfTGEMV_MXMatchesReference);
 
     return failed == 0 ? 0 : 1;
 }
