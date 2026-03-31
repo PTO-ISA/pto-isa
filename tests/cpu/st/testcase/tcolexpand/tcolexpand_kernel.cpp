@@ -27,6 +27,9 @@ AICORE void runTCOLEXPAND(__gm__ T __out__ *out, __gm__ T __in__ *src)
     GlobalData srcGlobal(src);
     GlobalData dstGlobal(out);
 
+    TASSIGN(srcTile, 0);
+    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileT::DType));
+
     TLOAD(srcTile, srcGlobal);
     TCOLEXPAND(dstTile, srcTile);
     TSTORE(dstGlobal, dstTile);

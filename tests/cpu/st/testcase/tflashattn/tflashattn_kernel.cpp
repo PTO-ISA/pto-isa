@@ -81,6 +81,9 @@ __global__ AICORE void RunTFLASHATTN(__gm__ float *out, __gm__ float *q, __gm__ 
     RightV vRight;
     AccOut outAcc;
 
+    // No direct Tile memory assignment is made (via TASSIGN)
+    // So, __PTO_AUTO__ macro should be enabled in compiler definitions for auto memory assignment
+
     TLOAD(qTile, qGlobal);
     TLOAD(kTile, kGlobal);
     TLOAD(vTile, vGlobal);

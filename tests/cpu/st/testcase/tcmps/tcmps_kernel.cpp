@@ -30,6 +30,9 @@ AICORE void runTCmps(__gm__ uint8_t __out__ *out, __gm__ T __in__ *src0, __gm__ 
     GlobalData_src0 src0Global(src0);
     GlobalData_dst dstGlobal(out);
 
+    TASSIGN(src0Tile, 0);
+    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileData_src0::DType));
+
     TLOAD(src0Tile, src0Global);
     TCMPS(dstTile, src0Tile, src1[0], cmpMode);
     TSTORE(dstGlobal, dstTile);

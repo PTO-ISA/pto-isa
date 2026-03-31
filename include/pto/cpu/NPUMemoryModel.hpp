@@ -32,36 +32,9 @@
 #include <algorithm>
 #include <cstdint>
 #include <vector>
+#include <pto/common/pto_tile.hpp>
 
 namespace pto {
-
-// Architecture-specific memory sizes (bytes)
-struct ArchMemorySizes {
-    std::size_t ubSize;  // Unified Buffer (Vec tiles)
-    std::size_t l1Size;  // L1 Buffer (Mat tiles)
-    std::size_t l0aSize; // L0A Buffer (Left tiles)
-    std::size_t l0bSize; // L0B Buffer (Right tiles)
-    std::size_t l0cSize; // L0C Buffer (Acc tiles)
-};
-
-// Memory sizes by architecture
-// A2/A3:
-// https://www.hiascend.com/doc_center/source/zh/canncommercial/80RC3/devguide/appdevg/sdpdevg/atlasprogramming_12_0003.html
-inline constexpr ArchMemorySizes kA2A3MemorySizes = {
-    192 * 1024, // UB:  192 KB
-    512 * 1024, // L1:  512 KB
-    64 * 1024,  // L0A: 64 KB
-    64 * 1024,  // L0B: 64 KB
-    128 * 1024  // L0C: 128 KB
-};
-
-inline constexpr ArchMemorySizes kA5MemorySizes = {
-    256 * 1024, // UB:  256 KB
-    512 * 1024, // L1:  512 KB
-    64 * 1024,  // L0A: 64 KB (placeholder - verify actual A5 spec)
-    64 * 1024,  // L0B: 64 KB
-    256 * 1024  // L0C: 256 KB
-};
 
 enum class NPUArch
 {
@@ -69,16 +42,42 @@ enum class NPUArch
     A5
 };
 
-enum class MemoryRegion
-{
-    UB,  // Unified Buffer - for Vec tiles
-    L1,  // L1 Buffer - for Mat tiles
-    L0A, // L0A Buffer - for Left tiles
-    L0B, // L0B Buffer - for Right tiles
-    L0C  // L0C Buffer - for Acc tiles
-};
-
 class NPUMemoryModel {
+private:
+    enum MemoryRegion
+    {
+        UB,  // Unified Buffer - for Vec tiles
+        L1,  // L1 Buffer - for Mat tiles
+        L0A, // L0A Buffer - for Left tiles
+        L0B, // L0B Buffer - for Right tiles
+        L0C, // L0C Buffer - for Acc tiles
+        _MAX_REGIONS
+    };
+
+public:
+    // Architecture-specific memory sizes (bytes)
+    using ArchMemorySizes = std::size_t[MemoryRegion::_MAX_REGIONS];
+
+private:
+    // Memory sizes by architecture
+    // A2/A3:
+    // https://www.hiascend.com/doc_center/source/zh/canncommercial/80RC3/devguide/appdevg/sdpdevg/atlasprogramming_12_0003.html
+    static inline constexpr ArchMemorySizes kA2A3MemorySizes = {
+        192 * 1024, // UB:  192 KB
+        512 * 1024, // L1:  512 KB
+        64 * 1024,  // L0A: 64 KB
+        64 * 1024,  // L0B: 64 KB
+        128 * 1024  // L0C: 128 KB
+    };
+
+    static inline constexpr ArchMemorySizes kA5MemorySizes = {
+        256 * 1024, // UB:  256 KB
+        512 * 1024, // L1:  512 KB
+        64 * 1024,  // L0A: 64 KB (placeholder - verify actual A5 spec)
+        64 * 1024,  // L0B: 64 KB
+        256 * 1024  // L0C: 256 KB
+    };
+
 public:
     // Each thread gets its own NPUMemoryModel instance, accurately modeling
     // the hardware where each AICore has physically separate memory.
@@ -100,19 +99,21 @@ public:
     {
         switch (arch) {
             case NPUArch::A2A3:
-                sizes_ = kA2A3MemorySizes;
+                // Yes, we know about memcpy, but CI does not allow it
+                for (size_t i = 0; i < std::size(kA2A3MemorySizes); i++) {
+                    sizes_[i] = kA2A3MemorySizes[i];
+                }
                 break;
             case NPUArch::A5:
-                sizes_ = kA5MemorySizes;
+                for (size_t i = 0; i < std::size(kA5MemorySizes); i++) {
+                    sizes_[i] = kA5MemorySizes[i];
+                }
                 break;
         }
 
-        ubBuffer_.resize(sizes_.ubSize, 0);
-        l1Buffer_.resize(sizes_.l1Size, 0);
-        l0aBuffer_.resize(sizes_.l0aSize, 0);
-        l0bBuffer_.resize(sizes_.l0bSize, 0);
-        l0cBuffer_.resize(sizes_.l0cSize, 0);
-
+        for (int i = 0; i < MemoryRegion::_MAX_REGIONS; i++) {
+            buffers_[i].resize(sizes_[i], 0);
+        }
         arch_ = arch;
         initialized_ = true;
     }
@@ -126,68 +127,53 @@ public:
     }
 
     // Get pointer to memory at offset within a region
-    template <typename T>
-    T *GetPointer(MemoryRegion region, std::size_t byteOffset)
+    template <typename TileDef>
+    TileDef::DType *GetPointer(std::size_t byteOffset)
     {
-        EnsureInitialized();
+        static_assert(is_tile_data_v<TileDef>);
 
-        char *base = nullptr;
-        std::size_t regionSize = 0;
-
-        switch (region) {
-            case MemoryRegion::UB:
-                base = ubBuffer_.data();
-                regionSize = sizes_.ubSize;
-                break;
-            case MemoryRegion::L1:
-                base = l1Buffer_.data();
-                regionSize = sizes_.l1Size;
-                break;
-            case MemoryRegion::L0A:
-                base = l0aBuffer_.data();
-                regionSize = sizes_.l0aSize;
-                break;
-            case MemoryRegion::L0B:
-                base = l0bBuffer_.data();
-                regionSize = sizes_.l0bSize;
-                break;
-            case MemoryRegion::L0C:
-                base = l0cBuffer_.data();
-                regionSize = sizes_.l0cSize;
-                break;
+        if constexpr (TileDef::Loc == TileType::Mat) {
+            return GetPointer<typename TileDef::DType, MemoryRegion::L1>(byteOffset, TileDef::Numel);
+        } else if constexpr (TileDef::Loc == TileType::Left) {
+            return GetPointer<typename TileDef::DType, MemoryRegion::L0A>(byteOffset, TileDef::Numel);
+        } else if constexpr (TileDef::Loc == TileType::Right) {
+            return GetPointer<typename TileDef::DType, MemoryRegion::L0B>(byteOffset, TileDef::Numel);
+        } else if constexpr (TileDef::Loc == TileType::Acc) {
+            return GetPointer<typename TileDef::DType, MemoryRegion::L0C>(byteOffset, TileDef::Numel);
+        } else {
+            return GetPointer<typename TileDef::DType, MemoryRegion::UB>(byteOffset,
+                                                                         TileDef::Numel); // For Vec and unknown types
         }
-
-        return reinterpret_cast<T *>(base + byteOffset);
     }
 
     // Get raw buffer bases (for debugging/direct access)
     char *GetUBBase()
     {
         EnsureInitialized();
-        return ubBuffer_.data();
+        return buffers_[MemoryRegion::UB].data();
     }
     char *GetL1Base()
     {
         EnsureInitialized();
-        return l1Buffer_.data();
+        return buffers_[MemoryRegion::L1].data();
     }
     char *GetL0ABase()
     {
         EnsureInitialized();
-        return l0aBuffer_.data();
+        return buffers_[MemoryRegion::L0A].data();
     }
     char *GetL0BBase()
     {
         EnsureInitialized();
-        return l0bBuffer_.data();
+        return buffers_[MemoryRegion::L0B].data();
     }
     char *GetL0CBase()
     {
         EnsureInitialized();
-        return l0cBuffer_.data();
+        return buffers_[MemoryRegion::L0C].data();
     }
 
-    const ArchMemorySizes &GetSizes() const
+    const NPUMemoryModel::ArchMemorySizes &GetSizes() const
     {
         return sizes_;
     }
@@ -204,39 +190,42 @@ public:
     void Clear()
     {
         if (initialized_) {
-            std::fill(ubBuffer_.begin(), ubBuffer_.end(), 0);
-            std::fill(l1Buffer_.begin(), l1Buffer_.end(), 0);
-            std::fill(l0aBuffer_.begin(), l0aBuffer_.end(), 0);
-            std::fill(l0bBuffer_.begin(), l0bBuffer_.end(), 0);
-            std::fill(l0cBuffer_.begin(), l0cBuffer_.end(), 0);
+            for (auto &buf : buffers_) {
+                std::fill(buf.begin(), buf.end(), 0);
+            }
         }
     }
 
     // Reset to uninitialized state
     void Reset()
     {
-        ubBuffer_.clear();
-        l1Buffer_.clear();
-        l0aBuffer_.clear();
-        l0bBuffer_.clear();
-        l0cBuffer_.clear();
+        for (auto &buf : buffers_) {
+            buf.clear();
+        }
         initialized_ = false;
     }
 
 private:
+    template <typename T, MemoryRegion region>
+    inline T *GetPointer(std::size_t byteOffset, size_t numel)
+    {
+        EnsureInitialized();
+
+        assert(byteOffset + numel * sizeof(T) <= sizes_[region]);
+        return reinterpret_cast<T *>(buffers_[region].data() + byteOffset);
+    }
+
     NPUMemoryModel() = default;
+    NPUMemoryModel(const NPUMemoryModel &) = delete;
+    NPUMemoryModel(const NPUMemoryModel &&) = delete;
 
     // Shared default architecture — set once, read by all threads during auto-init
     static inline NPUArch defaultArch_ = NPUArch::A2A3;
 
     // Per-thread memory buffers (thread_local instance owns these)
-    std::vector<char> ubBuffer_;
-    std::vector<char> l1Buffer_;
-    std::vector<char> l0aBuffer_;
-    std::vector<char> l0bBuffer_;
-    std::vector<char> l0cBuffer_;
+    std::vector<char> buffers_[MemoryRegion::_MAX_REGIONS];
 
-    ArchMemorySizes sizes_{};
+    ArchMemorySizes sizes_ = {};
     NPUArch arch_ = NPUArch::A2A3;
     bool initialized_ = false;
 };

@@ -28,6 +28,7 @@ AICORE void runTCI(__gm__ int32_t __out__ *out, int32_t start)
     using TileT = Tile<TileType::Vec, int32_t, 1, kCols, BLayout::RowMajor, -1, -1>;
     TileT dstTile(1, kCols);
     GlobalData dstGlobal(out);
+    TASSIGN(dstTile, 0);
 
     TCI<TileT, int32_t, descending>(dstTile, start);
     TSTORE(dstGlobal, dstTile);

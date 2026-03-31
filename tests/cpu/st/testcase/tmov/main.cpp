@@ -24,6 +24,9 @@ void testMov()
     Tile<srcLoc, T, rows, cols, srcBL, validRow, validCol, srcSL> src;
     Tile<dstLoc, T, rows, cols, dstBL, -1, -1, dstSL> dst(validRow, validCol);
 
+    TASSIGN(src, 0);
+    TASSIGN(dst, rows * cols * sizeof(T));
+
     std::fill(src.data(), src.data() + rows * cols, 0);
     std::fill(dst.data(), dst.data() + rows * cols, 0);
 

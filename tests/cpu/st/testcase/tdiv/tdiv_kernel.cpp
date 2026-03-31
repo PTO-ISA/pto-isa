@@ -31,6 +31,10 @@ AICORE void runTDiv(__gm__ T __out__ *out, __gm__ T __in__ *src0, __gm__ T __in_
     GlobalData src1Global(src1);
     GlobalData dstGlobal(out);
 
+    TASSIGN(src0Tile, 0);
+    TASSIGN(src1Tile, kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+    TASSIGN(dstTile, 2 * kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+
     TLOAD(src0Tile, src0Global);
     TLOAD(src1Tile, src1Global);
     set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);

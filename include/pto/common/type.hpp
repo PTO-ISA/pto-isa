@@ -22,8 +22,13 @@ See LICENSE in the root of the software repository for the full text of the Lice
 // for pto internal implementation
 #define PTO_INTERNAL AICORE PTO_INLINE
 
+#ifdef __CPU_SIM
+#define OP_NAME(Name)
+#define OP_TYPE(TypeName)
+#else
 #define OP_NAME(Name) __attribute__((vf_name(#Name)))
 #define OP_TYPE(TypeName) __attribute__((vf_kind(#TypeName)))
+#endif
 
 // -----------------------------------------------------------------------------
 // PTO assertion helpers

@@ -22,6 +22,7 @@ AICORE void runTTRI(__gm__ T __out__ *out)
     TileData dstTile(vRows, vCols);
 
     GlobalData dstGlobal(out);
+    TASSIGN(dstTile, 0x0);
 
     TTRI<TileData, isUpperOrLower>(dstTile, diagonal);
     TSTORE(dstGlobal, dstTile);

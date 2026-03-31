@@ -26,6 +26,9 @@ AICORE void runTMaxs(__gm__ T __out__ *out, __gm__ T __in__ *src, __gm__ T __in_
     GlobalData srcGlobal(src);
     GlobalData dstGlobal(out);
 
+    TASSIGN(srcTile, 0);
+    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+
     TLOAD(srcTile, srcGlobal);
     TMAXS(dstTile, srcTile, scalar[0]);
     TSTORE(dstGlobal, dstTile);

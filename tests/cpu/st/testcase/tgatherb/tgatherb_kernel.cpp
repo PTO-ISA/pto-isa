@@ -45,6 +45,9 @@ __global__ AICORE void runTGATHERB(__gm__ T __out__ *out, __gm__ T __in__ *src, 
     GlobalDataOffset offsetGlobal(offset);
     GlobalDataDst dstGlobal(out);
 
+    TASSIGN(srcTile, 0);
+    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+
     TLOAD(srcTile, srcGlobal);
     TLOAD(offsetTile, offsetGlobal);
     set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);

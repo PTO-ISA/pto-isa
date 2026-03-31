@@ -23,7 +23,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 get_filename_component(PTO_TILE_LIB_REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 
 add_executable(mla_attention_demo mla_attention_demo.cpp)
-target_compile_definitions(mla_attention_demo PRIVATE __CPU_SIM)
+target_compile_definitions(mla_attention_demo PRIVATE __CPU_SIM __PTO_AUTO__)
 target_include_directories(mla_attention_demo PRIVATE
     "${PTO_TILE_LIB_REPO_ROOT}/include"
 )

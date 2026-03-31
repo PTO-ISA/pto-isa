@@ -23,37 +23,8 @@ template <typename T, typename AddrType>
 PTO_INTERNAL void TASSIGN_IMPL(T &obj, AddrType addr)
 {
     if constexpr (is_tile_data_v<T>) {
-#ifdef __CPU_SIM
-        using DType = typename T::DType;
-        constexpr TileType tileType = T::Loc;
-
-        // Determine memory region based on tile type
-        // - Vec   → UB  (Unified Buffer)
-        // - Mat   → L1
-        // - Left  → L0A
-        // - Right → L0B
-        // - Acc   → L0C
-        MemoryRegion region;
-        if constexpr (tileType == TileType::Vec) {
-            region = MemoryRegion::UB;
-        } else if constexpr (tileType == TileType::Mat) {
-            region = MemoryRegion::L1;
-        } else if constexpr (tileType == TileType::Left) {
-            region = MemoryRegion::L0A;
-        } else if constexpr (tileType == TileType::Right) {
-            region = MemoryRegion::L0B;
-        } else if constexpr (tileType == TileType::Acc) {
-            region = MemoryRegion::L0C;
-        } else {
-            region = MemoryRegion::UB; // Default for unknown types
-        }
-
-        std::size_t byteOffset = static_cast<std::size_t>(addr);
-        obj.data() = NPUMemoryModel::Instance().GetPointer<DType>(region, byteOffset);
-#else
-        // No-op on real NPU - address binding is handled by hardware
-        return;
-#endif
+        static_assert(std::is_integral_v<AddrType>, "Tile can only be assigned with address of int type.");
+        obj.assignData(NPUMemoryModel::Instance().GetPointer<T>(static_cast<std::size_t>(addr)));
     } else {
         static_assert(is_global_data_v<T>, "Only Tile and GlobalTensor data types are supported.");
         static_assert(std::is_pointer_v<AddrType>, "GlobalTensor can only be assigned with address of pointer type.");

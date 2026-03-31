@@ -26,6 +26,9 @@ AICORE void runTRelu(__gm__ T __out__ *out, __gm__ T __in__ *src0)
     GlobalData src0Global(src0);
     GlobalData dstGlobal(out);
 
+    TASSIGN(src0Tile, 0);
+    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+
     TLOAD(src0Tile, src0Global);
     TRELU(dstTile, src0Tile);
     TSTORE(dstGlobal, dstTile);

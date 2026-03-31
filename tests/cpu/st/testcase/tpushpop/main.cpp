@@ -51,6 +51,10 @@ void testPushPopSingleThread()
     PPipe pipe(fifoStorage.data(), 0x0, 0x0);
     PPTile src;
     PPTile dst;
+
+    TASSIGN(src, 0);
+    TASSIGN(dst, rows * cols * sizeof(T));
+
     fillTile<T, rows, cols, srcLoc>(src, 0);
     for (int i = 0; i < dst.Numel; ++i) {
         dst.data()[i] = static_cast<T>(0);
@@ -81,6 +85,7 @@ void testPushPopMultiCore()
     std::thread producer([&]() {
         for (int iter = 0; iter < kIterations; ++iter) {
             PPTile src;
+            TASSIGN(src, 0);
             fillTile<T, rows, cols, srcLoc>(src, iter);
             TPUSH(src, pipe);
         }
@@ -91,6 +96,7 @@ void testPushPopMultiCore()
     std::thread consumer([&]() {
         for (int iter = 0; iter < kIterations; ++iter) {
             PPTile dst;
+            TASSIGN(dst, 0);
             for (int i = 0; i < dst.Numel; ++i) {
                 dst.data()[i] = static_cast<T>(0);
             }
@@ -148,6 +154,9 @@ TEST_F(TPushPopTest, a5_style_c2v_local_split_push_pop)
 
     AccTile src;
     VecTile dst;
+    TASSIGN(src, 0);
+    TASSIGN(dst, AccTile::Rows * AccTile::Cols * sizeof(AccTile::DType));
+
     fillTile<float, 16, 16, TileType::Acc>(src, 0);
     std::fill(dst.data(), dst.data() + dst.Numel, 0.0f);
 
@@ -176,6 +185,9 @@ TEST_F(TPushPopTest, a5_style_v2c_local_split_push_pop)
 
     VecTile src;
     MatTile dst;
+    TASSIGN(src, 0);
+    TASSIGN(dst, VecTile::Rows * VecTile::Cols * sizeof(VecTile::DType));
+
     fillTile<float, 8, 16, TileType::Vec>(src, 0);
     std::fill(dst.data(), dst.data() + dst.Numel, 0.0f);
 

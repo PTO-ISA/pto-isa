@@ -33,6 +33,9 @@ AICORE void runMGather(__gm__ float __out__ *out, __gm__ float __in__ *src, __gm
 
     TileT outTile(kTileRows, kTileCols);
     IdxT idxTile(kTileRows, kTileCols);
+
+    TASSIGN(idxTile, 0);
+    TASSIGN(outTile, kTileRows * kTileCols * sizeof(typename IdxT::DType));
     TLOAD(idxTile, idxGlobal);
     MGATHER(outTile, srcGlobal, idxTile);
     TSTORE(outGlobal, outTile);

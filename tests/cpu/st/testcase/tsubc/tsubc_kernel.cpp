@@ -29,6 +29,11 @@ AICORE void runTSubc(__gm__ T __out__ *out, __gm__ T __in__ *src0, __gm__ T __in
     GlobalData src2Global(src2);
     GlobalData dstGlobal(out);
 
+    TASSIGN(src0Tile, 0);
+    TASSIGN(src1Tile, kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+    TASSIGN(src2Tile, 2 * kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+    TASSIGN(dstTile, 3 * kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+
     TLOAD(src0Tile, src0Global);
     TLOAD(src1Tile, src1Global);
     TLOAD(src2Tile, src2Global);

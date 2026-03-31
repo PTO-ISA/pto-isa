@@ -26,6 +26,9 @@ AICORE void runTROWEXPAND(__gm__ float __out__ *out, __gm__ float __in__ *src)
     GlobalMat srcGlobal(src);
     GlobalMat dstGlobal(out);
 
+    TASSIGN(srcTile, 0);
+    TASSIGN(dstTile, kRows * kCols * sizeof(typename TileMat::DType));
+
     TLOAD(srcTile, srcGlobal);
     TROWEXPAND(dstTile, srcTile);
     TSTORE(dstGlobal, dstTile);

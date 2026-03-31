@@ -34,6 +34,9 @@ AICORE void runMScatter(__gm__ float __out__ *dst, __gm__ float __in__ *srcTile,
     TileT src(kTileRows, kTileCols);
     IdxT indexes(kTileRows, kTileCols);
 
+    TASSIGN(src, 0);
+    TASSIGN(indexes, kTileRows * kTileCols * sizeof(typename TileT::DType));
+
     TLOAD(src, srcGlobal);
     TLOAD(indexes, idxGlobal);
     MSCATTER(dstGlobal, src, indexes);

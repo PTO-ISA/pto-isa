@@ -65,6 +65,9 @@ AICORE void runHashFind(__gm__ int32_t __out__ *out, __gm__ int32_t __in__ *tabl
     TileI32 delta(kTileRows, kTileCols);
     TileI32 update(kTileRows, kTileCols);
 
+    // No direct Tile memory assignment is made (via TASSIGN)
+    // So, __PTO_AUTO__ macro should be enabled in compiler definitions for auto memory assignment
+
     TLOAD(qTile, queryGlobal);
     TCVT(qU32Tile, qTile, RoundMode::CAST_NONE);
 

@@ -22,6 +22,8 @@ AICORE void runSetGetVal(__gm__ T __in__ *src0)
     using TileData_src0 = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
     TileData_src0 src0Tile(kTRows_, kTCols_);
 
+    TASSIGN(src0Tile, 0);
+
     src0Tile.SetValue(4, 12.34);
     T val = src0Tile.GetValue(4);
     src0Tile.SetValue(5, val);

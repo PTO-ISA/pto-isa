@@ -33,9 +33,9 @@ inline AICORE void runTTRANS(__gm__ T __out__ *out, __gm__ T __in__ *src)
     TileDataDst dstTile;
     TileDataDst tmpTile;
 
-    TASSIGN(srcTile, 0x0);
-    TASSIGN(dstTile, 0x20000);
-    TASSIGN(tmpTile, 0x30000);
+    TASSIGN(srcTile, 0);
+    TASSIGN(dstTile, aligned_Cols * aligned_Rows * sizeof(typename TileDataSrc::DType));
+    TASSIGN(tmpTile, 2 * aligned_Cols * aligned_Rows * sizeof(typename TileDataSrc::DType));
 
     int offset = 0;
 

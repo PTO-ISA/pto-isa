@@ -26,6 +26,8 @@ AICORE void runTRSQRT(__gm__ float __out__ *out, __gm__ float __in__ *src)
     GlobalData srcGlobal(src);
     GlobalData dstGlobal(out);
 
+    TASSIGN(srcTile, 0);
+    TASSIGN(dstTile, srcTile.Numel * sizeof(typename TileT::DType));
     TLOAD(srcTile, srcGlobal);
     TRSQRT(dstTile, srcTile);
     TSTORE(dstGlobal, dstTile);

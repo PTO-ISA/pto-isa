@@ -36,6 +36,9 @@ __global__ AICORE void runTCVT(__gm__ T *out, __gm__ S *src)
 
     GlobalData_dst dstGlobal(out);
 
+    TASSIGN(srcTile, 0);
+    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileDataSrc::DType));
+
     TLOAD(srcTile, srcGlobal);
 
     set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);

@@ -113,6 +113,8 @@ AICORE void runTLOADND(__gm__ T *out, __gm__ T *src, int gShape0, int gShape1, i
         getGlobalTensor<T, shape0, shape1, shape2, kGTRows, shape4, kGTRows, shape4, BLayout::RowMajor, dyn_>(
             src, gShape0, gShape1, gShape2, kGTRows, shape4);
 
+    TASSIGN(vecTile, 0);
+
     TLOAD(vecTile, srcGlobal);
     for (size_t i = 0; i < TileData::Rows * TileData::Cols; i++) {
         out[i] = vecTile.data()[i];
@@ -132,6 +134,8 @@ AICORE void runTLOADDN(__gm__ T *out, __gm__ T *src, int gShape0, int gShape1, i
     auto srcGlobal =
         getGlobalTensor<T, shape0, shape1, shape2, shape3, kGTCols, shape3, kGTCols, BLayout::RowMajor, dyn_>(
             src, gShape0, gShape1, gShape2, shape3, kGTCols);
+
+    TASSIGN(vecTile, 0);
 
     TLOAD(vecTile, srcGlobal);
     for (size_t i = 0; i < TileData::Rows * TileData::Cols; i++) {

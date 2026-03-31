@@ -32,6 +32,10 @@ AICORE void runTScatter(__gm__ float __out__ *out, __gm__ float __in__ *src, __g
     GTf dstGlobal(out);
     GTi idxGlobal(idx);
 
+    TASSIGN(srcTile, 0);
+    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileT::DType));
+    TASSIGN(idxTile, 2 * kTRows_ * kTCols_ * sizeof(typename TileT::DType));
+
     TLOAD(srcTile, srcGlobal);
     TLOAD(idxTile, idxGlobal);
     TEXPANDS(dstTile, 0.0f);
