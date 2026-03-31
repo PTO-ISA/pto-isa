@@ -190,6 +190,40 @@ std::vector<T> RefMatmulF32(const std::vector<T> &a, const std::vector<T> &b, in
 }
 
 template <typename T>
+float ToHostFloat(T value)
+{
+    return static_cast<float>(value);
+}
+
+template <>
+float ToHostFloat<half>(half value)
+{
+    return __half2float(value);
+}
+
+template <>
+float ToHostFloat<bfloat16_t>(bfloat16_t value)
+{
+    return __bfloat162float(value);
+}
+
+template <typename T>
+std::vector<float> RefMatmulToFloat(const std::vector<T> &a, const std::vector<T> &b, int m, int k, int n)
+{
+    std::vector<float> out(m * n, 0.0f);
+    for (int row = 0; row < m; ++row) {
+        for (int col = 0; col < n; ++col) {
+            float acc = 0.0f;
+            for (int kk = 0; kk < k; ++kk) {
+                acc += ToHostFloat(a[row * k + kk]) * ToHostFloat(b[kk * n + col]);
+            }
+            out[row * n + col] = acc;
+        }
+    }
+    return out;
+}
+
+template <typename T>
 bool ExpectVecEq(const std::vector<T> &expected, const std::vector<T> &actual, const char *label)
 {
     if (expected.size() != actual.size()) {
@@ -318,14 +352,11 @@ __global__ void KernelTAdd(T *out, T *a, T *b, T sentinel)
     }
 }
 
-template <int M, int K, int N>
-__global__ void KernelTMATMUL(float *out, float *a, float *b)
+template <typename InputT, int M, int K, int N>
+__global__ void KernelTMATMUL(float *out, InputT *a, InputT *b)
 {
-    if (threadIdx.x != 0 || blockIdx.x != 0) {
-        return;
-    }
-    using TileA = pto::Tile<pto::TileType::Vec, float, M, K, pto::BLayout::RowMajor, -1, -1>;
-    using TileB = pto::Tile<pto::TileType::Vec, float, K, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileA = pto::Tile<pto::TileType::Vec, InputT, M, K, pto::BLayout::RowMajor, -1, -1>;
+    using TileB = pto::Tile<pto::TileType::Vec, InputT, K, N, pto::BLayout::RowMajor, -1, -1>;
     using TileC = pto::Tile<pto::TileType::Acc, float, M, N, pto::BLayout::RowMajor, -1, -1>;
     TileA aTile(M, K);
     TileB bTile(K, N);
@@ -469,7 +500,7 @@ bool TestTAddMatchesReference()
     return ExpectVecEq(expected, actual, "tadd");
 }
 
-bool TestSm121MatmulFastPathMatchesReference()
+bool TestSm121FloatInlinePtxMatmulMatchesReference()
 {
     constexpr int M = 8, K = 8, N = 8;
     std::vector<float> a(M * K);
@@ -490,15 +521,79 @@ bool TestSm121MatmulFastPathMatchesReference()
     if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(float), cudaMemcpyHostToDevice), "copy a")) return false;
     if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(float), cudaMemcpyHostToDevice), "copy b")) return false;
     if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out")) return false;
-    KernelTMATMUL<M, K, N><<<1, 1>>>(dOut, dA, dB);
-    if (!CheckCuda(cudaGetLastError(), "launch tmatmul")) return false;
-    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul")) return false;
+    KernelTMATMUL<float, M, K, N><<<1, 1>>>(dOut, dA, dB);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul float")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul float")) return false;
     std::vector<float> actual(expected.size());
     if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out")) return false;
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dOut);
-    return ExpectVecEq(expected, actual, "tmatmul_sm121");
+    return ExpectVecEq(expected, actual, "tmatmul_sm121_float");
+}
+
+bool TestSm121HalfTensorCoreMatmulMatchesReference()
+{
+    constexpr int M = 16, K = 16, N = 16;
+    std::vector<half> a(M * K);
+    std::vector<half> b(K * N);
+    for (int i = 0; i < M * K; ++i) {
+        a[i] = __float2half(static_cast<float>((i % 13) - 6) * 0.25f);
+    }
+    for (int i = 0; i < K * N; ++i) {
+        b[i] = __float2half(static_cast<float>((i % 11) - 5) * 0.5f);
+    }
+    auto expected = RefMatmulToFloat(a, b, M, K, N);
+    half *dA = nullptr;
+    half *dB = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(half)), "cudaMalloc dA half")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(half)), "cudaMalloc dB half")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut half")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(half), cudaMemcpyHostToDevice), "copy a half")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(half), cudaMemcpyHostToDevice), "copy b half")) return false;
+    if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out half")) return false;
+    KernelTMATMUL<half, M, K, N><<<1, 32>>>(dOut, dA, dB);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul half")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul half")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out half")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dOut);
+    return ExpectVecEq(expected, actual, "tmatmul_sm121_half");
+}
+
+bool TestSm121Bfloat16TensorCoreMatmulMatchesReference()
+{
+    constexpr int M = 16, K = 16, N = 16;
+    std::vector<bfloat16_t> a(M * K);
+    std::vector<bfloat16_t> b(K * N);
+    for (int i = 0; i < M * K; ++i) {
+        a[i] = __float2bfloat16(static_cast<float>((i % 9) - 4) * 0.75f);
+    }
+    for (int i = 0; i < K * N; ++i) {
+        b[i] = __float2bfloat16(static_cast<float>((i % 7) - 3) * 0.5f);
+    }
+    auto expected = RefMatmulToFloat(a, b, M, K, N);
+    bfloat16_t *dA = nullptr;
+    bfloat16_t *dB = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(bfloat16_t)), "cudaMalloc dA bf16")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(bfloat16_t)), "cudaMalloc dB bf16")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut bf16")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(bfloat16_t), cudaMemcpyHostToDevice), "copy a bf16")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(bfloat16_t), cudaMemcpyHostToDevice), "copy b bf16")) return false;
+    if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out bf16")) return false;
+    KernelTMATMUL<bfloat16_t, M, K, N><<<1, 32>>>(dOut, dA, dB);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul bf16")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul bf16")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out bf16")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dOut);
+    return ExpectVecEq(expected, actual, "tmatmul_sm121_bf16");
 }
 
 } // namespace
@@ -518,7 +613,9 @@ int main()
     run("TLoadDnColMajorMatchesReference", &TestTLoadDnColMajorMatchesReference);
     run("TStoreNdAndDnMatchReference", &TestTStoreNdAndDnMatchReference);
     run("TAddMatchesReference", &TestTAddMatchesReference);
-    run("Sm121MatmulFastPathMatchesReference", &TestSm121MatmulFastPathMatchesReference);
+    run("Sm121FloatInlinePtxMatmulMatchesReference", &TestSm121FloatInlinePtxMatmulMatchesReference);
+    run("Sm121HalfTensorCoreMatmulMatchesReference", &TestSm121HalfTensorCoreMatmulMatchesReference);
+    run("Sm121Bfloat16TensorCoreMatmulMatchesReference", &TestSm121Bfloat16TensorCoreMatmulMatchesReference);
 
     return failed == 0 ? 0 : 1;
 }

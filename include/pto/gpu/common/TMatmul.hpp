@@ -36,7 +36,7 @@ PTO_INTERNAL void TMATMUL_IMPL(TileAcc &cMatrix, TileLeft &aMatrix, TileRight &b
     CheckGpuMatmulValid<TileAcc, TileLeft, TileRight>();
 
 #ifdef PTO_GPU_SM121
-    if (gpu::sm121::TryInlinePtxTMATMUL(cMatrix, aMatrix, bMatrix)) {
+    if (gpu::sm121::TrySm121TMATMUL(cMatrix, aMatrix, bMatrix)) {
         return;
     }
 #endif

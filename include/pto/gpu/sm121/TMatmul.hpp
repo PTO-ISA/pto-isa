@@ -12,10 +12,13 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #define PTO_GPU_SM121_TMATMUL_HPP
 
 #include <type_traits>
+#include <mma.h>
 #include <pto/common/type.hpp>
 #include "pto/gpu/common/tile_offsets.hpp"
 
 namespace pto::gpu::sm121 {
+
+namespace wmma = nvcuda::wmma;
 
 template <typename T>
 PTO_INTERNAL float ToAccumFloat(T value)
@@ -42,8 +45,68 @@ PTO_INTERNAL float InlinePtxFma(float a, float b, float c)
     return out;
 }
 
+PTO_INTERNAL unsigned LinearThreadId()
+{
+    return threadIdx.x + blockDim.x * (threadIdx.y + blockDim.y * threadIdx.z);
+}
+
+PTO_INTERNAL unsigned ThreadsPerBlock()
+{
+    return blockDim.x * blockDim.y * blockDim.z;
+}
+
 template <typename TileAcc, typename TileLeft, typename TileRight>
-PTO_INTERNAL bool TryInlinePtxTMATMUL(TileAcc &cMatrix, TileLeft &aMatrix, TileRight &bMatrix)
+PTO_INTERNAL bool TryTensorCoreTMATMUL(TileAcc &cMatrix, TileLeft &aMatrix, TileRight &bMatrix)
+{
+    using CType = typename TileAcc::DType;
+    using AType = typename TileLeft::DType;
+    using BType = typename TileRight::DType;
+
+    constexpr bool supportedTypes =
+        std::is_same_v<CType, float> &&
+        ((std::is_same_v<AType, half> && std::is_same_v<BType, half>) ||
+         (std::is_same_v<AType, bfloat16_t> && std::is_same_v<BType, bfloat16_t>));
+
+    if constexpr (supportedTypes) {
+        const uint16_t m = aMatrix.GetValidRow();
+        const uint16_t k = aMatrix.GetValidCol();
+        const uint16_t n = bMatrix.GetValidCol();
+        if (m != 16 || n != 16 || k != 16 || bMatrix.GetValidRow() != 16) {
+            return false;
+        }
+        if constexpr (!TileLeft::isRowMajor || !TileRight::isRowMajor || !TileAcc::isRowMajor) {
+            return false;
+        }
+
+        const unsigned linearTid = LinearThreadId();
+        const unsigned warpId = linearTid / warpSize;
+        if (ThreadsPerBlock() < warpSize) {
+            return false;
+        }
+        if (warpId != 0) {
+            return true;
+        }
+
+        wmma::fragment<wmma::matrix_a, 16, 16, 16, AType, wmma::row_major> aFrag;
+        wmma::fragment<wmma::matrix_b, 16, 16, 16, BType, wmma::row_major> bFrag;
+        wmma::fragment<wmma::accumulator, 16, 16, 16, float> cFrag;
+
+        wmma::fill_fragment(cFrag, 0.0f);
+        wmma::load_matrix_sync(aFrag, aMatrix.data(), 16);
+        wmma::load_matrix_sync(bFrag, bMatrix.data(), 16);
+        wmma::mma_sync(cFrag, aFrag, bFrag, cFrag);
+        wmma::store_matrix_sync(cMatrix.data(), cFrag, 16, wmma::mem_row_major);
+        return true;
+    } else {
+        (void)cMatrix;
+        (void)aMatrix;
+        (void)bMatrix;
+        return false;
+    }
+}
+
+template <typename TileAcc, typename TileLeft, typename TileRight>
+PTO_INTERNAL bool TryInlinePtxF32TMATMUL(TileAcc &cMatrix, TileLeft &aMatrix, TileRight &bMatrix)
 {
     using CType = typename TileAcc::DType;
     using AType = typename TileLeft::DType;
@@ -55,6 +118,11 @@ PTO_INTERNAL bool TryInlinePtxTMATMUL(TileAcc &cMatrix, TileLeft &aMatrix, TileR
                                      (std::is_same_v<AType, bfloat16_t> && std::is_same_v<BType, bfloat16_t>));
     if constexpr (!supportedTypes) {
         return false;
+    }
+
+    const unsigned linearTid = LinearThreadId();
+    if (linearTid != 0) {
+        return ThreadsPerBlock() >= 1;
     }
 
     const uint16_t m = aMatrix.GetValidRow();
@@ -78,6 +146,15 @@ PTO_INTERNAL bool TryInlinePtxTMATMUL(TileAcc &cMatrix, TileLeft &aMatrix, TileR
         }
     }
     return true;
+}
+
+template <typename TileAcc, typename TileLeft, typename TileRight>
+PTO_INTERNAL bool TrySm121TMATMUL(TileAcc &cMatrix, TileLeft &aMatrix, TileRight &bMatrix)
+{
+    if (TryTensorCoreTMATMUL(cMatrix, aMatrix, bMatrix)) {
+        return true;
+    }
+    return TryInlinePtxF32TMATMUL(cMatrix, aMatrix, bMatrix);
 }
 
 } // namespace pto::gpu::sm121
