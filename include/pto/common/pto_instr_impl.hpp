@@ -233,10 +233,11 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include "pto/gpu/common/TMrgSort.hpp"
 #include "pto/gpu/common/TLoad.hpp"
 #include "pto/gpu/common/TStore.hpp"
-#include "pto/gpu/common/TMatmul.hpp"
 #ifdef PTO_GPU_SM121
 #include "pto/gpu/sm121/arch.hpp"
+#include "pto/gpu/sm121/TMatmul.hpp"
 #endif
+#include "pto/gpu/common/TMatmul.hpp"
 #endif
 
 #ifdef __CPU_SIM

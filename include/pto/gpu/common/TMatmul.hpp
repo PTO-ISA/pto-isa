@@ -35,6 +35,12 @@ PTO_INTERNAL void TMATMUL_IMPL(TileAcc &cMatrix, TileLeft &aMatrix, TileRight &b
 {
     CheckGpuMatmulValid<TileAcc, TileLeft, TileRight>();
 
+#ifdef PTO_GPU_SM121
+    if (gpu::sm121::TryInlinePtxTMATMUL(cMatrix, aMatrix, bMatrix)) {
+        return;
+    }
+#endif
+
     const uint16_t m = aMatrix.GetValidRow();
     const uint16_t k = aMatrix.GetValidCol();
     const uint16_t n = bMatrix.GetValidCol();

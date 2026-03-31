@@ -1,0 +1,524 @@
+#include <cuda_runtime.h>
+#include <iostream>
+#include <vector>
+#include <cstdint>
+#include <cmath>
+
+#include <pto/pto-inst.hpp>
+
+namespace {
+
+template <typename T, pto::Layout LayoutV>
+struct SimpleGlobal {
+    using DType = T;
+    static constexpr pto::Layout layout = LayoutV;
+
+    T *ptr;
+    int64_t shape[pto::GlobalTensorDim::TOTAL_DIM];
+    int64_t stride[pto::GlobalTensorDim::TOTAL_DIM];
+
+    __host__ __device__ SimpleGlobal(T *ptr_, int64_t s0, int64_t s1, int64_t s2, int64_t s3, int64_t s4,
+                                     int64_t st0, int64_t st1, int64_t st2, int64_t st3, int64_t st4)
+        : ptr(ptr_), shape{s0, s1, s2, s3, s4}, stride{st0, st1, st2, st3, st4}
+    {
+    }
+
+    __host__ __device__ T *data()
+    {
+        return ptr;
+    }
+
+    __host__ __device__ const T *data() const
+    {
+        return ptr;
+    }
+
+    __host__ __device__ int64_t GetShape(int dim) const
+    {
+        return shape[dim];
+    }
+
+    __host__ __device__ int64_t GetStride(int dim) const
+    {
+        return stride[dim];
+    }
+};
+
+bool CheckCuda(cudaError_t status, const char *what)
+{
+    if (status == cudaSuccess) {
+        return true;
+    }
+    std::cerr << "[CUDA] " << what << ": " << cudaGetErrorString(status) << std::endl;
+    return false;
+}
+
+template <typename T>
+std::size_t RowMajorOffset(std::size_t rows, std::size_t cols, std::size_t r, std::size_t c)
+{
+    (void)rows;
+    return r * cols + c;
+}
+
+template <typename T>
+std::size_t ColMajorOffset(std::size_t rows, std::size_t cols, std::size_t r, std::size_t c)
+{
+    (void)cols;
+    return c * rows + r;
+}
+
+template <typename T>
+std::vector<T> RefTLoadNdRowMajor(const std::vector<T> &src, int g0, int g1, int g2, int g3, int g4, int tileRows,
+                                  int tileCols, T pad)
+{
+    std::vector<T> out(tileRows * tileCols, pad);
+    int rowBase = 0;
+    for (int i = 0; i < g0; ++i) {
+        for (int j = 0; j < g1; ++j) {
+            for (int k = 0; k < g2; ++k) {
+                for (int r = 0; r < g3; ++r) {
+                    const int tileRow = rowBase + r;
+                    const int srcBase = i * (g1 * g2 * g3 * g4) + j * (g2 * g3 * g4) + k * (g3 * g4) + r * g4;
+                    for (int c = 0; c < g4; ++c) {
+                        out[RowMajorOffset<T>(tileRows, tileCols, tileRow, c)] = src[srcBase + c];
+                    }
+                }
+                rowBase += g3;
+            }
+        }
+    }
+    return out;
+}
+
+template <typename T>
+std::vector<T> RefTLoadDnColMajor(const std::vector<T> &src, int g0, int g1, int g2, int g3, int g4, int tileRows,
+                                  int tileCols, T pad)
+{
+    std::vector<T> out(tileRows * tileCols, pad);
+    int colBase = 0;
+    for (int i = 0; i < g0; ++i) {
+        for (int j = 0; j < g1; ++j) {
+            for (int k = 0; k < g2; ++k) {
+                for (int c = 0; c < g4; ++c) {
+                    const int tileCol = colBase + c;
+                    const int srcBase = i * (g1 * g2 * g3 * g4) + j * (g2 * g3 * g4) + k * (g3 * g4) + c * g3;
+                    for (int r = 0; r < g3; ++r) {
+                        out[ColMajorOffset<T>(tileRows, tileCols, r, tileCol)] = src[srcBase + r];
+                    }
+                }
+                colBase += g4;
+            }
+        }
+    }
+    return out;
+}
+
+template <typename T>
+std::vector<T> RefTStoreNdRowMajor(const std::vector<T> &tile, int g0, int g1, int g2, int g3, int g4, int tileRows,
+                                   int tileCols)
+{
+    std::vector<T> out(g0 * g1 * g2 * g3 * g4, T{});
+    int rowBase = 0;
+    for (int i = 0; i < g0; ++i) {
+        for (int j = 0; j < g1; ++j) {
+            for (int k = 0; k < g2; ++k) {
+                for (int r = 0; r < g3; ++r) {
+                    const int tileRow = rowBase + r;
+                    const int dstBase = i * (g1 * g2 * g3 * g4) + j * (g2 * g3 * g4) + k * (g3 * g4) + r * g4;
+                    for (int c = 0; c < g4; ++c) {
+                        out[dstBase + c] = tile[RowMajorOffset<T>(tileRows, tileCols, tileRow, c)];
+                    }
+                }
+                rowBase += g3;
+            }
+        }
+    }
+    return out;
+}
+
+template <typename T>
+std::vector<T> RefTStoreDnColMajor(const std::vector<T> &tile, int g0, int g1, int g2, int g3, int g4, int tileRows,
+                                   int tileCols)
+{
+    std::vector<T> out(g0 * g1 * g2 * g3 * g4, T{});
+    int colBase = 0;
+    for (int i = 0; i < g0; ++i) {
+        for (int j = 0; j < g1; ++j) {
+            for (int k = 0; k < g2; ++k) {
+                for (int c = 0; c < g4; ++c) {
+                    const int tileCol = colBase + c;
+                    const int dstBase = i * (g1 * g2 * g3 * g4) + j * (g2 * g3 * g4) + k * (g3 * g4) + c * g3;
+                    for (int r = 0; r < g3; ++r) {
+                        out[dstBase + r] = tile[ColMajorOffset<T>(tileRows, tileCols, r, tileCol)];
+                    }
+                }
+                colBase += g4;
+            }
+        }
+    }
+    return out;
+}
+
+template <typename T>
+std::vector<T> RefTAddRowMajor(const std::vector<T> &a, const std::vector<T> &b, int tileRows, int tileCols,
+                               int validRows, int validCols, T sentinel)
+{
+    std::vector<T> out(tileRows * tileCols, sentinel);
+    for (int r = 0; r < validRows; ++r) {
+        for (int c = 0; c < validCols; ++c) {
+            out[RowMajorOffset<T>(tileRows, tileCols, r, c)] =
+                a[RowMajorOffset<T>(tileRows, tileCols, r, c)] + b[RowMajorOffset<T>(tileRows, tileCols, r, c)];
+        }
+    }
+    return out;
+}
+
+template <typename T>
+std::vector<T> RefMatmulF32(const std::vector<T> &a, const std::vector<T> &b, int m, int k, int n)
+{
+    std::vector<T> out(m * n, T{});
+    for (int row = 0; row < m; ++row) {
+        for (int col = 0; col < n; ++col) {
+            T acc = T{};
+            for (int kk = 0; kk < k; ++kk) {
+                acc += a[row * k + kk] * b[kk * n + col];
+            }
+            out[row * n + col] = acc;
+        }
+    }
+    return out;
+}
+
+template <typename T>
+bool ExpectVecEq(const std::vector<T> &expected, const std::vector<T> &actual, const char *label)
+{
+    if (expected.size() != actual.size()) {
+        std::cerr << label << ": size mismatch: expected " << expected.size() << ", got " << actual.size()
+                  << std::endl;
+        return false;
+    }
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        if (expected[i] != actual[i]) {
+            std::cerr << label << ": mismatch at index " << i << ", expected " << expected[i] << ", got "
+                      << actual[i] << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+template <>
+bool ExpectVecEq<float>(const std::vector<float> &expected, const std::vector<float> &actual, const char *label)
+{
+    if (expected.size() != actual.size()) {
+        std::cerr << label << ": size mismatch: expected " << expected.size() << ", got " << actual.size()
+                  << std::endl;
+        return false;
+    }
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        if (std::abs(expected[i] - actual[i]) > 1e-5f) {
+            std::cerr << label << ": mismatch at index " << i << ", expected " << expected[i] << ", got "
+                      << actual[i] << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+template <typename T, int G0, int G1, int G2, int G3, int G4, int TRows, int TCols>
+__global__ void KernelTLoadNd(T *out, T *src)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using GlobalData = SimpleGlobal<T, pto::Layout::ND>;
+    using TileData = pto::Tile<pto::TileType::Vec, T, TRows, TCols, pto::BLayout::RowMajor, -1, -1,
+                               pto::SLayout::NoneBox, 512, pto::PadValue::Zero>;
+    T storage[TRows * TCols];
+    TileData tile(G0 * G1 * G2 * G3, G4);
+    tile.data() = storage;
+    GlobalData global(src, G0, G1, G2, G3, G4, G1 * G2 * G3 * G4, G2 * G3 * G4, G3 * G4, G4, 1);
+    pto::TLOAD(tile, global);
+    for (int i = 0; i < TRows * TCols; ++i) {
+        out[i] = storage[i];
+    }
+}
+
+template <typename T, int G0, int G1, int G2, int G3, int G4, int TRows, int TCols>
+__global__ void KernelTLoadDn(T *out, T *src)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using GlobalData = SimpleGlobal<T, pto::Layout::DN>;
+    using TileData = pto::Tile<pto::TileType::Vec, T, TRows, TCols, pto::BLayout::ColMajor, -1, -1,
+                               pto::SLayout::NoneBox, 512, pto::PadValue::Zero>;
+    T storage[TRows * TCols];
+    TileData tile(G3, G0 * G1 * G2 * G4);
+    tile.data() = storage;
+    GlobalData global(src, G0, G1, G2, G3, G4, G1 * G2 * G3 * G4, G2 * G3 * G4, G3 * G4, 1, G3);
+    pto::TLOAD(tile, global);
+    for (int i = 0; i < TRows * TCols; ++i) {
+        out[i] = storage[i];
+    }
+}
+
+template <typename T, int G0, int G1, int G2, int G3, int G4, int TRows, int TCols>
+__global__ void KernelTStoreNd(T *out, T *tileRaw)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using GlobalData = SimpleGlobal<T, pto::Layout::ND>;
+    using TileData = pto::Tile<pto::TileType::Vec, T, TRows, TCols, pto::BLayout::RowMajor, -1, -1>;
+    TileData tile(G0 * G1 * G2 * G3, G4);
+    tile.data() = tileRaw;
+    GlobalData global(out, G0, G1, G2, G3, G4, G1 * G2 * G3 * G4, G2 * G3 * G4, G3 * G4, G4, 1);
+    pto::TSTORE(global, tile);
+}
+
+template <typename T, int G0, int G1, int G2, int G3, int G4, int TRows, int TCols>
+__global__ void KernelTStoreDn(T *out, T *tileRaw)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using GlobalData = SimpleGlobal<T, pto::Layout::DN>;
+    using TileData = pto::Tile<pto::TileType::Vec, T, TRows, TCols, pto::BLayout::ColMajor, -1, -1>;
+    TileData tile(G3, G0 * G1 * G2 * G4);
+    tile.data() = tileRaw;
+    GlobalData global(out, G0, G1, G2, G3, G4, G1 * G2 * G3 * G4, G2 * G3 * G4, G3 * G4, 1, G3);
+    pto::TSTORE(global, tile);
+}
+
+template <typename T, int TRows, int TCols, int ValidRows, int ValidCols>
+__global__ void KernelTAdd(T *out, T *a, T *b, T sentinel)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using TileData = pto::Tile<pto::TileType::Vec, T, TRows, TCols, pto::BLayout::RowMajor, -1, -1>;
+    T aStorage[TRows * TCols];
+    T bStorage[TRows * TCols];
+    T cStorage[TRows * TCols];
+    for (int i = 0; i < TRows * TCols; ++i) {
+        aStorage[i] = a[i];
+        bStorage[i] = b[i];
+        cStorage[i] = sentinel;
+    }
+    TileData aTile(ValidRows, ValidCols);
+    TileData bTile(ValidRows, ValidCols);
+    TileData cTile(ValidRows, ValidCols);
+    aTile.data() = aStorage;
+    bTile.data() = bStorage;
+    cTile.data() = cStorage;
+    pto::TADD(cTile, aTile, bTile);
+    for (int i = 0; i < TRows * TCols; ++i) {
+        out[i] = cStorage[i];
+    }
+}
+
+template <int M, int K, int N>
+__global__ void KernelTMATMUL(float *out, float *a, float *b)
+{
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    using TileA = pto::Tile<pto::TileType::Vec, float, M, K, pto::BLayout::RowMajor, -1, -1>;
+    using TileB = pto::Tile<pto::TileType::Vec, float, K, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileC = pto::Tile<pto::TileType::Acc, float, M, N, pto::BLayout::RowMajor, -1, -1>;
+    TileA aTile(M, K);
+    TileB bTile(K, N);
+    TileC cTile(M, N);
+    aTile.data() = a;
+    bTile.data() = b;
+    cTile.data() = out;
+    pto::TMATMUL(cTile, aTile, bTile);
+}
+
+bool TestTLoadNdRowMajorMatchesReference()
+{
+    constexpr int G0 = 1, G1 = 1, G2 = 1, G3 = 4, G4 = 7, TRows = 4, TCols = 8;
+    std::vector<float> src(G0 * G1 * G2 * G3 * G4);
+    for (std::size_t i = 0; i < src.size(); ++i) {
+        src[i] = static_cast<float>(i + 1);
+    }
+    auto expected = RefTLoadNdRowMajor(src, G0, G1, G2, G3, G4, TRows, TCols, 0.0f);
+
+    float *dSrc = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dSrc, src.size() * sizeof(float)), "cudaMalloc dSrc")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut")) return false;
+    if (!CheckCuda(cudaMemcpy(dSrc, src.data(), src.size() * sizeof(float), cudaMemcpyHostToDevice), "copy src")) return false;
+    KernelTLoadNd<float, G0, G1, G2, G3, G4, TRows, TCols><<<1, 1>>>(dOut, dSrc);
+    if (!CheckCuda(cudaGetLastError(), "launch tload nd")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tload nd")) return false;
+
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out")) return false;
+    cudaFree(dSrc);
+    cudaFree(dOut);
+    return ExpectVecEq(expected, actual, "tload_nd");
+}
+
+bool TestTLoadDnColMajorMatchesReference()
+{
+    constexpr int G0 = 1, G1 = 1, G2 = 1, G3 = 3, G4 = 5, TRows = 8, TCols = 8;
+    std::vector<float> src(G0 * G1 * G2 * G3 * G4);
+    for (std::size_t i = 0; i < src.size(); ++i) {
+        src[i] = static_cast<float>(100 + i);
+    }
+    auto expected = RefTLoadDnColMajor(src, G0, G1, G2, G3, G4, TRows, TCols, 0.0f);
+
+    float *dSrc = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dSrc, src.size() * sizeof(float)), "cudaMalloc dSrc")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut")) return false;
+    if (!CheckCuda(cudaMemcpy(dSrc, src.data(), src.size() * sizeof(float), cudaMemcpyHostToDevice), "copy src")) return false;
+    KernelTLoadDn<float, G0, G1, G2, G3, G4, TRows, TCols><<<1, 1>>>(dOut, dSrc);
+    if (!CheckCuda(cudaGetLastError(), "launch tload dn")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tload dn")) return false;
+
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out")) return false;
+    cudaFree(dSrc);
+    cudaFree(dOut);
+    return ExpectVecEq(expected, actual, "tload_dn");
+}
+
+bool TestTStoreNdAndDnMatchReference()
+{
+    {
+        constexpr int G0 = 1, G1 = 1, G2 = 1, G3 = 4, G4 = 7, TRows = 4, TCols = 8;
+        std::vector<float> tile(TRows * TCols, -1.0f);
+        for (int r = 0; r < G3; ++r) {
+            for (int c = 0; c < G4; ++c) {
+                tile[r * TCols + c] = static_cast<float>(r * 10 + c);
+            }
+        }
+        auto expected = RefTStoreNdRowMajor(tile, G0, G1, G2, G3, G4, TRows, TCols);
+        float *dTile = nullptr;
+        float *dOut = nullptr;
+        if (!CheckCuda(cudaMalloc(&dTile, tile.size() * sizeof(float)), "cudaMalloc dTile")) return false;
+        if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut")) return false;
+        if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset dOut")) return false;
+        if (!CheckCuda(cudaMemcpy(dTile, tile.data(), tile.size() * sizeof(float), cudaMemcpyHostToDevice), "copy tile")) return false;
+        KernelTStoreNd<float, G0, G1, G2, G3, G4, TRows, TCols><<<1, 1>>>(dOut, dTile);
+        if (!CheckCuda(cudaGetLastError(), "launch tstore nd")) return false;
+        if (!CheckCuda(cudaDeviceSynchronize(), "sync tstore nd")) return false;
+        std::vector<float> actual(expected.size());
+        if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out")) return false;
+        cudaFree(dTile);
+        cudaFree(dOut);
+        if (!ExpectVecEq(expected, actual, "tstore_nd")) return false;
+    }
+    {
+        constexpr int G0 = 1, G1 = 1, G2 = 1, G3 = 3, G4 = 6, TRows = 16, TCols = 8;
+        std::vector<int16_t> tile(TRows * TCols, static_cast<int16_t>(-7));
+        for (int c = 0; c < G4; ++c) {
+            for (int r = 0; r < G3; ++r) {
+                tile[c * TRows + r] = static_cast<int16_t>(c * 10 + r);
+            }
+        }
+        auto expected = RefTStoreDnColMajor(tile, G0, G1, G2, G3, G4, TRows, TCols);
+        int16_t *dTile = nullptr;
+        int16_t *dOut = nullptr;
+        if (!CheckCuda(cudaMalloc(&dTile, tile.size() * sizeof(int16_t)), "cudaMalloc dTile")) return false;
+        if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(int16_t)), "cudaMalloc dOut")) return false;
+        if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(int16_t)), "memset dOut")) return false;
+        if (!CheckCuda(cudaMemcpy(dTile, tile.data(), tile.size() * sizeof(int16_t), cudaMemcpyHostToDevice), "copy tile")) return false;
+        KernelTStoreDn<int16_t, G0, G1, G2, G3, G4, TRows, TCols><<<1, 1>>>(dOut, dTile);
+        if (!CheckCuda(cudaGetLastError(), "launch tstore dn")) return false;
+        if (!CheckCuda(cudaDeviceSynchronize(), "sync tstore dn")) return false;
+        std::vector<int16_t> actual(expected.size());
+        if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(int16_t), cudaMemcpyDeviceToHost), "copy out")) return false;
+        cudaFree(dTile);
+        cudaFree(dOut);
+        if (!ExpectVecEq(expected, actual, "tstore_dn")) return false;
+    }
+    return true;
+}
+
+bool TestTAddMatchesReference()
+{
+    constexpr int TRows = 8, TCols = 8, ValidRows = 5, ValidCols = 7;
+    std::vector<float> a(TRows * TCols);
+    std::vector<float> b(TRows * TCols);
+    for (int i = 0; i < TRows * TCols; ++i) {
+        a[i] = static_cast<float>(i);
+        b[i] = static_cast<float>(100 - i);
+    }
+    constexpr float sentinel = -777.0f;
+    auto expected = RefTAddRowMajor(a, b, TRows, TCols, ValidRows, ValidCols, sentinel);
+    float *dA = nullptr;
+    float *dB = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(float)), "cudaMalloc dA")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(float)), "cudaMalloc dB")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(float), cudaMemcpyHostToDevice), "copy a")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(float), cudaMemcpyHostToDevice), "copy b")) return false;
+    KernelTAdd<float, TRows, TCols, ValidRows, ValidCols><<<1, 1>>>(dOut, dA, dB, sentinel);
+    if (!CheckCuda(cudaGetLastError(), "launch tadd")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tadd")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dOut);
+    return ExpectVecEq(expected, actual, "tadd");
+}
+
+bool TestSm121MatmulFastPathMatchesReference()
+{
+    constexpr int M = 8, K = 8, N = 8;
+    std::vector<float> a(M * K);
+    std::vector<float> b(K * N);
+    for (int i = 0; i < M * K; ++i) {
+        a[i] = static_cast<float>((i % 9) - 4);
+    }
+    for (int i = 0; i < K * N; ++i) {
+        b[i] = static_cast<float>((i % 7) - 3);
+    }
+    auto expected = RefMatmulF32(a, b, M, K, N);
+    float *dA = nullptr;
+    float *dB = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(float)), "cudaMalloc dA")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(float)), "cudaMalloc dB")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(float), cudaMemcpyHostToDevice), "copy a")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(float), cudaMemcpyHostToDevice), "copy b")) return false;
+    if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out")) return false;
+    KernelTMATMUL<M, K, N><<<1, 1>>>(dOut, dA, dB);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dOut);
+    return ExpectVecEq(expected, actual, "tmatmul_sm121");
+}
+
+} // namespace
+
+int main()
+{
+    int failed = 0;
+    auto run = [&](const char *name, bool (*fn)()) {
+        const bool ok = fn();
+        std::cout << (ok ? "[PASS] " : "[FAIL] ") << name << std::endl;
+        if (!ok) {
+            ++failed;
+        }
+    };
+
+    run("TLoadNdRowMajorMatchesReference", &TestTLoadNdRowMajorMatchesReference);
+    run("TLoadDnColMajorMatchesReference", &TestTLoadDnColMajorMatchesReference);
+    run("TStoreNdAndDnMatchReference", &TestTStoreNdAndDnMatchReference);
+    run("TAddMatchesReference", &TestTAddMatchesReference);
+    run("Sm121MatmulFastPathMatchesReference", &TestSm121MatmulFastPathMatchesReference);
+
+    return failed == 0 ? 0 : 1;
+}
