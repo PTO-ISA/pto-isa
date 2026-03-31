@@ -76,6 +76,8 @@
     - [TROWMIN](isa/TROWMIN_zh.md)
     - [TROWARGMAX](isa/TROWARGMAX_zh.md)
     - [TROWARGMIN](isa/TROWARGMIN_zh.md)
+    - [TCOLARGMAX](isa/TCOLARGMAX_zh.md)
+    - [TCOLARGMIN](isa/TCOLARGMIN_zh.md)
     - [TROWEXPAND](isa/TROWEXPAND_zh.md)
     - [TROWEXPANDDIV](isa/TROWEXPANDDIV_zh.md)
     - [TROWEXPANDMUL](isa/TROWEXPANDMUL_zh.md)

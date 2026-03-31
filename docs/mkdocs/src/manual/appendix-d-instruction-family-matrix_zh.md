@@ -88,6 +88,8 @@
 | 轴归约 / 扩展 | [TCOLMAX](/docs/isa/TCOLMAX_zh.md) | `reduce_expand` | `dst, src` | `docs/isa/TCOLMAX_zh.md` |
 | 轴归约 / 扩展 | [TROWMAX](/docs/isa/TROWMAX_zh.md) | `reduce_expand` | `dst, src` | `docs/isa/TROWMAX_zh.md` |
 | 轴归约 / 扩展 | [TROWMIN](/docs/isa/TROWMIN_zh.md) | `reduce_expand` | `dst, src` | `docs/isa/TROWMIN_zh.md` |
+| 轴归约 / 扩展 | [TCOLARGMAX](/docs/isa/TCOLARGMAX_zh.md) | `reduce_expand` | `dst, src` | `docs/isa/TCOLARGMAX_zh.md` |
+| 轴归约 / 扩展 | [TCOLARGMIN](/docs/isa/TCOLARGMIN_zh.md) | `reduce_expand` | `dst, src` | `docs/isa/TCOLARGMIN_zh.md` |
 | 轴归约 / 扩展 | [TROWEXPAND](/docs/isa/TROWEXPAND_zh.md) | `reduce_expand` | `dst, src` | `docs/isa/TROWEXPAND_zh.md` |
 | 轴归约 / 扩展 | [TROWEXPANDDIV](/docs/isa/TROWEXPANDDIV_zh.md) | `reduce_expand` | `dst, src` | `docs/isa/TROWEXPANDDIV_zh.md` |
 | 轴归约 / 扩展 | [TROWEXPANDMUL](/docs/isa/TROWEXPANDMUL_zh.md) | `reduce_expand` | `dst, src` | `docs/isa/TROWEXPANDMUL_zh.md` |
