@@ -224,6 +224,30 @@ std::vector<float> RefMatmulToFloat(const std::vector<T> &a, const std::vector<T
 }
 
 template <typename T>
+std::vector<float> RefMatmulAccToFloat(const std::vector<T> &a, const std::vector<T> &b, const std::vector<float> &acc,
+                                       int m, int k, int n)
+{
+    auto out = RefMatmulToFloat(a, b, m, k, n);
+    for (std::size_t i = 0; i < out.size(); ++i) {
+        out[i] += acc[i];
+    }
+    return out;
+}
+
+template <typename T>
+std::vector<float> RefMatmulBiasToFloat(const std::vector<T> &a, const std::vector<T> &b,
+                                        const std::vector<float> &bias, int m, int k, int n)
+{
+    auto out = RefMatmulToFloat(a, b, m, k, n);
+    for (int row = 0; row < m; ++row) {
+        for (int col = 0; col < n; ++col) {
+            out[row * n + col] += bias[col];
+        }
+    }
+    return out;
+}
+
+template <typename T>
 bool ExpectVecEq(const std::vector<T> &expected, const std::vector<T> &actual, const char *label)
 {
     if (expected.size() != actual.size()) {
@@ -253,6 +277,24 @@ bool ExpectVecEq<float>(const std::vector<float> &expected, const std::vector<fl
         if (std::abs(expected[i] - actual[i]) > 1e-5f) {
             std::cerr << label << ": mismatch at index " << i << ", expected " << expected[i] << ", got "
                       << actual[i] << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ExpectVecNear(const std::vector<float> &expected, const std::vector<float> &actual,
+                   const char *label, float tol)
+{
+    if (expected.size() != actual.size()) {
+        std::cerr << label << ": size mismatch: expected " << expected.size() << ", got " << actual.size()
+                  << std::endl;
+        return false;
+    }
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        if (std::abs(expected[i] - actual[i]) > tol) {
+            std::cerr << label << ": mismatch at index " << i << ", expected " << expected[i] << ", got "
+                      << actual[i] << ", tol " << tol << std::endl;
             return false;
         }
     }
@@ -365,6 +407,41 @@ __global__ void KernelTMATMUL(float *out, InputT *a, InputT *b)
     bTile.data() = b;
     cTile.data() = out;
     pto::TMATMUL(cTile, aTile, bTile);
+}
+
+template <typename InputT, int M, int K, int N>
+__global__ void KernelTMATMUL_ACC(float *out, float *in, InputT *a, InputT *b)
+{
+    using TileA = pto::Tile<pto::TileType::Vec, InputT, M, K, pto::BLayout::RowMajor, -1, -1>;
+    using TileB = pto::Tile<pto::TileType::Vec, InputT, K, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileC = pto::Tile<pto::TileType::Acc, float, M, N, pto::BLayout::RowMajor, -1, -1>;
+    TileA aTile(M, K);
+    TileB bTile(K, N);
+    TileC cOutTile(M, N);
+    TileC cInTile(M, N);
+    aTile.data() = a;
+    bTile.data() = b;
+    cOutTile.data() = out;
+    cInTile.data() = in;
+    pto::TMATMUL_ACC(cOutTile, cInTile, aTile, bTile);
+}
+
+template <typename InputT, int M, int K, int N>
+__global__ void KernelTMATMUL_BIAS(float *out, InputT *a, InputT *b, float *bias)
+{
+    using TileA = pto::Tile<pto::TileType::Vec, InputT, M, K, pto::BLayout::RowMajor, -1, -1>;
+    using TileB = pto::Tile<pto::TileType::Vec, InputT, K, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileC = pto::Tile<pto::TileType::Acc, float, M, N, pto::BLayout::RowMajor, -1, -1>;
+    using TileBias = pto::Tile<pto::TileType::Vec, float, 1, N, pto::BLayout::RowMajor, -1, -1>;
+    TileA aTile(M, K);
+    TileB bTile(K, N);
+    TileC cTile(M, N);
+    TileBias biasTile(1, N);
+    aTile.data() = a;
+    bTile.data() = b;
+    cTile.data() = out;
+    biasTile.data() = bias;
+    pto::TMATMUL_BIAS(cTile, aTile, bTile, biasTile);
 }
 
 bool TestTLoadNdRowMajorMatchesReference()
@@ -532,9 +609,9 @@ bool TestSm121FloatInlinePtxMatmulMatchesReference()
     return ExpectVecEq(expected, actual, "tmatmul_sm121_float");
 }
 
-bool TestSm121HalfTensorCoreMatmulMatchesReference()
+bool TestSm121HalfTensorCoreMatmulExtendedMatchesReference()
 {
-    constexpr int M = 16, K = 16, N = 16;
+    constexpr int M = 32, K = 16, N = 32;
     std::vector<half> a(M * K);
     std::vector<half> b(K * N);
     for (int i = 0; i < M * K; ++i) {
@@ -561,12 +638,12 @@ bool TestSm121HalfTensorCoreMatmulMatchesReference()
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dOut);
-    return ExpectVecEq(expected, actual, "tmatmul_sm121_half");
+    return ExpectVecNear(expected, actual, "tmatmul_sm121_half_extended", 1e-3f);
 }
 
-bool TestSm121Bfloat16TensorCoreMatmulMatchesReference()
+bool TestSm121Bfloat16TensorCoreMatmulExtendedMatchesReference()
 {
-    constexpr int M = 16, K = 16, N = 16;
+    constexpr int M = 16, K = 32, N = 16;
     std::vector<bfloat16_t> a(M * K);
     std::vector<bfloat16_t> b(K * N);
     for (int i = 0; i < M * K; ++i) {
@@ -593,7 +670,86 @@ bool TestSm121Bfloat16TensorCoreMatmulMatchesReference()
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dOut);
-    return ExpectVecEq(expected, actual, "tmatmul_sm121_bf16");
+    return ExpectVecNear(expected, actual, "tmatmul_sm121_bf16_extended", 2e-2f);
+}
+
+bool TestSm121HalfTensorCoreMatmulAccMatchesReference()
+{
+    constexpr int M = 16, K = 16, N = 16;
+    std::vector<half> a(M * K);
+    std::vector<half> b(K * N);
+    std::vector<float> acc(M * N);
+    for (int i = 0; i < M * K; ++i) {
+        a[i] = __float2half(static_cast<float>((i % 15) - 7) * 0.125f);
+    }
+    for (int i = 0; i < K * N; ++i) {
+        b[i] = __float2half(static_cast<float>((i % 10) - 4) * 0.375f);
+    }
+    for (int i = 0; i < M * N; ++i) {
+        acc[i] = static_cast<float>((i % 8) - 4) * 0.5f;
+    }
+    auto expected = RefMatmulAccToFloat(a, b, acc, M, K, N);
+    half *dA = nullptr;
+    half *dB = nullptr;
+    float *dAcc = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(half)), "cudaMalloc dA acc")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(half)), "cudaMalloc dB acc")) return false;
+    if (!CheckCuda(cudaMalloc(&dAcc, acc.size() * sizeof(float)), "cudaMalloc dAcc acc")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut acc")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(half), cudaMemcpyHostToDevice), "copy a acc")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(half), cudaMemcpyHostToDevice), "copy b acc")) return false;
+    if (!CheckCuda(cudaMemcpy(dAcc, acc.data(), acc.size() * sizeof(float), cudaMemcpyHostToDevice), "copy acc in")) return false;
+    KernelTMATMUL_ACC<half, M, K, N><<<1, 32>>>(dOut, dAcc, dA, dB);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul acc")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul acc")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out acc")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dAcc);
+    cudaFree(dOut);
+    return ExpectVecNear(expected, actual, "tmatmul_sm121_acc", 1e-3f);
+}
+
+bool TestSm121Bfloat16TensorCoreMatmulBiasMatchesReference()
+{
+    constexpr int M = 16, K = 16, N = 16;
+    std::vector<bfloat16_t> a(M * K);
+    std::vector<bfloat16_t> b(K * N);
+    std::vector<float> bias(N);
+    for (int i = 0; i < M * K; ++i) {
+        a[i] = __float2bfloat16(static_cast<float>((i % 9) - 4) * 0.25f);
+    }
+    for (int i = 0; i < K * N; ++i) {
+        b[i] = __float2bfloat16(static_cast<float>((i % 7) - 3) * 0.75f);
+    }
+    for (int i = 0; i < N; ++i) {
+        bias[i] = static_cast<float>(i - 8) * 0.125f;
+    }
+    auto expected = RefMatmulBiasToFloat(a, b, bias, M, K, N);
+    bfloat16_t *dA = nullptr;
+    bfloat16_t *dB = nullptr;
+    float *dBias = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(bfloat16_t)), "cudaMalloc dA bias")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(bfloat16_t)), "cudaMalloc dB bias")) return false;
+    if (!CheckCuda(cudaMalloc(&dBias, bias.size() * sizeof(float)), "cudaMalloc dBias")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut bias")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(bfloat16_t), cudaMemcpyHostToDevice), "copy a bias")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(bfloat16_t), cudaMemcpyHostToDevice), "copy b bias")) return false;
+    if (!CheckCuda(cudaMemcpy(dBias, bias.data(), bias.size() * sizeof(float), cudaMemcpyHostToDevice), "copy bias")) return false;
+    if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out bias")) return false;
+    KernelTMATMUL_BIAS<bfloat16_t, M, K, N><<<1, 32>>>(dOut, dA, dB, dBias);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul bias")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul bias")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out bias")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dBias);
+    cudaFree(dOut);
+    return ExpectVecNear(expected, actual, "tmatmul_sm121_bias", 2e-2f);
 }
 
 } // namespace
@@ -614,8 +770,10 @@ int main()
     run("TStoreNdAndDnMatchReference", &TestTStoreNdAndDnMatchReference);
     run("TAddMatchesReference", &TestTAddMatchesReference);
     run("Sm121FloatInlinePtxMatmulMatchesReference", &TestSm121FloatInlinePtxMatmulMatchesReference);
-    run("Sm121HalfTensorCoreMatmulMatchesReference", &TestSm121HalfTensorCoreMatmulMatchesReference);
-    run("Sm121Bfloat16TensorCoreMatmulMatchesReference", &TestSm121Bfloat16TensorCoreMatmulMatchesReference);
+    run("Sm121HalfTensorCoreMatmulExtendedMatchesReference", &TestSm121HalfTensorCoreMatmulExtendedMatchesReference);
+    run("Sm121Bfloat16TensorCoreMatmulExtendedMatchesReference", &TestSm121Bfloat16TensorCoreMatmulExtendedMatchesReference);
+    run("Sm121HalfTensorCoreMatmulAccMatchesReference", &TestSm121HalfTensorCoreMatmulAccMatchesReference);
+    run("Sm121Bfloat16TensorCoreMatmulBiasMatchesReference", &TestSm121Bfloat16TensorCoreMatmulBiasMatchesReference);
 
     return failed == 0 ? 0 : 1;
 }

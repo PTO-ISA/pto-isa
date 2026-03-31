@@ -16,8 +16,10 @@ Current checks:
 - `TSTORE` DN col-major path
 - `TADD` correctness against a host reference
 - `sm121` float `TMATMUL` inline-PTX FMA fallback smoke test
-- `sm121` half `TMATMUL` tensor-core MMA smoke test
-- `sm121` bfloat16 `TMATMUL` tensor-core MMA smoke test
+- `sm121` half `TMATMUL` tensor-core MMA tiled-path smoke test
+- `sm121` bfloat16 `TMATMUL` tensor-core MMA tiled-path smoke test
+- `sm121` half `TMATMUL_ACC` tensor-core fast-path smoke test
+- `sm121` bfloat16 `TMATMUL_BIAS` tensor-core fast-path smoke test
 
 ## Build
 
@@ -37,5 +39,6 @@ ctest --output-on-failure
 
 - This lane is intentionally lightweight and self-contained.
 - It uses CTest directly instead of the repo's CPU/NPU test harnesses.
-- `sm121` now has a real warp-level tensor-core MMA path for half/bfloat16 16x16x16 tiles.
+- `sm121` now has a real warp-level tensor-core MMA path for half/bfloat16 using 16x16x16 MMA tiles, composed into larger 16-aligned matrix tiles in software.
+- `TMATMUL_ACC` and `TMATMUL_BIAS` now reuse the same tensor-core tiled path on supported `sm121` shapes.
 - float matmul currently uses the lighter inline-PTX FMA fallback path.

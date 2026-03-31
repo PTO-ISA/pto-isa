@@ -64,6 +64,12 @@ PTO_INTERNAL void TMATMUL_ACC_IMPL(TileAcc &cOutMatrix, TileAcc &cInMatrix, Tile
 {
     CheckGpuMatmulValid<TileAcc, TileLeft, TileRight>();
 
+#ifdef PTO_GPU_SM121
+    if (gpu::sm121::TrySm121TMATMULAcc(cOutMatrix, cInMatrix, aMatrix, bMatrix)) {
+        return;
+    }
+#endif
+
     const uint16_t m = aMatrix.GetValidRow();
     const uint16_t k = aMatrix.GetValidCol();
     const uint16_t n = bMatrix.GetValidCol();
@@ -83,9 +89,29 @@ PTO_INTERNAL void TMATMUL_ACC_IMPL(TileAcc &cOutMatrix, TileAcc &cInMatrix, Tile
     }
 }
 
+template <typename TileAcc, typename TileLeft, typename TileRight>
+PTO_INTERNAL void TMATMUL_ACC_IMPL(TileAcc &cMatrix, TileLeft &aMatrix, TileRight &bMatrix)
+{
+    CheckGpuMatmulValid<TileAcc, TileLeft, TileRight>();
+
+#ifdef PTO_GPU_SM121
+    if (gpu::sm121::TrySm121TMATMULAcc(cMatrix, aMatrix, bMatrix)) {
+        return;
+    }
+#endif
+
+    TMATMUL_ACC_IMPL(cMatrix, cMatrix, aMatrix, bMatrix);
+}
+
 template <typename TileAcc, typename TileLeft, typename TileRight, typename TileBias>
 PTO_INTERNAL void TMATMUL_BIAS_IMPL(TileAcc &cMatrix, TileLeft &aMatrix, TileRight &bMatrix, TileBias &biasMatrix)
 {
+#ifdef PTO_GPU_SM121
+    if (gpu::sm121::TrySm121TMATMULBias(cMatrix, aMatrix, bMatrix, biasMatrix)) {
+        return;
+    }
+#endif
+
     TMATMUL_IMPL(cMatrix, aMatrix, bMatrix);
     const uint16_t m = aMatrix.GetValidRow();
     const uint16_t n = bMatrix.GetValidCol();
