@@ -22,6 +22,8 @@ Current checks:
 - `sm121` float `TMATMUL` inline-PTX FMA fallback smoke test
 - `sm121` half `TMATMUL` tensor-core MMA tiled-path smoke test
 - `sm121` bfloat16 `TMATMUL` tensor-core MMA tiled-path smoke test
+- `sm121` half `TMATMUL` larger 64x64x64 tensor-core correctness test
+- `sm121` bfloat16 `TMATMUL` larger 64x64x64 tensor-core correctness test
 - `sm121` half `TMATMUL_ACC` tensor-core fast-path smoke test
 - `sm121` bfloat16 `TMATMUL_BIAS` tensor-core fast-path smoke test
 - `sm121` half `TMATMUL_MX` API-path smoke test

@@ -873,6 +873,70 @@ bool TestSm121Bfloat16TensorCoreMatmulExtendedMatchesReference()
     return ExpectVecNear(expected, actual, "tmatmul_sm121_bf16_extended", 2e-2f);
 }
 
+bool TestSm121HalfTensorCoreMatmulLarge64MatchesReference()
+{
+    constexpr int M = 64, K = 64, N = 64;
+    std::vector<half> a(M * K);
+    std::vector<half> b(K * N);
+    for (int i = 0; i < M * K; ++i) {
+        a[i] = __float2half(static_cast<float>((i % 19) - 9) * 0.125f);
+    }
+    for (int i = 0; i < K * N; ++i) {
+        b[i] = __float2half(static_cast<float>((i % 17) - 8) * 0.1875f);
+    }
+    auto expected = RefMatmulToFloat(a, b, M, K, N);
+    half *dA = nullptr;
+    half *dB = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(half)), "cudaMalloc dA half large")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(half)), "cudaMalloc dB half large")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut half large")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(half), cudaMemcpyHostToDevice), "copy a half large")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(half), cudaMemcpyHostToDevice), "copy b half large")) return false;
+    if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out half large")) return false;
+    KernelTMATMUL<half, M, K, N><<<1, 32>>>(dOut, dA, dB);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul half large")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul half large")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out half large")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dOut);
+    return ExpectVecNear(expected, actual, "tmatmul_sm121_half_large64", 2e-3f);
+}
+
+bool TestSm121Bfloat16TensorCoreMatmulLarge64MatchesReference()
+{
+    constexpr int M = 64, K = 64, N = 64;
+    std::vector<bfloat16_t> a(M * K);
+    std::vector<bfloat16_t> b(K * N);
+    for (int i = 0; i < M * K; ++i) {
+        a[i] = __float2bfloat16(static_cast<float>((i % 15) - 7) * 0.25f);
+    }
+    for (int i = 0; i < K * N; ++i) {
+        b[i] = __float2bfloat16(static_cast<float>((i % 13) - 6) * 0.3125f);
+    }
+    auto expected = RefMatmulToFloat(a, b, M, K, N);
+    bfloat16_t *dA = nullptr;
+    bfloat16_t *dB = nullptr;
+    float *dOut = nullptr;
+    if (!CheckCuda(cudaMalloc(&dA, a.size() * sizeof(bfloat16_t)), "cudaMalloc dA bf16 large")) return false;
+    if (!CheckCuda(cudaMalloc(&dB, b.size() * sizeof(bfloat16_t)), "cudaMalloc dB bf16 large")) return false;
+    if (!CheckCuda(cudaMalloc(&dOut, expected.size() * sizeof(float)), "cudaMalloc dOut bf16 large")) return false;
+    if (!CheckCuda(cudaMemcpy(dA, a.data(), a.size() * sizeof(bfloat16_t), cudaMemcpyHostToDevice), "copy a bf16 large")) return false;
+    if (!CheckCuda(cudaMemcpy(dB, b.data(), b.size() * sizeof(bfloat16_t), cudaMemcpyHostToDevice), "copy b bf16 large")) return false;
+    if (!CheckCuda(cudaMemset(dOut, 0, expected.size() * sizeof(float)), "memset out bf16 large")) return false;
+    KernelTMATMUL<bfloat16_t, M, K, N><<<1, 32>>>(dOut, dA, dB);
+    if (!CheckCuda(cudaGetLastError(), "launch tmatmul bf16 large")) return false;
+    if (!CheckCuda(cudaDeviceSynchronize(), "sync tmatmul bf16 large")) return false;
+    std::vector<float> actual(expected.size());
+    if (!CheckCuda(cudaMemcpy(actual.data(), dOut, actual.size() * sizeof(float), cudaMemcpyDeviceToHost), "copy out bf16 large")) return false;
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dOut);
+    return ExpectVecNear(expected, actual, "tmatmul_sm121_bf16_large64", 3e-2f);
+}
+
 bool TestSm121HalfTensorCoreMatmulAccMatchesReference()
 {
     constexpr int M = 16, K = 16, N = 16;
@@ -1033,6 +1097,8 @@ int main()
     run("Sm121FloatInlinePtxMatmulMatchesReference", &TestSm121FloatInlinePtxMatmulMatchesReference);
     run("Sm121HalfTensorCoreMatmulExtendedMatchesReference", &TestSm121HalfTensorCoreMatmulExtendedMatchesReference);
     run("Sm121Bfloat16TensorCoreMatmulExtendedMatchesReference", &TestSm121Bfloat16TensorCoreMatmulExtendedMatchesReference);
+    run("Sm121HalfTensorCoreMatmulLarge64MatchesReference", &TestSm121HalfTensorCoreMatmulLarge64MatchesReference);
+    run("Sm121Bfloat16TensorCoreMatmulLarge64MatchesReference", &TestSm121Bfloat16TensorCoreMatmulLarge64MatchesReference);
     run("Sm121HalfTensorCoreMatmulAccMatchesReference", &TestSm121HalfTensorCoreMatmulAccMatchesReference);
     run("Sm121Bfloat16TensorCoreMatmulBiasMatchesReference", &TestSm121Bfloat16TensorCoreMatmulBiasMatchesReference);
     run("Sm121HalfTMATMUL_MXMatchesReference", &TestSm121HalfTMATMUL_MXMatchesReference);
