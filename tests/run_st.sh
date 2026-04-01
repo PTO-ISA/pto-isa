@@ -189,6 +189,7 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
       python3 tests/script/run_st.py $ARGS -w -v a3 -t tpushpop_cv -g TPushPopCvTest.case1_half_single_tile
       python3 tests/script/run_st.py $ARGS -w -v a3 -t tpushpop_vc -g TPushPopVcTest.case1_int8_single_k_tile
       python3 tests/script/run_st.py $ARGS -w -v a3 -t tpushpop_cv_nosplit -g TPushPopCvNoSplitTest.case1_half_single_tile
+      python3 tests/script/run_st.py $ARGS -w -v a3 -t tpushpop_vc_nosplit -g TPushPopVcNoSplitTest.case1_int8_single_k_tile
     fi
 
   elif [ "$ENABLE_ALL" = "true" ]; then            # 所有用例
@@ -281,6 +282,7 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv_nosplit
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc_nosplit
     fi
   fi
 fi
@@ -330,6 +332,7 @@ if [ "$ENABLE_A5" = "true" ]; then
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv -g TPushPopCvTest.case1_half_single_tile
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc -g TPushPopVcTest.case1_int8_single_k_tile
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv_nosplit -g TPushPopCvNoSplitTest.case1_half_single_tile
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc_nosplit -g TPushPopVcNoSplitTest.case1_int8_single_k_tile
     fi
     python3 tests/script/run_st.py $ARGS -w -v a5 -t textract -g TEXTRACTTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tfillpad -g TFILLPADTest.case_float_GT_128_127_VT_128_128_BLK1_PADMAX_PADMAX
@@ -460,6 +463,7 @@ if [ "$ENABLE_A5" = "true" ]; then
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc
       python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_cv_nosplit
+      python3 tests/script/run_st.py $ARGS -w -v a5 -t tpushpop_vc_nosplit
     fi
     python3 tests/script/run_st.py $ARGS -w -v a5 -t textract
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tfillpad

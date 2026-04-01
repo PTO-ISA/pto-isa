@@ -23,6 +23,7 @@ constexpr int kFaTileS1 = 256;
 constexpr int kFaQkPreload = 4;
 constexpr std::size_t kFaProfileBytesPerBlock = 1024 * 3; // cube + two vec subblocks
 constexpr std::size_t kFaCvCommSlotBytes = 512U;
+constexpr int VEC_CORES = 2;
 
 template <int S0, int HEAD_SIZE, int S1, int CUBE_S0, int CUBE_S1 = kFaCubeS1, int TILE_S1 = kFaTileS1,
           int QK_PRELOAD = kFaQkPreload, int CV_FIFO_SIZE = kFaCvFifoSize, bool INTERMEDIATE_CHECK = false,

@@ -39,8 +39,8 @@ using namespace PtoTestCommon;
 static std::vector<std::string> Split(const std::string &s, char delim)
 {
     std::vector<std::string> out;
-    std::stringstream ss(s);
     std::string item;
+    std::stringstream ss(s);
     while (std::getline(ss, item, delim)) {
         if (!item.empty())
             out.push_back(item);

@@ -106,7 +106,6 @@ enum CoreEvtID : uint32_t
     PV_EVENT_ID1,
 };
 
-#define VEC_CORES 2
 // -----------------------------------------------------------------------------
 // Performance tuning knobs (high-level)
 //
