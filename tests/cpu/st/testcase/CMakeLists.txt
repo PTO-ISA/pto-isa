@@ -73,6 +73,7 @@ tloadconv
 tlog
 tlrelu
 tmatmul
+tmatmul_layout
 tmax
 tmaxs
 tmin
@@ -122,7 +123,6 @@ ttri
 twait
 treshape
 tpushpop_cv
-tmatmul_layout
 trandom
 thistogram
 timg2col
