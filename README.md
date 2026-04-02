@@ -7,12 +7,17 @@
 Parallel Tile Operation (PTO) is a virtual instruction set architecture designed by Ascend CANN, focusing on tile-level operations. This repository offers high-performance, cross-platform tile operations across Ascend platforms. By porting to PTO instruction sequences, users can migrate Ascend hardware more easily.
 
 [![License](https://img.shields.io/badge/License-CANN%20Open%20Software%20License%202.0-blue.svg)](LICENSE)
+[![CI](https://github.com/hw-native-sys/pto-isa/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hw-native-sys/pto-isa/actions/workflows/ci.yml)
 [![Platform](https://img.shields.io/badge/Platform-Ascend%20A2%20%7C%20A3%20%7C%20A5%20%7C%20CPU-green.svg)](#platform-support)
 [![Docs](https://img.shields.io/badge/Docs-MkDocs%20Site-blue.svg)](docs/README.md)
 
 ## News
 
-* **2025-12-27**: PTO Tile Library becomes publicly available.
+* 🚀 **2026-04-02**: GitHub `main` is now guarded by passing CI for pre-commit, docs build, CPU-SIM smoke tests, and full CPU-SIM ST.
+* 🧠 **2026-04-02**: CPU-SIM BF16 coverage, GitCode-to-GitHub sync fixes, and `TPush`/`TPop`/`TPipe` validation updates landed on `main`.
+* 📚 **2026-04-02**: Documentation quality improved with MkDocs build gating, markdownlint cleanup batches, and a new agent-oriented PTO-ISA workflow skill.
+* 🌉 **2026-04-02**: Costmodel row=`1` col-reduce fixes and A3 `run_st.sh` path corrections were merged, reducing bring-up friction across CPU, simulator, and NPU paths.
+* 🎉 **2025-12-27**: PTO Tile Library becomes publicly available.
 
 ## Overview
 
@@ -48,7 +53,7 @@ This repository includes performance-oriented kernels with reference measurement
 
 ### GEMM (A2/A3 reference)
 
-- Kernel: `kernels/manual/a2a3/gemm_performance/`
+* Kernel: `kernels/manual/a2a3/gemm_performance/`
 
 Measured on Ascend A3 (24 cores) with fp16 inputs → fp32 output:
 
@@ -65,12 +70,12 @@ Detailed analysis and tuning notes: [High-Performance GEMM Operator Example](ker
 
 ### Flash Attention (A2/A3 reference)
 
-- Kernel: `kernels/manual/common/flash_atten/`
+* Kernel: `kernels/manual/common/flash_atten/`
 
 Detailed analysis and tuning notes: [Flash Attention Kernel Implementation](kernels/manual/common/flash_atten/README.md).
 
-- S0: query sequence length (number of rows in Q/O)
-- S1: key/value sequence length (number of rows in K/V)
+* S0: query sequence length (number of rows in Q/O)
+* S1: key/value sequence length (number of rows in K/V)
 
 ![Flash Attention normalized TFLOPS (A2/A3)](docs/figures/performance/fa_normalized_tflops_a2a3.svg)
 
@@ -86,7 +91,6 @@ The following features will be released in the future:
 | **Convolution extension** | PTO ISA support for convolution kernels. | ISA Extension |
 | **Collective communication extension** | PTO ISA support for collective communication. | ISA Extension |
 | **System schedule extension** | PTO ISA support for SPMD/MPMD programming. | ISA Extension |
-
 
 ## How to Use PTO Tile Library
 
@@ -126,24 +130,25 @@ For detailed, OS-specific setup (Windows / Linux / macOS), see: [docs/getting-st
 
 This repository includes comprehensive API documentation and ISA instruction references built with MkDocs (Material theme) under `docs/mkdocs/`. The documentation covers:
 
-- Complete PTO ISA instruction reference
-- API usage guidelines and examples
-- Performance tuning guides
-- Architecture and design documentation
+* Complete PTO ISA instruction reference
+* API usage guidelines and examples
+* Performance tuning guides
+* Architecture and design documentation
 
-**Option 1: Access Online Documentation (Recommended)**
+#### Access Online Documentation
 
 For the latest documentation, visit the [Documentation Center](https://pto-isa.gitcode.com).
 
-**Option 2: Build Documentation Locally**
+#### Build Documentation Locally
 
 Build locally if you need offline access, are working on documentation changes, or want to view unreleased features.
 
-**Prerequisites:**
-- Python >= 3.8
-- pip (Python package manager)
+#### Prerequisites
 
-**Method 1: Quick Start with MkDocs CLI**
+* Python >= 3.8
+* pip (Python package manager)
+
+#### Quick Start with MkDocs CLI
 
 1. Install MkDocs and dependencies:
 
@@ -151,9 +156,9 @@ Build locally if you need offline access, are working on documentation changes, 
 python -m pip install -r docs/mkdocs/requirements.txt
 ```
 
-2. Choose one of the following options:
+1. Choose one of the following options:
 
-**Option A: Serve documentation locally (for development/preview)**
+##### Serve documentation locally (for development/preview)
 
 ```bash
 python -m mkdocs serve -f docs/mkdocs/mkdocs.yml
@@ -161,7 +166,7 @@ python -m mkdocs serve -f docs/mkdocs/mkdocs.yml
 
 The documentation will be available at `http://127.0.0.1:8000`. The server watches for file changes and automatically reloads. Press `Ctrl+C` to stop the server.
 
-**Option B: Build static HTML site (for offline use/deployment)**
+##### Build static HTML site (for offline use/deployment)
 
 ```bash
 python -m mkdocs build -f docs/mkdocs/mkdocs.yml
@@ -169,7 +174,7 @@ python -m mkdocs build -f docs/mkdocs/mkdocs.yml
 
 Output will be in `docs/mkdocs/site/`. Open `docs/mkdocs/site/index.html` in your browser.
 
-**Method 2: Build via CMake (Advanced)**
+#### Build via CMake (Advanced)
 
 This method is useful for CI/CD pipelines or when integrating documentation builds into your development workflow.
 
@@ -181,7 +186,7 @@ source .venv-mkdocs/bin/activate  # On Windows: .venv-mkdocs\Scripts\Activate.ps
 python -m pip install -r docs/mkdocs/requirements.txt
 ```
 
-2. Configure and build with CMake:
+1. Configure and build with CMake:
 
 ```bash
 cmake -S docs -B build/docs -DPython3_EXECUTABLE=$PWD/.venv-mkdocs/bin/python
@@ -259,16 +264,17 @@ python3 tests/run_cpu.py --verbose
 
 For example, if you use the CANN community package and install to the default path:
 
-- Default path (installed as root)
+* Default path (installed as root)
 
-    ```bash
-    source /usr/local/Ascend/cann/bin/setenv.bash
-    ```
+  ```bash
+  source /usr/local/Ascend/cann/bin/setenv.bash
+  ```
 
-- Default path (installed as a non-root user)
-    ```bash
-    source $HOME/Ascend/cann/bin/setenv.bash
-    ```
+* Default path (installed as a non-root user)
+
+  ```bash
+  source $HOME/Ascend/cann/bin/setenv.bash
+  ```
 
 If you install to `install-path`, use:
 
@@ -280,22 +286,24 @@ source ${install-path}/cann/bin/setenv.bash
 
 * Run Full ST Tests:
 
-  ```bash
-  chmod +x build.sh
-  ./build.sh --run_all --a3 --sim
-  ```
+```bash
+chmod +x build.sh
+./build.sh --run_all --a3 --sim
+```
+
 * Run Simplified ST Tests:
 
-  ```bash
-  chmod +x build.sh
-  ./build.sh --run_simple --a5 --npu
-  ```
+```bash
+chmod +x build.sh
+./build.sh --run_simple --a5 --npu
+```
+
 * Packaging:
 
-  ```bash
-  chmod +x build.sh
-  ./build.sh --pkg
-  ```
+```bash
+chmod +x build.sh
+./build.sh --pkg
+```
 
 ## Documentation
 
