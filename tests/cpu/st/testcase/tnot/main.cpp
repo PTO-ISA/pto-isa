@@ -35,10 +35,10 @@ std::string GetGoldenDir()
     return fullPath;
 }
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_>
+template <typename T, int sTRows_, int sTCols_, int dTRows_, int dTCols_, int kGRows_, int kGCols_>
 void LaunchTNot(T *out, T *src0, void *stream);
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_>
+template <typename T, int sTRows_, int sTCols_, int dTRows_, int dTCols_, int kGRows_, int kGCols_>
 void test_tnot()
 {
     size_t fileSize = kGRows_ * kGCols_ * sizeof(T);
@@ -60,7 +60,7 @@ void test_tnot()
     CHECK_RESULT_GTEST(ReadFile(GetGoldenDir() + "/input1.bin", fileSize, src0Host, fileSize));
 
     aclrtMemcpy(src0Device, fileSize, src0Host, fileSize, ACL_MEMCPY_HOST_TO_DEVICE);
-    LaunchTNot<T, kGRows_, kGCols_, kTRows_, kTCols_>(dstDevice, src0Device, stream);
+    LaunchTNot<T, sTRows_, sTCols_, dTRows_, dTCols_, kGRows_, kGCols_>(dstDevice, src0Device, stream);
 
     aclrtSynchronizeStream(stream);
     aclrtMemcpy(dstHost, fileSize, dstDevice, fileSize, ACL_MEMCPY_DEVICE_TO_HOST);
@@ -85,12 +85,36 @@ void test_tnot()
 
     EXPECT_TRUE(ret);
 }
-const int NUM_64 = 64;
-TEST_F(TNOTTest, case_int32_64x64_64x64_64x64)
+TEST_F(TNOTTest, case_0)
 {
-    test_tnot<int32_t, NUM_64, NUM_64, NUM_64, NUM_64>();
+    test_tnot<int32_t, 64, 64, 64, 64, 60, 55>();
 }
-TEST_F(TNOTTest, case_int16_64x64_64x64_64x64)
+TEST_F(TNOTTest, case_1)
 {
-    test_tnot<int16_t, NUM_64, NUM_64, NUM_64, NUM_64>();
+    test_tnot<int16_t, 64, 64, 64, 64, 60, 55>();
+}
+TEST_F(TNOTTest, case_2)
+{
+    test_tnot<int32_t, 64, 64, 96, 96, 64, 60>();
+}
+TEST_F(TNOTTest, case_3)
+{
+    test_tnot<int16_t, 64, 64, 96, 96, 64, 60>();
+}
+
+TEST_F(TNOTTest, case_4)
+{
+    test_tnot<uint32_t, 64, 64, 64, 64, 60, 55>();
+}
+TEST_F(TNOTTest, case_5)
+{
+    test_tnot<uint16_t, 64, 64, 64, 64, 60, 55>();
+}
+TEST_F(TNOTTest, case_6)
+{
+    test_tnot<uint32_t, 96, 96, 96, 96, 64, 60>();
+}
+TEST_F(TNOTTest, case_7)
+{
+    test_tnot<uint16_t, 96, 96, 64, 64, 64, 60>();
 }
