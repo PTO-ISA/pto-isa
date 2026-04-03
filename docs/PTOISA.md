@@ -132,7 +132,6 @@ This page is the source-synchronized ISA index generated from `docs/isa/manifest
 | Complex | [`TGATHER`](isa/TGATHER.md) | Gather/select elements using either an index tile or a compile-time mask pattern. |
 | Complex | [`TCI`](isa/TCI.md) | Generate a contiguous integer sequence into a destination tile. |
 | Complex | [`TTRI`](isa/TTRI.md) | Generate a triangular (lower/upper) mask tile. |
-| Complex | [`TRANDOM`](isa/TRANDOM.md) | Generates random numbers in the destination tile using a counter-based cipher algorithm. |
 | Complex | [`TPARTADD`](isa/TPARTADD.md) | Partial elementwise add with implementation-defined handling of mismatched valid regions. |
 | Complex | [`TPARTMUL`](isa/TPARTMUL.md) | Partial elementwise multiply with implementation-defined handling of mismatched valid regions. |
 | Complex | [`TPARTMAX`](isa/TPARTMAX.md) | Partial elementwise max with implementation-defined handling of mismatched valid regions. |

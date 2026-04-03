@@ -1,6 +1,5 @@
 # TRANDOM
 
-
 ## Tile Operation Diagram
 
 ![TRANDOM tile operation](../figures/isa/TRANDOM.svg)
@@ -11,9 +10,11 @@ Generates random numbers in the destination tile using a counter-based cipher al
 
 ## Math Interpretation
 
-This instruction implements a counter-based random number generator. For each element in the valid region, it generates pseudo-random values based on a key and counter state using a cipher-like transformation with configurable rounds.
+This instruction implements a counter-based random number generator. For each element in the valid region, it generates
+pseudo-random values based on a key and counter state using a cipher-like transformation with configurable rounds.
 
 The algorithm uses:
+
 - 128-bit state (4 × 32-bit counters)
 - 64-bit key (2 × 32-bit words)
 - ChaCha-like quarter-round operations with vector instructions
@@ -52,12 +53,12 @@ PTO_INST void TRANDOM_IMPL(DstTile &dst, TRandomKey &key, TRandomCounter &counte
 ## Constraints
 
 - **Implementation checks (A5)**:
-    - `DstTile::DType` must be one of: `int32_t`, `uint32_t`.
-    - Tile layout must be row-major (`DstTile::isRowMajor`).
-    - `Rounds` must be either 7 or 10 (default: 10).
-    - `key` and `counter` must not be null.
+  - `DstTile::DType` must be one of: `int32_t`, `uint32_t`.
+  - Tile layout must be row-major (`DstTile::isRowMajor`).
+  - `Rounds` must be either 7 or 10 (default: 10).
+  - `key` and `counter` must not be null.
 - **Valid region**:
-    - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
+  - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
 
 ## Examples
 

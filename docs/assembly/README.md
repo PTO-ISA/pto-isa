@@ -6,7 +6,7 @@ This directory contains comprehensive documentation for PTO AS operations, cover
 
 ## Overview
 
-PTO AS provides **117 tile operations**, **11 auxiliary functions**, **47 scalar arithmetic operations**, and **7 control flow operations**.
+PTO AS provides **116 tile operations**, **11 auxiliary functions**, **47 scalar arithmetic operations**, and **7 control flow operations**.
 
 Each operation is documented with:
 
@@ -96,13 +96,14 @@ IR-level constructs for tensor view management, tile allocation, and synchroniza
 - **Move**: `TMOV`, `TMOV_FP`
 - **Padding**: `TFILLPAD`, `TFILLPAD_INPLACE`, `TFILLPAD_EXPAND`
 
-### Complex Operations - 14 operations
+### Complex Operations - 13 operations
+
 **Document**: [Complex Operations](complex-ops.md)
 
 - **Sorting**: `TSORT32`, `TMRGSORT`
 - **Gathering**: `TGATHER`, `TGATHERB`, `TSCATTER`
 - **Partial Operations**: `TPARTADD`, `TPARTMUL`, `TPARTMAX`, `TPARTMIN`
-- **Utility**: `TCI`, `TTRI`, `TRANDOM`, `TQUANT`, `TPRINT`
+- **Utility**: `TCI`, `TTRI`, `TQUANT`, `TPRINT`
 
 ### Manual Resource Binding - 6 operations
 
