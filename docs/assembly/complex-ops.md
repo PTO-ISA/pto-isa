@@ -12,14 +12,13 @@ This document describes complex operations including sorting, gathering, quantiz
 
 For detailed instruction documentation, see [isa/TPRINT](../isa/TPRINT.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 pto.tprint %src : !pto.tile<...> | !pto.partition_tensor_view<MxNxdtype> -> ()
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tprint ins(%src : !pto.tile_buf<...> | !pto.partition_tensor_view<MxNxdtype>)
 ```
@@ -30,8 +29,8 @@ pto.tprint ins(%src : !pto.tile_buf<...> | !pto.partition_tensor_view<MxNxdtype>
 
 For detailed instruction documentation, see [isa/TMRGSORT](../isa/TMRGSORT.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tmrgsort %src, %blockLen : (!pto.tile<...>, dtype) -> !pto.tile<...>
 %dst, %executed = pto.tmrgsort %src0, %src1, %src2, %src3 {exhausted = false}
@@ -39,7 +38,6 @@ For detailed instruction documentation, see [isa/TMRGSORT](../isa/TMRGSORT.md)
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tmrgsort ins(%src, %blockLen : !pto.tile_buf<...>, dtype)  outs(%dst : !pto.tile_buf<...>)
 pto.tmrgsort ins(%src0, %src1, %src2, %src3 {exhausted = false} : !pto.tile_buf<...>, !pto.tile_buf<...>, !pto.tile_buf<...>, !pto.tile_buf<...>)
@@ -53,13 +51,11 @@ outs(%dst, %executed : !pto.tile_buf<...>, vector<4xi16>)
 For detailed instruction documentation, see [isa/TSORT32](../isa/TSORT32.md)
 
 **AS Level 1 (SSA):**
-
 ```text
 %dst, %idx = pto.tsort32 %src : !pto.tile<...> -> (!pto.tile<...>, !pto.tile<...>)
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tsort32 ins(%src : !pto.tile_buf<...>) outs(%dst, %idx : !pto.tile_buf<...>, !pto.tile_buf<...>)
 ```
@@ -70,15 +66,14 @@ pto.tsort32 ins(%src : !pto.tile_buf<...>) outs(%dst, %idx : !pto.tile_buf<...>,
 
 For detailed instruction documentation, see [isa/TGATHER](../isa/TGATHER.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tgather %src, %indices : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 %dst = pto.tgather %src {maskPattern = #pto.mask_pattern<P0101>}: !pto.tile<...> -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tgather ins(%src, %indices : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 pto.tgather ins(%src, {maskPattern = #pto.mask_pattern<P0101>} : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
@@ -90,14 +85,13 @@ pto.tgather ins(%src, {maskPattern = #pto.mask_pattern<P0101>} : !pto.tile_buf<.
 
 For detailed instruction documentation, see [isa/TCI](../isa/TCI.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tci %scalar {descending = false} : dtype -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tci ins(%scalar {descending = false} : dtype) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -108,14 +102,13 @@ pto.tci ins(%scalar {descending = false} : dtype) outs(%dst : !pto.tile_buf<...>
 
 For detailed instruction documentation, see [isa/TTRI](../isa/TTRI.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.ttri %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.ttri ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -126,14 +119,13 @@ pto.ttri ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : 
 
 For detailed instruction documentation, see [isa/TRANDOM](../isa/TRANDOM.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.trandom %key, %counter : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.trandom ins(%key, %counter : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -144,14 +136,13 @@ pto.trandom ins(%key, %counter : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%d
 
 For detailed instruction documentation, see [isa/TPARTADD](../isa/TPARTADD.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tpartadd %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tpartadd ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -162,14 +153,13 @@ pto.tpartadd ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%ds
 
 For detailed instruction documentation, see [isa/TPARTMUL](../isa/TPARTMUL.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tpartmul %src0, %src1 : !pto.tile<...> -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tpartmul ins(%src0, %src1 : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -180,14 +170,13 @@ pto.tpartmul ins(%src0, %src1 : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<..
 
 For detailed instruction documentation, see [isa/TPARTMAX](../isa/TPARTMAX.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tpartmax %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tpartmax ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -198,14 +187,13 @@ pto.tpartmax ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%ds
 
 For detailed instruction documentation, see [isa/TPARTMIN](../isa/TPARTMIN.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tpartmin %src0, %src1 : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tpartmin ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -216,14 +204,13 @@ pto.tpartmin ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%ds
 
 For detailed instruction documentation, see [isa/TGATHERB](../isa/TGATHERB.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tgatherb %src, %offsets : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tgatherb ins(%src, %offsets : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -234,14 +221,13 @@ pto.tgatherb ins(%src, %offsets : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%
 
 For detailed instruction documentation, see [isa/TSCATTER](../isa/TSCATTER.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tscatter %src, %idx : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tscatter ins(%src, %idx : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
@@ -252,14 +238,13 @@ pto.tscatter ins(%src, %idx : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst 
 
 For detailed instruction documentation, see [isa/TQUANT](../isa/TQUANT.md)
 
-**AS Level 1 (SSA):**
 
+**AS Level 1 (SSA):**
 ```text
 %dst = pto.tquant %src, %qp : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS):**
-
 ```text
 pto.tquant ins(%src, %qp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```

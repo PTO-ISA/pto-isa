@@ -6,10 +6,9 @@ This directory contains comprehensive documentation for PTO AS operations, cover
 
 ## Overview
 
-PTO AS provides **116 tile operations**, **11 auxiliary functions**, **47 scalar arithmetic operations**, and **7 control flow operations**.
+PTO AS provides **117 tile operations**, **11 auxiliary functions**, **47 scalar arithmetic operations**, and **7 control flow operations**.
 
 Each operation is documented with:
-
 - **AS Level 1 (SSA)**: Static Single Assignment form
 - **AS Level 2 (DPS)**: Destination-Passing Style
 - **Mathematical Semantics**: Formal mathematical interpretation
@@ -28,16 +27,12 @@ IR-level constructs for tensor view management, tile allocation, and synchroniza
 - **Indexing**: `get_block_idx`, `get_subblock_idx`, `get_block_num`, `get_subblock_num`
 - **Pointer Arithmetic**: `addptr`
 - **Synchronization**: `record_event`, `wait_event`, `barrier`, `PIPE_BARRIER`
-  For the current PTO-DSL kernel-authoring flow, prefer sync-free source plus
-  `ptoas --enable-insert-sync`; treat `record_event` and `wait_event` as
-  low-level IR or assembly constructs.
 
 ---
 
 ## Tile Operations (116 operations)
 
 ### Elementwise (Tile-Tile) - 28 operations
-
 **Document**: [Elementwise Operations](elementwise-ops.md)
 
 - **Arithmetic**: `TADD`, `TSUB`, `TMUL`, `TDIV`, `TABS`, `TNEG`
@@ -51,7 +46,6 @@ IR-level constructs for tensor view management, tile allocation, and synchroniza
 - **Modulo**: `TREM`, `TFMOD`
 
 ### Tile-Scalar Operations - 19 operations
-
 **Document**: [Tile-Scalar Operations](tile-scalar-ops.md)
 
 - **Arithmetic**: `TADDS`, `TSUBS`, `TMULS`, `TDIVS`, `TMINS`, `TMAXS`
@@ -64,7 +58,6 @@ IR-level constructs for tensor view management, tile allocation, and synchroniza
 - **Compound**: `TADDSC`, `TSUBSC`
 
 ### Axis Reduction and Expansion - 23 operations
-
 **Document**: [Axis Reduction and Expansion](axis-ops.md)
 
 - **Row Reduction**: `TROWSUM`, `TROWMAX`, `TROWMIN`
@@ -73,14 +66,12 @@ IR-level constructs for tensor view management, tile allocation, and synchroniza
 - **Column Expansion**: `TCOLEXPAND`, `TCOLEXPANDADD`, `TCOLEXPANDMUL`, `TCOLEXPANDDIV`, `TCOLEXPANDSUB`, `TCOLEXPANDMAX`, `TCOLEXPANDMIN`, `TCOLEXPANDEXPDIF`
 
 ### Memory Operations - 6 operations
-
 **Document**: [Memory Operations](memory-ops.md)
 
 - **Load/Store**: `TLOAD`, `TSTORE`, `TSTORE_FP`, `TPREFETCH`
 - **Gather/Scatter**: `MGATHER`, `MSCATTER`
 
 ### Matrix Multiplication - 8 operations
-
 **Document**: [Matrix Multiplication](matrix-ops.md)
 
 - **Basic**: `TMATMUL`, `TMATMUL_ACC`, `TMATMUL_BIAS`
@@ -88,7 +79,6 @@ IR-level constructs for tensor view management, tile allocation, and synchroniza
 - **Vector**: `TGEMV`, `TGEMV_ACC`, `TGEMV_BIAS`, `TGEMV_MX`
 
 ### Data Movement and Layout - 12 operations
-
 **Document**: [Data Movement and Layout](data-movement-ops.md)
 
 - **Extract/Insert**: `TEXTRACT`, `TEXTRACT_FP`, `TINSERT`, `TINSERT_FP`
@@ -96,17 +86,15 @@ IR-level constructs for tensor view management, tile allocation, and synchroniza
 - **Move**: `TMOV`, `TMOV_FP`
 - **Padding**: `TFILLPAD`, `TFILLPAD_INPLACE`, `TFILLPAD_EXPAND`
 
-### Complex Operations - 13 operations
-
+### Complex Operations - 14 operations
 **Document**: [Complex Operations](complex-ops.md)
 
 - **Sorting**: `TSORT32`, `TMRGSORT`
 - **Gathering**: `TGATHER`, `TGATHERB`, `TSCATTER`
 - **Partial Operations**: `TPARTADD`, `TPARTMUL`, `TPARTMAX`, `TPARTMIN`
-- **Utility**: `TCI`, `TTRI`, `TQUANT`, `TPRINT`
+- **Utility**: `TCI`, `TTRI`, `TRANDOM`, `TQUANT`, `TPRINT`
 
 ### Manual Resource Binding - 6 operations
-
 **Document**: [Manual Resource Binding](manual-binding-ops.md)
 
 - **Assignment**: `TASSIGN`

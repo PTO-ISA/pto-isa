@@ -140,6 +140,7 @@ This directory contains the per-instruction reference for the PTO Tile Lib ISA.
 - [TGATHER](TGATHER.md) - Gather/select elements using either an index tile or a compile-time mask pattern.
 - [TCI](TCI.md) - Generate a contiguous integer sequence into a destination tile.
 - [TTRI](TTRI.md) - Generate a triangular (lower/upper) mask tile.
+- [TRANDOM](TRANDOM.md) - Generates random numbers in the destination tile using a counter-based cipher algorithm.
 - [TPARTADD](TPARTADD.md) - Partial elementwise add with implementation-defined handling of mismatched valid regions.
 - [TPARTMUL](TPARTMUL.md) - Partial elementwise multiply with implementation-defined handling of mismatched valid regions.
 - [TPARTMAX](TPARTMAX.md) - Partial elementwise max with implementation-defined handling of mismatched valid regions.

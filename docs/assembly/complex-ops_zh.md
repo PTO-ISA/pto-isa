@@ -117,7 +117,24 @@ pto.tci ins(%scalar {descending = false} : dtype) outs(%dst : !pto.tile_buf<...>
 **AS Level 2 (DPS)：**
 
 ```text
-pto.ttri ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+pto.ttri ins(%src0, %src1 : ! !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+```
+
+---
+
+### TRANDOM
+
+该指令的详细介绍请见[isa/TRANDOM](../isa/TRandom_zh.md)
+
+
+**AS Level 1 (SSA)：**
+```text
+%dst = pto.trandom %key, %counter : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+```
+
+**AS Level 2 (DPS)：**
+```text
+pto.trandom ins(%key, %counter : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
 
 ---
