@@ -108,6 +108,7 @@ void TPushPopMatmulAddTestFunc(uint32_t M, uint32_t K, uint32_t N)
     EXPECT_TRUE(ret);
 }
 
+// TILE_UP_DOWN: cube pushes full AccTile; each vector core pops its row range
 TEST_F(TPushPopCVTest, case1_half_single_tile)
 {
     TPushPopMatmulAddTestFunc<aclFloat16, float, 1>(16, 32, 32);
@@ -126,4 +127,24 @@ TEST_F(TPushPopCVTest, case4_half_multi_tile_wrapping)
 TEST_F(TPushPopCVTest, case3_float_single_tile)
 {
     TPushPopMatmulAddTestFunc<float, float, 3>(16, 32, 32);
+}
+// // TILE_LEFT_RIGHT: cube pushes full AccTile; each vector core pops its column range
+TEST_F(TPushPopCVTest, case5_half_single_tile_left_right)
+{
+    TPushPopMatmulAddTestFunc<aclFloat16, float, 5>(16, 32, 32);
+}
+
+TEST_F(TPushPopCVTest, case6_half_split_m_left_right)
+{
+    TPushPopMatmulAddTestFunc<aclFloat16, float, 6>(32, 32, 32);
+}
+
+TEST_F(TPushPopCVTest, case7_float_single_tile_left_right)
+{
+    TPushPopMatmulAddTestFunc<float, float, 7>(16, 32, 32);
+}
+
+TEST_F(TPushPopCVTest, case8_half_multi_tile_wrapping_left_right)
+{
+    TPushPopMatmulAddTestFunc<aclFloat16, float, 8>(64, 32, 32);
 }

@@ -107,6 +107,7 @@ void TPushPopVCMatmulTestFunc(uint32_t M, uint32_t K, uint32_t N)
     EXPECT_TRUE(ret);
 }
 
+// TILE_UP_DOWN: vector cores split quantB along K rows, each handles TILE_K/2 rows
 TEST_F(TPushPopVCTest, case1_int8_single_k_tile)
 {
     TPushPopVCMatmulTestFunc<int8_t, float, float, 1>(16, 64, 32);
@@ -135,4 +136,36 @@ TEST_F(TPushPopVCTest, case5_int16_two_k_tiles)
 TEST_F(TPushPopVCTest, case6_int16_four_k_tiles)
 {
     TPushPopVCMatmulTestFunc<int16_t, float, float, 6>(16, 256, 32);
+}
+
+// TILE_LEFT_RIGHT: vector cores split quantB along N columns, each handles TILE_N/2 cols
+// N=64 for int8 TILE_LEFT_RIGHT: PROD_N=32, satisfies 32-byte tile alignment (32*sizeof(int8_t)=32)
+TEST_F(TPushPopVCTest, case7_int8_single_k_tile_left_right)
+{
+    TPushPopVCMatmulTestFunc<int8_t, float, float, 7>(16, 64, 64);
+}
+
+TEST_F(TPushPopVCTest, case8_int8_two_k_tiles_left_right)
+{
+    TPushPopVCMatmulTestFunc<int8_t, float, float, 8>(16, 128, 64);
+}
+
+TEST_F(TPushPopVCTest, case9_int8_four_k_tiles_left_right)
+{
+    TPushPopVCMatmulTestFunc<int8_t, float, float, 9>(16, 256, 64);
+}
+
+TEST_F(TPushPopVCTest, case10_int16_single_k_tile_left_right)
+{
+    TPushPopVCMatmulTestFunc<int16_t, float, float, 10>(16, 64, 32);
+}
+
+TEST_F(TPushPopVCTest, case11_int16_two_k_tiles_left_right)
+{
+    TPushPopVCMatmulTestFunc<int16_t, float, float, 11>(16, 128, 32);
+}
+
+TEST_F(TPushPopVCTest, case12_int16_four_k_tiles_left_right)
+{
+    TPushPopVCMatmulTestFunc<int16_t, float, float, 12>(16, 256, 32);
 }

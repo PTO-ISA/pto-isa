@@ -63,24 +63,36 @@ def gen_golden_data(case_name, case_params):
 
 if __name__ == "__main__":
     case_name_list = [
+        # TILE_UP_DOWN: vector cores split quantB along K rows (keys 1-6)
         "TPushPopVCTest.case1_int8_single_k_tile",
         "TPushPopVCTest.case2_int8_two_k_tiles",
         "TPushPopVCTest.case3_int8_four_k_tiles",
         "TPushPopVCTest.case4_int16_single_k_tile",
         "TPushPopVCTest.case5_int16_two_k_tiles",
         "TPushPopVCTest.case6_int16_four_k_tiles",
+        # TILE_LEFT_RIGHT: vector cores split quantB along N columns (keys 7-12)
+        "TPushPopVCTest.case7_int8_single_k_tile_left_right",
+        "TPushPopVCTest.case8_int8_two_k_tiles_left_right",
+        "TPushPopVCTest.case9_int8_four_k_tiles_left_right",
+        "TPushPopVCTest.case10_int16_single_k_tile_left_right",
+        "TPushPopVCTest.case11_int16_two_k_tiles_left_right",
+        "TPushPopVCTest.case12_int16_four_k_tiles_left_right",
     ]
 
     # M=16 fixed, K varies for K-tiling test, TILE_K=64
     case_params_list = [
-        # int8 cases: M=16, K varies, TILE_K=64, InT=float
-        (16, 64, 32, np.int8, np.float32, np.float32),  # case1: K=64, NUM_K_TILES=1
+        (16, 64, 32, np.int8, np.float32, np.float32),   # case1: K=64,  NUM_K_TILES=1
         (16, 128, 32, np.int8, np.float32, np.float32),  # case2: K=128, NUM_K_TILES=2
         (16, 256, 32, np.int8, np.float32, np.float32),  # case3: K=256, NUM_K_TILES=4 (FIFO wrapping)
-        # int16 cases: M=16, K varies, TILE_K=64, InT=float
-        (16, 64, 32, np.int16, np.float32, np.float32),  # case4: K=64, NUM_K_TILES=1
-        (16, 128, 32, np.int16, np.float32, np.float32),  # case5: K=128, NUM_K_TILES=2
-        (16, 256, 32, np.int16, np.float32, np.float32),  # case6: K=256, NUM_K_TILES=4 (FIFO wrapping)
+        (16, 64, 32, np.int16, np.float32, np.float32),  # case4: K=64,  NUM_K_TILES=1
+        (16, 128, 32, np.int16, np.float32, np.float32), # case5: K=128, NUM_K_TILES=2
+        (16, 256, 32, np.int16, np.float32, np.float32), # case6: K=256, NUM_K_TILES=4 (FIFO wrapping)
+        (16, 64, 64, np.int8, np.float32, np.float32),   # case7: K=64,  NUM_K_TILES=1
+        (16, 128, 64, np.int8, np.float32, np.float32),  # case8: K=128, NUM_K_TILES=2
+        (16, 256, 64, np.int8, np.float32, np.float32),  # case9: K=256, NUM_K_TILES=4
+        (16, 64, 32, np.int16, np.float32, np.float32),  # case10: K=64,  NUM_K_TILES=1
+        (16, 128, 32, np.int16, np.float32, np.float32), # case11: K=128, NUM_K_TILES=2
+        (16, 256, 32, np.int16, np.float32, np.float32), # case12: K=256, NUM_K_TILES=4
     ]
 
     for i, case_name in enumerate(case_name_list):

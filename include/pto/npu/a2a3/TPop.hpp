@@ -46,10 +46,7 @@ PTO_INTERNAL void TPOP_IMPL(Pipe &pipe, TileCons &tile)
 template <typename Pipe, TileSplitAxis Split>
 PTO_INTERNAL void TFREE_IMPL(Pipe &pipe)
 {
-    bool isFree = pipe.cons.getFreeStatus();
-    if (isFree) {
-        pipe.cons.free();
-    }
+    return;
 }
 
 //--------------------------------------------
@@ -76,10 +73,7 @@ PTO_INTERNAL void TPOP_IMPL(TileData &tile, Pipe &pipe)
 template <typename Pipe>
 PTO_INTERNAL void TFREE_IMPL(Pipe &pipe)
 {
-    bool isFree = pipe.cons.getFreeStatus();
-    if (isFree) {
-        pipe.cons.free();
-    }
+    return;
 }
 
 } // namespace pto
