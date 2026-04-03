@@ -19,8 +19,7 @@ np.random.seed(19)
 def gen_golden_data_trelu(case_name, param):
     dtype = param.dtype
 
-    row, col = [param.tile_row, param.tile_col]
-    row_valid, col_valid = [param.valid_row, param.valid_col]
+    row, col = [param.valid_row, param.valid_col]
 
     # Generate random input arrays
     input1 = cast_for_compute(np.random.randint(1, 10, size=[row, col]), dtype)
@@ -34,12 +33,12 @@ def gen_golden_data_trelu(case_name, param):
 
 
 class TReluParams:
-    def __init__(self, dtype, global_row, global_col, tile_row, tile_col, valid_row, valid_col):
+    def __init__(self, dtype, src_tile_row, src_tile_col, dst_tile_row, dst_tile_col, valid_row, valid_col):
         self.dtype = dtype
-        self.global_row = global_row
-        self.global_col = global_col
-        self.tile_row = tile_row
-        self.tile_col = tile_col
+        self.src_tile_row = src_tile_row
+        self.src_tile_col = src_tile_col
+        self.dst_tile_row = dst_tile_row
+        self.dst_tile_col = dst_tile_col
         self.valid_row = valid_row
         self.valid_col = valid_col
 
@@ -52,15 +51,15 @@ def generate_case_name(param):
         np.int32: 'int32',
         np.int16: 'int16'
     })
-    
+
     def substring(a, b) -> str:
         return f"_{a}x{b}"
-        
-    name = f"TRELUTest.case_{dtype_str}" 
-    name += substring(param.global_row, param.global_col)
-    name += substring(param.tile_row, param.tile_col)
+
+    name = f"TRELUTest.case_{dtype_str}"
+    name += substring(param.src_tile_row, param.src_tile_col)
+    name += substring(param.dst_tile_row, param.dst_tile_col)
     name += substring(param.valid_row, param.valid_col)
-    
+
     return name
 
 
@@ -76,8 +75,13 @@ if __name__ == "__main__":
     case_params_list = [
         TReluParams(np.float32, 64, 64, 64, 64, 64, 64),
         TReluParams(np.int32, 64, 64, 64, 64, 64, 64),
+        TReluParams(np.float16, 16, 256, 16, 256, 16, 256),
         TReluParams(np.int16, 64, 64, 64, 64, 64, 64),
-        TReluParams(np.float16, 16, 256, 16, 256, 16, 256)
+        
+        TReluParams(np.float32, 64, 64, 64, 64, 60, 55),
+        TReluParams(np.int32, 64, 64, 64, 64, 60, 55),
+        TReluParams(np.float16, 64, 64, 96, 96, 64, 60),
+        TReluParams(np.int16, 64, 64, 96, 96, 64, 60)
     ]
     if os.getenv("PTO_CPU_SIM_ENABLE_BF16") == "1":
         case_params_list.append(TReluParams(BF16_DTYPE, 16, 256, 16, 256, 16, 256))

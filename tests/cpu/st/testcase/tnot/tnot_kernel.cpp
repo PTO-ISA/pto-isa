@@ -13,21 +13,24 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 using namespace pto;
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_>
+template <typename T, int sTRows_, int sTCols_, int dTRows_, int dTCols_, int kGRows_, int kGCols_>
 AICORE void runTNot(__gm__ T __out__ *out, __gm__ T __in__ *src0)
 {
     using DynShapeDim5 = Shape<1, 1, 1, kGRows_, kGCols_>;
     using DynStridDim5 = Stride<1, 1, 1, kGCols_, 1>;
-    using GlobalData = GlobalTensor<T, DynShapeDim5, DynStridDim5>;
-    using TileData = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    TileData src0Tile(kTRows_, kTCols_);
-    TileData dstTile(kTRows_, kTCols_);
+    using GlobalDataSrc = GlobalTensor<T, DynShapeDim5, DynStridDim5>;
+    using GlobalDataDst = GlobalTensor<T, DynShapeDim5, DynStridDim5>;
 
-    GlobalData src0Global(src0);
-    GlobalData dstGlobal(out);
+    using TileDataSrc = Tile<TileType::Vec, T, sTRows_, sTCols_, BLayout::RowMajor, -1, -1>;
+    using TileDataDst = Tile<TileType::Vec, T, dTRows_, dTCols_, BLayout::RowMajor, -1, -1>;
+    TileDataSrc src0Tile(kGRows_, kGCols_);
+    TileDataDst dstTile(kGRows_, kGCols_);
+
+    GlobalDataSrc src0Global(src0);
+    GlobalDataDst dstGlobal(out);
 
     TASSIGN(src0Tile, 0);
-    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+    TASSIGN(dstTile, sTRows_ * sTCols_ * sizeof(typename TileDataSrc::DType));
 
     TLOAD(src0Tile, src0Global);
     TNOT(dstTile, src0Tile);
@@ -35,14 +38,23 @@ AICORE void runTNot(__gm__ T __out__ *out, __gm__ T __in__ *src0)
     out = dstGlobal.data();
 }
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_>
+template <typename T, int sTRows_, int sTCols_, int dTRows_, int dTCols_, int kGRows_, int kGCols_>
 void LaunchTNot(T *out, T *src0, void *stream)
 {
     if constexpr (std::is_same_v<T, aclFloat16>)
-        runTNot<half, kGRows_, kGCols_, kTRows_, kTCols_>((half *)(out), (half *)(src0));
+        runTNot<half, sTRows_, sTCols_, dTRows_, dTCols_, kGRows_, kGCols_>((half *)(out), (half *)(src0));
     else
-        runTNot<T, kGRows_, kGCols_, kTRows_, kTCols_>(out, src0);
+        runTNot<T, sTRows_, sTCols_, dTRows_, dTCols_, kGRows_, kGCols_>(out, src0);
 }
-const int NUM_64 = 64;
-template void LaunchTNot<int32_t, NUM_64, NUM_64, NUM_64, NUM_64>(int32_t *out, int32_t *src0, void *stream);
-template void LaunchTNot<int16_t, NUM_64, NUM_64, NUM_64, NUM_64>(int16_t *out, int16_t *src0, void *stream);
+
+template void LaunchTNot<int32_t, 64, 64, 64, 64, 60, 55>(int32_t *out, int32_t *src0, void *stream);
+template void LaunchTNot<int16_t, 64, 64, 64, 64, 60, 55>(int16_t *out, int16_t *src0, void *stream);
+
+template void LaunchTNot<int32_t, 64, 64, 96, 96, 64, 60>(int32_t *out, int32_t *src0, void *stream);
+template void LaunchTNot<int16_t, 64, 64, 96, 96, 64, 60>(int16_t *out, int16_t *src0, void *stream);
+
+template void LaunchTNot<uint32_t, 64, 64, 64, 64, 60, 55>(uint32_t *out, uint32_t *src0, void *stream);
+template void LaunchTNot<uint16_t, 64, 64, 64, 64, 60, 55>(uint16_t *out, uint16_t *src0, void *stream);
+
+template void LaunchTNot<uint32_t, 96, 96, 96, 96, 64, 60>(uint32_t *out, uint32_t *src0, void *stream);
+template void LaunchTNot<uint16_t, 96, 96, 64, 64, 64, 60>(uint16_t *out, uint16_t *src0, void *stream);
