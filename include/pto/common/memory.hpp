@@ -21,8 +21,7 @@ namespace pto {
 // returns the memory qualifier for a given TileType and data type.
 // compilation errors occur if the TileType does not have a specialized version.
 template <TileType L, typename DType>
-struct MemoryQualifier {
-};
+struct MemoryQualifier {};
 
 template <typename DType>
 struct MemoryQualifier<TileType::Vec, DType> {
