@@ -56,7 +56,9 @@ def gen_golden_data(case_name, param):
 
 
 class TestParams:
-    def __init__(self, dtype, global_row, global_col, tile_row, tile_col, valid_row, valid_col, pad_value_type=PAD_VALUE_NULL):
+    def __init__(
+        self, dtype, global_row, global_col, tile_row, tile_col, valid_row, valid_col, pad_value_type=PAD_VALUE_NULL
+    ):
         self.dtype = dtype
         self.global_row = global_row
         self.global_col = global_col

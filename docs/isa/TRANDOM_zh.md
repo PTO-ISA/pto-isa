@@ -1,6 +1,5 @@
 # TRANDOM
 
-
 ## Tile Operation Diagram
 
 ![TRANDOM tile operation](../figures/isa/TRANDOM.svg)
@@ -11,9 +10,11 @@
 
 ## 数学解释
 
-该指令实现了一个基于计数器的随机数生成器。对于有效区域中的每个元素，它基于密钥和计数器状态，使用可配置轮数的密码类变换生成伪随机值。
+该指令实现了一个基于计数器的随机数生成器。对于有效区域中的每个元素，它基于密钥和计数器状态，使用可配置轮数的密码类变换生成
+伪随机值。
 
 该算法使用：
+
 - 128 位状态（4 × 32 位计数器）
 - 64 位密钥（2 × 32 位字）
 - 类似 ChaCha 的四分之一轮操作，使用向量指令
@@ -52,12 +53,12 @@ PTO_INST void TRANDOM_IMPL(DstTile &dst, TRandomKey &key, TRandomCounter &counte
 ## 约束条件
 
 - **实现检查（A5）**：
-    - `DstTile::DType` 必须为以下类型之一：`int32_t`、`uint32_t`。
-    - Tile 布局必须为行主序（`DstTile::isRowMajor`）。
-    - `Rounds` 必须为 7 或 10（默认为 10）。
-    - `key` 和 `counter` 不能为空。
+  - `DstTile::DType` 必须为以下类型之一：`int32_t`、`uint32_t`。
+  - Tile 布局必须为行主序（`DstTile::isRowMajor`）。
+  - `Rounds` 必须为 7 或 10（默认为 10）。
+  - `key` 和 `counter` 不能为空。
 - **有效区域**：
-    - 该操作使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域。
+  - 该操作使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域。
 
 ## 示例
 
