@@ -114,9 +114,14 @@ BINARY_OP_DEF(MIN)
 UNARY_OP_DEF(LOG)
 UNARY_OP_DEF(NEG)
 UNARY_OP_DEF(NOT)
-UNARY_OP_DEF(RECIP)
 UNARY_OP_DEF(RELU)
 UNARY_OP_DEF(EXP)
+
+template <auto PrecisionType = RecipAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
+PTO_INTERNAL void TRECIP_IMPL(TileDataDst &dst, TileDataSrc &src)
+{
+    UnaryElementTileOp_Impl<ElementOp::OP_RECIP>(dst, src);
+}
 
 template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename TileDataTmp>
 PTO_INTERNAL void TREM_IMPL(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, TileDataTmp &tmp)

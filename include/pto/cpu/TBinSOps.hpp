@@ -45,7 +45,7 @@ PTO_INTERNAL void TMULS_IMPL(TileData &dst, TileData &src, typename TileData::DT
     unsigned col = dst.GetValidCol();
     TBinSOp<TileData>(dst.data(), src.data(), scalar, row, col, lambda);
 }
-template <typename TileData>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileData>
 PTO_INTERNAL void TDIVS_IMPL(TileData &dst, TileData &src, typename TileData::DType scalar)
 {
     auto lambda = [](typename TileData::DType x, typename TileData::DType y) { return x / y; };
@@ -53,7 +53,7 @@ PTO_INTERNAL void TDIVS_IMPL(TileData &dst, TileData &src, typename TileData::DT
     unsigned col = dst.GetValidCol();
     TBinSOp<TileData>(dst.data(), src.data(), scalar, row, col, lambda);
 }
-template <typename TileData>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileData>
 PTO_INTERNAL void TDIVS_IMPL(TileData &dst, typename TileData::DType scalar, TileData &src)
 {
     auto lambda = [](typename TileData::DType x, typename TileData::DType y) { return y / x; };

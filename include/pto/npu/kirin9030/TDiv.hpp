@@ -67,7 +67,8 @@ PTO_INTERNAL void TDivCheck(const TileDataDst &dst, const TileDataSrc0 &src0, co
                "Fix: TDIV input tile src1 valid shape mismatch with output tile dst shape.");
 }
 
-template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc0,
+          typename TileDataSrc1>
 PTO_INTERNAL void TDIV_IMPL(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1)
 {
     using T = typename TileDataDst::DType;

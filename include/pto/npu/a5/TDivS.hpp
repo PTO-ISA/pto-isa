@@ -22,24 +22,23 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 namespace pto {
 
-template <typename T>
+template <DivAlgorithm PrecisionType, typename T>
 struct DivSOp {
 #ifndef STRAIGHT_INTRINSICS_IMPL
     PTO_INTERNAL static void BinSInstr(RegTensor<T> &reg_dst, RegTensor<T> &reg_src0, T reg_src1, MaskReg &preg)
     {
-        if constexpr (std::is_same_v<T, float>) {
+        if constexpr (PrecisionType == DivAlgorithm::HIGH_PRECISION && std::is_same_v<T, float>) {
             vdup(reg_dst, reg_src1, preg, MODE_ZEROING);
-            DivIEEE754FloatImpl<T, RegTensor<T> >(reg_dst, reg_src0, reg_dst, preg);
-        } else if constexpr (std::is_same_v<T, half>) {
+            DivIEEE754FloatImpl<T, RegTensor<T>>(reg_dst, reg_src0, reg_dst, preg);
+        } else if constexpr (PrecisionType == DivAlgorithm::HIGH_PRECISION && std::is_same_v<T, half>) {
             vdup(reg_dst, reg_src1, preg, MODE_ZEROING);
-            DivIEEE754HalfImpl<T, RegTensor<T> >(reg_dst, reg_src0, reg_dst, preg);
+            DivIEEE754HalfImpl<T, RegTensor<T>>(reg_dst, reg_src0, reg_dst, preg);
         } else {
             vdup(reg_dst, reg_src1, preg, MODE_ZEROING);
             vdiv(reg_dst, reg_src0, reg_dst, preg, MODE_ZEROING);
         }
     }
 #else
-
     PTO_INTERNAL static void BinSInstr(RegTensor<T> &vregdst, RegTensor<T> &vregsrc, T src1, MaskReg &preg)
     {
         float divider = static_cast<float>(src1);
@@ -69,11 +68,17 @@ struct DivSOp {
 #endif
 };
 
-template <typename T>
+template <enum DivAlgorithm PrecisionType, typename T>
 struct DivSOpS {
     PTO_INTERNAL static void BinSInstr(RegTensor<T> &vregdst, RegTensor<T> &vregsrc, T src0, MaskReg &preg)
     {
-        if constexpr (std::is_same<T, float>::value || std::is_same<T, half>::value) {
+        if constexpr (PrecisionType == DivAlgorithm::HIGH_PRECISION && std::is_same_v<T, float>) {
+            vdup(vregdst, src0, preg, MODE_ZEROING);
+            DivIEEE754FloatImpl<T, RegTensor<T>>(vregdst, vregdst, vregsrc, preg);
+        } else if constexpr (PrecisionType == DivAlgorithm::HIGH_PRECISION && std::is_same_v<T, half>) {
+            vdup(vregdst, src0, preg, MODE_ZEROING);
+            DivIEEE754HalfImpl<T, RegTensor<T>>(vregdst, vregdst, vregsrc, preg);
+        } else if constexpr (std::is_same<T, float>::value || std::is_same<T, half>::value) {
             vdup(vregdst, src0, preg, MODE_ZEROING);
             vdiv(vregdst, vregdst, vregsrc, preg);
         } else if constexpr (std::is_same<T, int32_t>::value) {
@@ -126,8 +131,8 @@ PTO_INTERNAL void TSDiv_naive(__ubuf__ T *dst, __ubuf__ T *src0, T src1, unsigne
         }
     }
 }
-template <typename TileDataDst, typename TileDataSrc, unsigned elementsPerRepeat, unsigned blockSizeElem,
-          unsigned dstRowStride, unsigned srcRowStride>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          unsigned elementsPerRepeat, unsigned blockSizeElem, unsigned dstRowStride, unsigned srcRowStride>
 __tf__ PTO_INTERNAL OP_NAME(TDIVS)
     OP_TYPE(element_wise) void TDivS(typename TileDataDst::TileDType __out__ dst,
                                      typename TileDataSrc::TileDType __in__ src0,
@@ -140,13 +145,13 @@ __tf__ PTO_INTERNAL OP_NAME(TDIVS)
     if constexpr (std::is_integral_v<T>) {
         TDivs_naive<T, TileDataDst::Cols, TileDataSrc::Cols>(dstPtr, src0Ptr, src1, validRow, validCol);
     } else {
-        BinaryInstr<DivSOp<T>, TileDataDst, TileDataSrc, T, elementsPerRepeat, blockSizeElem, dstRowStride,
-                    srcRowStride>(dstPtr, src0Ptr, src1, validRow, validCol, version);
+        BinaryInstr<DivSOp<PrecisionType, T>, TileDataDst, TileDataSrc, T, elementsPerRepeat, blockSizeElem,
+                    dstRowStride, srcRowStride>(dstPtr, src0Ptr, src1, validRow, validCol, version);
     }
 }
 
-template <typename TileDataDst, typename TileDataSrc, unsigned elementsPerRepeat, unsigned blockSizeElem,
-          unsigned dstRowStride, unsigned srcRowStride>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          unsigned elementsPerRepeat, unsigned blockSizeElem, unsigned dstRowStride, unsigned srcRowStride>
 __tf__ PTO_INTERNAL OP_NAME(TDIVS)
     OP_TYPE(element_wise) void TDivS(typename TileDataDst::TileDType __out__ dst,
                                      typename TileDataSrc::DType __in__ src1,
@@ -159,12 +164,12 @@ __tf__ PTO_INTERNAL OP_NAME(TDIVS)
     if constexpr (std::is_integral_v<T>) {
         TSDiv_naive<T, TileDataDst::Cols, TileDataSrc::Cols>(dstPtr, src0Ptr, src1, validRow, validCol);
     } else {
-        BinaryInstr<DivSOpS<T>, TileDataDst, TileDataSrc, T, elementsPerRepeat, blockSizeElem, dstRowStride,
-                    srcRowStride>(dstPtr, src0Ptr, src1, validRow, validCol, version);
+        BinaryInstr<DivSOpS<PrecisionType, T>, TileDataDst, TileDataSrc, T, elementsPerRepeat, blockSizeElem,
+                    dstRowStride, srcRowStride>(dstPtr, src0Ptr, src1, validRow, validCol, version);
     }
 }
 
-template <typename TileDataDst, typename TileDataSrc>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TDIVS_IMPL(TileDataDst &dst, TileDataSrc &src0, typename TileDataSrc::DType scalar)
 {
     static_assert(std::is_same<typename TileDataDst::DType, uint32_t>::value ||
@@ -200,11 +205,11 @@ PTO_INTERNAL void TDIVS_IMPL(TileDataDst &dst, TileDataSrc &src0, typename TileD
     constexpr unsigned srcRowStride = TileDataSrc::RowStride;
     unsigned validRow = dst.GetValidRow();
     unsigned validCol = dst.GetValidCol();
-    TDivS<TileDataDst, TileDataSrc, elementsPerRepeat, blockSizeElem, dstRowStride, srcRowStride>(
+    TDivS<PrecisionType, TileDataDst, TileDataSrc, elementsPerRepeat, blockSizeElem, dstRowStride, srcRowStride>(
         dst.data(), src0.data(), scalar, validRow, validCol);
 }
 
-template <typename TileDataDst, typename TileDataSrc>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TDIVS_IMPL(TileDataDst &dst, typename TileDataSrc::DType scalar, TileDataSrc &src0)
 {
     static_assert(TileDataSrc::Loc == TileType::Vec, "TileType of src and dst tiles must be TileType::Vec.");
@@ -227,7 +232,7 @@ PTO_INTERNAL void TDIVS_IMPL(TileDataDst &dst, typename TileDataSrc::DType scala
     constexpr unsigned srcRowStride = TileDataSrc::RowStride;
     unsigned validRow = dst.GetValidRow();
     unsigned validCol = dst.GetValidCol();
-    TDivS<TileDataDst, TileDataSrc, elementsPerRepeat, blockSizeElem, dstRowStride, srcRowStride>(
+    TDivS<PrecisionType, TileDataDst, TileDataSrc, elementsPerRepeat, blockSizeElem, dstRowStride, srcRowStride>(
         dst.data(), scalar, src0.data(), validRow, validCol);
 }
 } // namespace pto

@@ -59,7 +59,7 @@ void TDiv_Impl(typename tile_shape::TileDType dst, typename tile_shape::TileDTyp
     }
 }
 
-template <typename tile_shape>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename tile_shape>
 PTO_INTERNAL void TDIV_IMPL(tile_shape &dst, tile_shape &src0, tile_shape &src1)
 {
     unsigned row = dst.GetValidRow();
