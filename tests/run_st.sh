@@ -148,7 +148,7 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
     python3 tests/script/run_st.py $ARGS -w -v a3 -t texp -g TEXPTest.case_float_64x64_64x64_64x64_inPlace_False
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tabs -g TABSTest.case_float_64x64_64x64_64x64_inPlace_False
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tlog -g TLOGTest.case_float_64x64_64x64_64x64_inPlace_False
-    python3 tests/script/run_st.py $ARGS -w -v a3 -t trecip -g TRECIPTest.case_float_64x64_64x64_64x64_inPlace_False
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trecip -g TRECIPTest.case_float_64x64_64x64_64x64
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tdivs -g TDIVSTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tdivs -g TDIVSTest.case4
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tdivs -g TDIVSTest.case5

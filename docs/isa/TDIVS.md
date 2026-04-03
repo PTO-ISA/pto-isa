@@ -55,12 +55,21 @@ pto.tdivs ins(%scalar, %src : dtype, !pto.tile_buf<...>) outs(%dst : !pto.tile_b
 Declared in `include/pto/common/pto_instr.hpp`:
 
 ```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TDIVS(TileDataDst &dst, TileDataSrc &src0, typename TileDataSrc::DType scalar, WaitEvents &... events);
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          typename... WaitEvents>
+PTO_INST RecordEvent TDIVS(TileDataDst &dst, TileDataSrc &src0, typename TileDataSrc::DType scalar,
+                           WaitEvents &... events);
 
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TDIVS(TileDataDst &dst, typename TileDataDst::DType scalar, TileDataSrc &src0, WaitEvents &... events);
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          typename... WaitEvents>
+PTO_INST RecordEvent TDIVS(TileDataDst &dst, typename TileDataDst::DType scalar, TileDataSrc &src0,
+                           WaitEvents &... events)
 ```
+
+`PrecisionType` has the following values available:
+
+* `DivAlgorithm::DEFAULT`: Normal algorithm, faster but with lower precision.
+* `DivAlgorithm::HIGH_PRECISION`: High precision algorithm, but slower.
 
 ## Constraints
 
@@ -80,6 +89,8 @@ PTO_INST RecordEvent TDIVS(TileDataDst &dst, typename TileDataDst::DType scalar,
     - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
 - **Division-by-zero**:
     - Behavior is target-defined; on A5 the tile/scalar form maps to multiply-by-reciprocal and uses `1/0 -> +inf` for `scalar == 0`.
+- **High Precision Algorithm**
+    - Only available on A5, `PrecisionType` option is ignored on A3.
 
 ## Examples
 
@@ -94,6 +105,7 @@ void example_auto() {
   using TileT = Tile<TileType::Vec, float, 16, 16>;
   TileT src, dst;
   TDIVS(dst, src, 2.0f);
+  TDIVS<DivAlgorithm::HIGH_PRECISION>(dst, src, 2.0f);
 }
 ```
 
@@ -110,6 +122,7 @@ void example_manual() {
   TASSIGN(src, 0x1000);
   TASSIGN(dst, 0x2000);
   TDIVS(dst, 2.0f, src);
+  TDIVS<DivAlgorithm::HIGH_PRECISION>(dst, 2.0f, src);
 }
 ```
 

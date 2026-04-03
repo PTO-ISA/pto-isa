@@ -15,8 +15,13 @@ See LICENSE in the root of the software repository for the full text of the Lice
 using namespace std;
 using namespace PtoTestCommon;
 
-template <uint32_t caseId>
-void launchTDIVSTestCase(void *out, void *src, float scalar, aclrtStream stream);
+template <typename T, int dstTileRow, int dstTileCol, int srcTileRow, int srcTileCol, int validRow, int validCol,
+          bool highPrecision = false>
+void LaunchTDivS(T *out, T *src, T scalar, void *stream);
+
+template <int dstTileRow, int dstTileCol, int srcTileRow, int srcTileCol, int validRow, int validCol,
+          bool highPrecision = false>
+void LaunchTDivSHalf(aclFloat16 *out, aclFloat16 *src, aclFloat16 scalar, void *stream);
 
 class TDIVSTest : public testing::Test {
 public:
@@ -37,8 +42,9 @@ std::string GetGoldenDir()
     return fullPath;
 }
 
-template <uint32_t caseId, typename T, int dstTileRow, int dstTileCol, int row, int vaildRow, int col, int srcVaildCol>
-bool TDivSTestFramework()
+template <typename T, int dstTileRow, int dstTileCol, int srcTileRow, int srcTileCol, int vaildRow, int vaildCol,
+          bool isHalf = false, bool highPrecision = false>
+void TDivSTestFramework()
 {
     aclInit(nullptr);
     aclrtSetDevice(0);
@@ -47,12 +53,13 @@ bool TDivSTestFramework()
     aclrtCreateStream(&stream);
 
     size_t dstByteSize = dstTileRow * dstTileCol * sizeof(T);
-    size_t srcByteSize = row * col * sizeof(T);
+    size_t srcByteSize = srcTileRow * srcTileCol * sizeof(T);
+    size_t scalarByteSize = sizeof(T);
     T *dstHost;
     T *srcHost;
     T *dstDevice;
     T *srcDevice;
-    float scalar;
+    T scalar;
 
     aclrtMallocHost((void **)(&dstHost), dstByteSize);
     aclrtMallocHost((void **)(&srcHost), srcByteSize);
@@ -61,13 +68,15 @@ bool TDivSTestFramework()
     aclrtMalloc((void **)&srcDevice, srcByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
 
     ReadFile(GetGoldenDir() + "/input.bin", srcByteSize, srcHost, srcByteSize);
-    std::string scalar_file = GetGoldenDir() + "/divider.bin";
-    std::ifstream file(scalar_file, std::ios::binary);
-
-    file.read(reinterpret_cast<char *>(&scalar), 4);
-    file.close();
+    ReadFile(GetGoldenDir() + "/divider.bin", scalarByteSize, (void *)&scalar, sizeof(T));
     aclrtMemcpy(srcDevice, srcByteSize, srcHost, srcByteSize, ACL_MEMCPY_HOST_TO_DEVICE);
-    launchTDIVSTestCase<caseId>(dstDevice, srcDevice, scalar, stream);
+    if constexpr (isHalf) {
+        LaunchTDivSHalf<dstTileRow, dstTileCol, srcTileRow, srcTileCol, vaildRow, vaildCol, highPrecision>(
+            dstDevice, srcDevice, scalar, stream);
+    } else {
+        LaunchTDivS<T, dstTileRow, dstTileCol, srcTileRow, srcTileCol, vaildRow, vaildCol, highPrecision>(
+            dstDevice, srcDevice, scalar, stream);
+    }
     aclrtSynchronizeStream(stream);
     aclrtMemcpy(dstHost, dstByteSize, dstDevice, dstByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
 
@@ -88,35 +97,36 @@ bool TDivSTestFramework()
     ReadFile(GetGoldenDir() + "/golden.bin", dstByteSize, golden.data(), dstByteSize);
     ReadFile(GetGoldenDir() + "/output.bin", dstByteSize, devFinal.data(), dstByteSize);
 
-    return ResultCmp<T>(golden, devFinal, 0.001f);
+    constexpr auto resPrecision = highPrecision ? 0.0000001f : 0.001f;
+    bool ret = ResultCmp<T>(golden, devFinal, resPrecision);
+    EXPECT_TRUE(ret);
 }
 
 TEST_F(TDIVSTest, case1)
 {
-    bool ret = TDivSTestFramework<1, float, 32, 128, 32, 32, 64, 64>();
-    EXPECT_TRUE(ret);
+    TDivSTestFramework<float, 32, 128, 32, 64, 32, 64>();
 }
-
 TEST_F(TDIVSTest, case2)
 {
-    bool ret = TDivSTestFramework<2, aclFloat16, 63, 128, 63, 63, 64, 64>();
-    EXPECT_TRUE(ret);
+    TDivSTestFramework<aclFloat16, 63, 128, 63, 64, 63, 64, true>();
 }
-
 TEST_F(TDIVSTest, case4)
 {
-    bool ret = TDivSTestFramework<4, int16_t, 15, 192, 15, 15, 192, 192>();
-    EXPECT_TRUE(ret);
+    TDivSTestFramework<int16_t, 15, 192, 15, 192, 15, 192>();
 }
-
 TEST_F(TDIVSTest, case5)
 {
-    bool ret = TDivSTestFramework<5, float, 7, 512, 7, 7, 448, 448>();
-    EXPECT_TRUE(ret);
+    TDivSTestFramework<float, 7, 512, 7, 448, 7, 448>();
 }
-
 TEST_F(TDIVSTest, case6)
 {
-    bool ret = TDivSTestFramework<6, float, 256, 32, 256, 256, 16, 16>();
-    EXPECT_TRUE(ret);
+    TDivSTestFramework<float, 256, 32, 256, 16, 256, 16>();
+}
+TEST_F(TDIVSTest, caseHP1)
+{
+    TDivSTestFramework<float, 2, 16, 2, 16, 2, 16, false, true>();
+}
+TEST_F(TDIVSTest, caseHP2)
+{
+    TDivSTestFramework<aclFloat16, 2, 32, 2, 32, 2, 32, true, true>();
 }

@@ -32,10 +32,12 @@ std::string GetGoldenDir()
     return fullPath;
 }
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, bool isInPlace = false>
+template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, bool isInPlace = false,
+          bool highPrecision = false>
 void LaunchTRecip(T *out, T *src, void *stream);
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, bool isInPlace = false>
+template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, bool isInPlace = false,
+          bool highPrecision = false>
 void test_trecip()
 {
     size_t fileSize = kGRows_ * kGCols_ * sizeof(T);
@@ -57,7 +59,7 @@ void test_trecip()
     ReadFile(GetGoldenDir() + "/input1.bin", fileSize, srcHost, fileSize);
 
     aclrtMemcpy(srcDevice, fileSize, srcHost, fileSize, ACL_MEMCPY_HOST_TO_DEVICE);
-    LaunchTRecip<T, kGRows_, kGCols_, kTRows_, kTCols_, isInPlace>(dstDevice, srcDevice, stream);
+    LaunchTRecip<T, kGRows_, kGCols_, kTRows_, kTCols_, isInPlace, highPrecision>(dstDevice, srcDevice, stream);
 
     aclrtSynchronizeStream(stream);
     aclrtMemcpy(dstHost, fileSize, dstDevice, fileSize, ACL_MEMCPY_DEVICE_TO_HOST);
@@ -89,27 +91,35 @@ void test_trecip()
     EXPECT_TRUE(ret);
 }
 
-TEST_F(TRECIPTest, case_float_64x64_64x64_64x64_inPlace_True)
+TEST_F(TRECIPTest, case_float_64x64_64x64_64x64_inPlace)
 {
     test_trecip<float, 64, 64, 64, 64, true>();
 }
-TEST_F(TRECIPTest, case_float_64x64_64x64_64x64_inPlace_False)
+TEST_F(TRECIPTest, case_float_64x64_64x64_64x64)
 {
     test_trecip<float, 64, 64, 64, 64, false>();
 }
-TEST_F(TRECIPTest, case_half_64x64_64x64_64x64_inPlace_True)
+TEST_F(TRECIPTest, case_half_64x64_64x64_64x64_inPlace)
 {
     test_trecip<aclFloat16, 64, 64, 64, 64, true>();
 }
-TEST_F(TRECIPTest, case_half_64x64_64x64_64x64_inPlace_False)
+TEST_F(TRECIPTest, case_half_64x64_64x64_64x64)
 {
     test_trecip<aclFloat16, 64, 64, 64, 64, false>();
 }
-TEST_F(TRECIPTest, case_float_64x64_66x72_64x64_inPlace_False)
+TEST_F(TRECIPTest, case_float_64x64_66x72_64x64)
 {
     test_trecip<float, 64, 64, 66, 72, false>();
 }
-TEST_F(TRECIPTest, case_float_58x70_66x72_58x70_inPlace_False)
+TEST_F(TRECIPTest, case_float_58x70_66x72_58x70)
 {
     test_trecip<float, 58, 70, 66, 72, false>();
+}
+TEST_F(TRECIPTest, case_float_hp_2x16_2x16_2x16)
+{
+    test_trecip<float, 2, 16, 2, 16, false, true>();
+}
+TEST_F(TRECIPTest, case_half_hp_2x32_2x32_2x32)
+{
+    test_trecip<aclFloat16, 2, 32, 2, 32, false, true>();
 }

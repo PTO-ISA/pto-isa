@@ -14,26 +14,29 @@ import os
 import struct
 import ctypes
 import numpy as np
-np.random.seed(23)
 
 
 def gen_golden_data(param):
-    data_type = param.data_type
+    dtype = param.data_type
     rows = param.row
     cols = param.col
     dst_tile_row = param.dst_tile_row
     dst_tile_col = param.dst_tile_col
 
-    input_arr = np.random.uniform(low=-8, high=8, size=(rows, cols)).astype(data_type)
-    divider = np.random.uniform(low=-8, high=8, size=(1, 1)).astype(data_type)
-    output_arr = np.zeros((dst_tile_row, dst_tile_col), dtype=data_type)
-    for i in range(rows):
-        for j in range(cols):
-            output_arr[i, j] = input_arr[i, j] / divider[0, 0]
+    if dtype in (np.int8, np.uint8, np.int16, np.uint16, np.int32, np.uint32):
+        dtype_info = np.iinfo(dtype)
+        input_arr = np.random.randint(dtype_info.min, dtype_info.max, size=[rows, cols]).astype(dtype)
+        divider = np.random.randint(dtype_info.min, dtype_info.max, size=[1, 1]).astype(dtype)
+    else:
+        dtype_info = np.finfo(dtype)
+        input_arr = np.random.uniform(low=dtype_info.min, high=dtype_info.max, size=[rows, cols]).astype(dtype)
+        divider = np.random.uniform(low=dtype_info.min, high=dtype_info.max, size=[1, 1]).astype(dtype)
+    
+    output_arr = np.zeros((dst_tile_row, dst_tile_col), dtype=dtype)
+    output_arr[0:rows, 0:cols] = input_arr[0:rows, 0:cols] / divider[0, 0]
 
     input_arr.tofile('input.bin')
-    with open("divider.bin", 'wb') as f:
-        f.write(struct.pack('f', np.float32(divider[0, 0])))
+    divider.tofile('divider.bin')
     output_arr.tofile('golden.bin')
 
 
@@ -46,6 +49,7 @@ class TDivsParams:
         self.row = row
         self.col = col
 
+
 if __name__ == "__main__":
     case_params_list = [
         TDivsParams("TDIVSTest.case1", np.float32, 32, 128, 32, 64),
@@ -53,7 +57,9 @@ if __name__ == "__main__":
         TDivsParams("TDIVSTest.case3", np.int32, 31, 256, 31, 128),
         TDivsParams("TDIVSTest.case4", np.int16, 15, 192, 15, 64 * 3),
         TDivsParams("TDIVSTest.case5", np.float32, 7, 512, 7, 64 * 7),
-        TDivsParams("TDIVSTest.case6", np.float32, 256, 32, 256, 16)
+        TDivsParams("TDIVSTest.case6", np.float32, 256, 32, 256, 16),
+        TDivsParams("TDIVSTest.caseHP1", np.float32, 2, 16, 2, 16),
+        TDivsParams("TDIVSTest.caseHP2", np.float16, 2, 32, 2, 32)
     ]
 
     for _, case in enumerate(case_params_list):

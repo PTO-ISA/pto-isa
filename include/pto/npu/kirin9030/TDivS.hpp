@@ -63,7 +63,7 @@ __tf__ PTO_INTERNAL OP_NAME(TDIVS)
         dstPtr, src0Ptr, src1, validRow, validCol, version);
 }
 
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 PTO_INTERNAL void TDIVS_IMPL(DstTile &dst, SrcTile &src0, typename SrcTile::DType scalar)
 {
     static_assert(std::is_same<typename DstTile::DType, uint32_t>::value ||
@@ -103,7 +103,7 @@ PTO_INTERNAL void TDIVS_IMPL(DstTile &dst, SrcTile &src0, typename SrcTile::DTyp
                                                                                           scalar, validRow, validCol);
 }
 
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 PTO_INTERNAL void TDIVS_IMPL(DstTile &dst, typename SrcTile::DType scalar, SrcTile &src0)
 {
     static_assert(SrcTile::Loc == TileType::Vec, "TileType of src and dst tiles must be TileType::Vec.");

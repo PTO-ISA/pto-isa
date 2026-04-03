@@ -55,12 +55,21 @@ pto.tdivs ins(%scalar, %src : dtype, !pto.tile_buf<...>) outs(%dst : !pto.tile_b
 声明于 `include/pto/common/pto_instr.hpp`：
 
 ```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TDIVS(TileDataDst &dst, TileDataSrc &src0, typename TileDataSrc::DType scalar, WaitEvents &... events);
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          typename... WaitEvents>
+PTO_INST RecordEvent TDIVS(TileDataDst &dst, TileDataSrc &src0, typename TileDataSrc::DType scalar,
+                           WaitEvents &... events);
 
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TDIVS(TileDataDst &dst, typename TileDataDst::DType scalar, TileDataSrc &src0, WaitEvents &... events);
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          typename... WaitEvents>
+PTO_INST RecordEvent TDIVS(TileDataDst &dst, typename TileDataDst::DType scalar, TileDataSrc &src0,
+                           WaitEvents &... events)
 ```
+
+`PrecisionType`可指定以下值：
+
+* `DivAlgorithm::DEFAULT`：普通算法，速度快但精度较低。
+* `DivAlgorithm::HIGH_PRECISION`：高精度算法，速度较慢。
 
 ## 约束
 
@@ -85,6 +94,8 @@ PTO_INST RecordEvent TDIVS(TileDataDst &dst, typename TileDataDst::DType scalar,
     - 该操作使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域.
 - **除零**:
     - 行为由目标定义；在 A5 上，tile/标量形式映射到乘以倒数，并对 `scalar == 0` 使用 `1/0 -> +inf`。
+- **高精度算法**
+    - 仅在A5上有效，`PrecisionType`选项A3上将被忽略。
 
 ## 示例
 
@@ -99,6 +110,7 @@ void example_auto() {
   using TileT = Tile<TileType::Vec, float, 16, 16>;
   TileT src, dst;
   TDIVS(dst, src, 2.0f);
+  TDIVS<DivAlgorithm::HIGH_PRECISION>(dst, src, 2.0f);
 }
 ```
 
@@ -115,6 +127,7 @@ void example_manual() {
   TASSIGN(src, 0x1000);
   TASSIGN(dst, 0x2000);
   TDIVS(dst, 2.0f, src);
+  TDIVS<DivAlgorithm::HIGH_PRECISION>(dst, 2.0f, src);
 }
 ```
 

@@ -41,9 +41,15 @@ pto.trecip ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 声明于 `include/pto/common/pto_instr.hpp`：
 
 ```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
+template <auto PrecisionType = RecipAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          typename... WaitEvents>
 PTO_INST RecordEvent TRECIP(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events);
 ```
+
+`PrecisionType`可指定以下值：
+
+* `RecipAlgorithm::DEFAULT`：普通算法，速度快但精度较低。
+* `RecipAlgorithm::HIGH_PRECISION`：高精度算法，速度较慢。
 
 ## 约束
 
@@ -58,6 +64,8 @@ PTO_INST RecordEvent TRECIP(TileDataDst &dst, TileDataSrc &src, WaitEvents &... 
     - 该操作使用 `dst.GetValidRow()` / `dst.GetValidCol()` 作为迭代域。
 - **域 / NaN**:
     - 除零行为由目标定义；CPU 模拟器在调试构建中会断言。
+- **高精度算法**
+    - 仅在A5上有效，`PrecisionType`选项A3上将被忽略。
 
 ## 示例
 
@@ -70,6 +78,7 @@ void example() {
   using TileT = Tile<TileType::Vec, float, 16, 16>;
   TileT x, out;
   TRECIP(out, x);
+  TRECIP<RecipAlgorithm::HIGH_PRECISION>(out, x);
 }
 ```
 

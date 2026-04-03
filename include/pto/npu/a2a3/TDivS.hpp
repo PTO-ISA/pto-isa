@@ -201,7 +201,7 @@ __tf__ PTO_INTERNAL void TDivS(typename TileDataDst::TileDType __out__ dstData,
     }
 }
 
-template <typename TileDataDst, typename TileDataSrc>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TDIVS_IMPL(TileDataDst &dst, TileDataSrc &src, typename TileDataSrc::DType scalar)
 {
     using T = typename TileDataSrc::DType;
@@ -254,7 +254,7 @@ __tf__ PTO_INTERNAL void TSDiv(typename TileDataDst::TileDType __out__ dstData,
             dst, src, scalar, validRow, validCol);
     }
 }
-template <typename TileDataDst, typename TileDataSrc>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TDIVS_IMPL(TileDataDst &dst, typename TileDataDst::DType scalar, TileDataSrc &src)
 {
     using T = typename TileDataSrc::DType;

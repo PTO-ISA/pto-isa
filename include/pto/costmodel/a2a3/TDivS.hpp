@@ -14,13 +14,13 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 namespace pto {
 
-template <typename TileDataDst, typename TileDataSrc>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TDIVS_IMPL(TileDataDst &dst, TileDataSrc &src, typename TileDataSrc::DType scalar)
 {
     pto::CostModel::GetInstance().BinSOpPredictCycle<DivSOp, TileDataDst, TileDataSrc>("TDIVS", dst, src);
 }
 
-template <typename TileDataDst, typename TileDataSrc>
+template <auto PrecisionType = DivAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TDIVS_IMPL(TileDataDst &dst, typename TileDataSrc::DType scalar, TileDataSrc &src)
 {
     pto::CostModel::GetInstance().BinSOpPredictCycle<DivSOp, TileDataDst, TileDataSrc>("TDIVS", dst, src);
