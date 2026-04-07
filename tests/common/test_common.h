@@ -222,7 +222,7 @@ bool ResultCmp(const std::vector<T> &outDataValExp, const T *outDataValAct, floa
     size_t errCount = 0;
 
     bool rst = true;
-    size_t eSize = outDataValExp.size() / sizeof(T);
+    size_t eSize = outDataValExp.size();
     for (size_t eIdx = 0; eIdx < eSize; eIdx++) {
         auto expVal = static_cast<float>(outDataValExp[eIdx]);
         auto actVal = static_cast<float>(outDataValAct[eIdx]);
