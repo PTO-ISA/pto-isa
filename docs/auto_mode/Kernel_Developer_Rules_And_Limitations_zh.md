@@ -90,6 +90,10 @@ else {
 }
 ```
 
+## 1.4 - 目前非常不推荐使用double/multi buffering
+目前对于double/multi buffering没有完全支持，因为一旦kernel稍微变得复杂，那使用double buffering往往会涉及到很多动态控制流，让自动同步变得极其困难。
+编译器正在调研设计专门的抽象接口（带上一些约束）供程序员使用来使能double/multi buffering，从而能让编译器正确分析。
+
 # 2 - 内存分配相关规则
 
 AUTO模式下由于不能使用`TASSIGN`，编译器无法自动得知两个tile之间的alias关系，因为无法得知程序员的意图，所以需要程序员显式告诉编译器两个tile的alias关系。

@@ -87,6 +87,12 @@ else {
 }
 ```
 
+## 1.4 - It's strongly recommended NOT to use double/multi buffering at the moment
+For now, the double/multi buffering in auto mode isn't fully supported, because once the kernels becomes complicated, using double buffering always
+involves complex control flows, imposing huges challenges for compilers to do auto-sync.
+Auto mode compiler team is trying to design a dedicated abstraction/interface (with some constraints) to kernel developers, to enable double buffering,
+while the compiler can correctly analyze the code and do proper auto sync.
+
 # 2 - Memory Allocation Rules
 
 ## 2.1 Use `TRESHAPE` to tell compiler that 2 tiles have the same base address
