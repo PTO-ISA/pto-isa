@@ -403,6 +403,146 @@ struct GlobalTensor {
         return -1;
     }
 
+    template <int dim>
+    PTO_INTERNAL void SetShape(int64_t s)
+    {
+        static_assert(dim >= GlobalTensorDim::DIM_0 && dim < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticShape[dim] == DYNAMIC, "dim must be DYNAMIC");
+        shape_.shape[dim] = s;
+    }
+
+    template <int dim1, int dim2>
+    PTO_INTERNAL void SetShape(int64_t s1, int64_t s2)
+    {
+        static_assert(dim1 >= GlobalTensorDim::DIM_0 && dim1 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim2 >= GlobalTensorDim::DIM_0 && dim2 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticShape[dim1] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim2] == DYNAMIC, "dim must be DYNAMIC");
+        shape_.shape[dim1] = s1;
+        shape_.shape[dim2] = s2;
+    }
+
+    template <int dim1, int dim2, int dim3>
+    PTO_INTERNAL void SetShape(int64_t s1, int64_t s2, int64_t s3)
+    {
+        static_assert(dim1 >= GlobalTensorDim::DIM_0 && dim1 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim2 >= GlobalTensorDim::DIM_0 && dim2 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim3 >= GlobalTensorDim::DIM_0 && dim3 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticShape[dim1] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim2] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim3] == DYNAMIC, "dim must be DYNAMIC");
+        shape_.shape[dim1] = s1;
+        shape_.shape[dim2] = s2;
+        shape_.shape[dim3] = s3;
+    }
+
+    template <int dim1, int dim2, int dim3, int dim4>
+    PTO_INTERNAL void SetShape(int64_t s1, int64_t s2, int64_t s3, int64_t s4)
+    {
+        static_assert(dim1 >= GlobalTensorDim::DIM_0 && dim1 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim2 >= GlobalTensorDim::DIM_0 && dim2 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim3 >= GlobalTensorDim::DIM_0 && dim3 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim4 >= GlobalTensorDim::DIM_0 && dim4 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticShape[dim1] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim2] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim3] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim4] == DYNAMIC, "dim must be DYNAMIC");
+        shape_.shape[dim1] = s1;
+        shape_.shape[dim2] = s2;
+        shape_.shape[dim3] = s3;
+        shape_.shape[dim4] = s4;
+    }
+
+    template <int dim1, int dim2, int dim3, int dim4, int dim5>
+    PTO_INTERNAL void SetShape(int64_t s1, int64_t s2, int64_t s3, int64_t s4, int64_t s5)
+    {
+        static_assert(dim1 >= GlobalTensorDim::DIM_0 && dim1 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim2 >= GlobalTensorDim::DIM_0 && dim2 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim3 >= GlobalTensorDim::DIM_0 && dim3 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim4 >= GlobalTensorDim::DIM_0 && dim4 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim5 >= GlobalTensorDim::DIM_0 && dim5 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticShape[dim1] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim2] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim3] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim4] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticShape[dim5] == DYNAMIC, "dim must be DYNAMIC");
+        shape_.shape[dim1] = s1;
+        shape_.shape[dim2] = s2;
+        shape_.shape[dim3] = s3;
+        shape_.shape[dim4] = s4;
+        shape_.shape[dim5] = s5;
+    }
+
+    template <int dim>
+    PTO_INTERNAL void SetStride(int64_t s)
+    {
+        static_assert(dim >= GlobalTensorDim::DIM_0 && dim < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticStride[dim] == DYNAMIC, "dim must be DYNAMIC");
+        stride_.stride[dim] = s;
+    }
+
+    template <int dim1, int dim2>
+    PTO_INTERNAL void SetStride(int64_t s1, int64_t s2)
+    {
+        static_assert(dim1 >= GlobalTensorDim::DIM_0 && dim1 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim2 >= GlobalTensorDim::DIM_0 && dim2 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticStride[dim1] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim2] == DYNAMIC, "dim must be DYNAMIC");
+        stride_.stride[dim1] = s1;
+        stride_.stride[dim2] = s2;
+    }
+
+    template <int dim1, int dim2, int dim3>
+    PTO_INTERNAL void SetStride(int64_t s1, int64_t s2, int64_t s3)
+    {
+        static_assert(dim1 >= GlobalTensorDim::DIM_0 && dim1 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim2 >= GlobalTensorDim::DIM_0 && dim2 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim3 >= GlobalTensorDim::DIM_0 && dim3 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticStride[dim1] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim2] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim3] == DYNAMIC, "dim must be DYNAMIC");
+        stride_.stride[dim1] = s1;
+        stride_.stride[dim2] = s2;
+        stride_.stride[dim3] = s3;
+    }
+
+    template <int dim1, int dim2, int dim3, int dim4>
+    PTO_INTERNAL void SetStride(int64_t s1, int64_t s2, int64_t s3, int64_t s4)
+    {
+        static_assert(dim1 >= GlobalTensorDim::DIM_0 && dim1 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim2 >= GlobalTensorDim::DIM_0 && dim2 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim3 >= GlobalTensorDim::DIM_0 && dim3 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim4 >= GlobalTensorDim::DIM_0 && dim4 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticStride[dim1] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim2] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim3] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim4] == DYNAMIC, "dim must be DYNAMIC");
+        stride_.stride[dim1] = s1;
+        stride_.stride[dim2] = s2;
+        stride_.stride[dim3] = s3;
+        stride_.stride[dim4] = s4;
+    }
+
+    template <int dim1, int dim2, int dim3, int dim4, int dim5>
+    PTO_INTERNAL void SetStride(int64_t s1, int64_t s2, int64_t s3, int64_t s4, int64_t s5)
+    {
+        static_assert(dim1 >= GlobalTensorDim::DIM_0 && dim1 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim2 >= GlobalTensorDim::DIM_0 && dim2 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim3 >= GlobalTensorDim::DIM_0 && dim3 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim4 >= GlobalTensorDim::DIM_0 && dim4 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(dim5 >= GlobalTensorDim::DIM_0 && dim5 < GlobalTensorDim::TOTAL_DIM, "only support set dim(0-4)");
+        static_assert(staticStride[dim1] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim2] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim3] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim4] == DYNAMIC, "dim must be DYNAMIC");
+        static_assert(staticStride[dim5] == DYNAMIC, "dim must be DYNAMIC");
+        stride_.stride[dim1] = s1;
+        stride_.stride[dim2] = s2;
+        stride_.stride[dim3] = s3;
+        stride_.stride[dim4] = s4;
+        stride_.stride[dim5] = s5;
+    }
+
     template <typename T, typename AddrType>
     friend AICORE void TASSIGN_IMPL(T &src, AddrType addr);
 

@@ -122,12 +122,12 @@ For detailed instruction documentation, see [isa/TRANDOM](../isa/TRANDOM.md)
 
 **AS Level 1 (SSA):**
 ```text
-%dst = pto.trandom %key, %counter : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
+%dst = pto.tci %key, %counter {rounds = 10} : -> !pto.tile<...>
 ```
 
-**AS Level 2 (DPS):**
+**AS Level 2 (DPS)：**
 ```text
-pto.trandom ins(%key, %counter : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+pto.trandom ins(%key, %counter {rounds = 10} : dtype) outs(%dst : !pto.tile_buf<...>)
 ```
 
 ---

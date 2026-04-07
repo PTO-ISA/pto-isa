@@ -142,4 +142,4 @@
     - [TGATHERB](isa/TGATHERB_zh.md)
     - [TSCATTER](isa/TSCATTER_zh.md)
     - [TQUANT](isa/TQUANT_zh.md)
-
+    - [TRANDOM](isa/TRandom_zh.md)
