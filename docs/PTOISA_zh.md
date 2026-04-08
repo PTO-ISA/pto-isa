@@ -132,7 +132,7 @@
 | 复杂指令 | [`TGATHER`](isa/TGATHER_zh.md) | 使用索引 Tile 或编译时掩码模式来收集/选择元素。 |
 | 复杂指令 | [`TCI`](isa/TCI_zh.md) | 生成连续整数序列到目标 Tile 中。 |
 | 复杂指令 | [`TTRI`](isa/TTRI_zh.md) | 生成三角（下/上）掩码 Tile。 |
-| 复杂指令 | [`TRANDOM`](isa/TRandom_zh.md) | 使用基于计数器的密码算法在目标 Tile 中生成随机数。 |
+| 复杂指令 | [`TRANDOM`](isa/TRANDOM_zh.md) | 使用基于计数器的密码算法在目标 Tile 中生成随机数。 |
 | 复杂指令 | [`TPARTADD`](isa/TPARTADD_zh.md) | 部分逐元素加法，对不匹配的有效区域具有实现定义的处理方式。 |
 | 复杂指令 | [`TPARTMUL`](isa/TPARTMUL_zh.md) | 部分逐元素乘法，对有效区域不一致的处理为实现定义。 |
 | 复杂指令 | [`TPARTMAX`](isa/TPARTMAX_zh.md) | 部分逐元素最大值，对不匹配的有效区域具有实现定义的处理方式。 |

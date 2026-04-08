@@ -96,22 +96,22 @@ The following features will be released in the future:
 
 PTO instructions support two modes: **Auto Mode (Available only in CPU simulation)** (where the user does not allocate buffers or manage pipelining) and **Manual Mode** (where the user must allocate buffer addresses and manage pipelining). We recommend the following steps for optimizing operators:
 
-1. Develop the operator based on Auto Mode, generating PTO instruction sequences according to the algorithm logic.
-2. Verify functionality and correctness in CPU simulation.
-3. Port the code to Ascend hardware to ensure correctness and collect performance data.
-4. Identify performance bottlenecks (CUBE Bound, MTE Bound, Vector Bound) and begin optimization and tuning.
+1. Develop the operator based on Auto Mode, generating PTO instruction sequences according to the algorithm logic. See [demos/auto_mode/baseline/add](demos/auto_mode/baseline/add/README.md) for an example.
+2. Verify functionality and correctness in CPU simulation (see [Run CPU Simulator](#run-cpu-simulator-recommended-first-step)).
+3. Port the code to Ascend hardware to ensure correctness and collect performance data. See the [msprof tool](https://www.hiascend.com/document/detail/zh/canncommercial/850/devaids/Profiling/atlasprofiling_16_0010.html).
+4. Identify performance bottlenecks (CUBE Bound / MTE Bound / Vector Bound) and begin optimization and tuning. See [Performance Optimization](docs/coding/opt.md).
 
 We ensure that each PTO instruction, when implemented within a fixed tile shape, fully leverages the capabilities of the underlying hardware. We encapsulate low-level hardware implementations into the tile abstractions and utilize expert knowledge to create a variety of tile templates. During static compilation, the compiler selects the best assembly implementation for the current shape based on template parameters. By merging different PTO instructions, we achieve optimal performance.
 
 In this repository, we demonstrate how standard tile operations can be mapped to various pipelines through template parameters:
 
-* Static tile Shape (Row, Col)
-* Dynamic tile Mask (Valid Mask)
-* Event Record & Wait (Set wait flag)
+* Static tile Shape (Row, Col): [Tile Programming Model](docs/coding/Tile.md)
+* Dynamic tile Mask (Valid Mask): [Tile Programming Model](docs/coding/Tile.md)
+* Event Record & Wait (Set wait flag): [Events and Synchronization](docs/coding/Event.md), [General Conventions](docs/isa/conventions.md)
 * Specialized Fixed Function (SFU)
 * Fixed Pipeline (FIXP)
 
-PTO ISA defines over 90 standard operations. This repository implements a growing subset of them, with ongoing efforts to add more.
+PTO ISA defines over 90 standard operations. See the [PTO instruction list](docs/isa/README.md). This repository implements a growing subset of them, with ongoing efforts to add more.
 
 ## Platform Support
 

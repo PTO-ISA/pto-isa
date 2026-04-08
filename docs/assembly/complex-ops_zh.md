@@ -124,7 +124,7 @@ pto.ttri ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : 
 
 ### TRANDOM
 
-该指令的详细介绍请见[isa/TRANDOM](../isa/TRandom_zh.md)
+该指令的详细介绍请见[isa/TRANDOM](../isa/TRANDOM_zh.md)
 
 
 **AS Level 1 (SSA)：**
