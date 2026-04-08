@@ -51,7 +51,7 @@ constexpr uint32_t TOTAL_THREADS = WARP_SIZE * NUM_WARPS;
 } // namespace mscatter_cfg
 
 template <ScatterOOB Mode>
-AICORE PTO_INLINE uint32_t apply_scatter_oob(uint32_t idx, uint32_t tableSize, bool &skip)
+__simt_callee__ AICORE PTO_INLINE uint32_t apply_scatter_oob(uint32_t idx, uint32_t tableSize, bool &skip)
 {
     skip = false;
     if constexpr (Mode == ScatterOOB::Undefined) {
@@ -67,7 +67,7 @@ AICORE PTO_INLINE uint32_t apply_scatter_oob(uint32_t idx, uint32_t tableSize, b
 }
 
 template <ScatterAtomicOp Atomic, typename T>
-AICORE PTO_INLINE void scatter_write(__gm__ T *ptr, T val)
+__simt_callee__ AICORE PTO_INLINE void scatter_write(__gm__ T *ptr, T val)
 {
     if constexpr (Atomic == ScatterAtomicOp::None) {
         *ptr = val;
