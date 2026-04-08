@@ -117,5 +117,12 @@ PTO_INTERNAL void TSORT32_IMPL(TileDataDst &dst, TileDataSrc &src, TileDataIdx &
     }
     TSort32<T, TileDataDst, TileDataSrc, TileDataIdx>(dst.data(), src.data(), idx.data(), validRow, validCol);
 }
+
+template <typename TileDataDst, typename TileDataSrc, typename TileDataIdx, typename TmpTileData>
+PTO_INTERNAL void TSORT32_IMPL(TileDataDst &dst, TileDataSrc &src, TileDataIdx &idx, TmpTileData &tmp)
+{
+    TSORT32_IMPL(dst, src, idx);
+}
+
 } // namespace pto
 #endif

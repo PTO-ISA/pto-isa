@@ -29,18 +29,21 @@ __global__ AICORE void runTSort32(__gm__ T0 __out__ *out, __gm__ T0 __in__ *src,
     using TileDataSrc = Tile<TileType::Vec, T0, kTRows, kTCols, BLayout::RowMajor, -1, -1>;
     using TileDataIdx = Tile<TileType::Vec, T1, kTRows, kTCols, BLayout::RowMajor, -1, -1>;
     using TileDataDst = Tile<TileType::Vec, T0, kTRows, kTCols * totalNum, BLayout::RowMajor, -1, -1>;
+    using TmpTileData = Tile<TileType::Vec, T0, 1, 32, BLayout::RowMajor>;
     TileDataSrc srcTile(validRow, validCol);
     TileDataIdx idxTile(validRow, validCol);
     TileDataDst dstTile(validRow, validCol * totalNum);
+    TmpTileData tmpTile;
     TASSIGN(srcTile, 0x0);
     TASSIGN(idxTile, kTRows * kTCols * sizeof(T0));
     TASSIGN(dstTile, kTRows * kTCols * sizeof(T0) + kTRows * kTCols * sizeof(T1));
+    TASSIGN(tmpTile, 2 * kTRows * kTCols * sizeof(T0) + kTRows * kTCols * sizeof(T1));
 
     TLOAD(srcTile, srcGlobal);
     TLOAD(idxTile, idxGlobal);
     set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
     wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
-    TSORT32(dstTile, srcTile, idxTile);
+    TSORT32(dstTile, srcTile, idxTile, tmpTile);
     set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
     wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
     TSTORE(dstGlobal, dstTile);
