@@ -79,39 +79,51 @@ __global__ AICORE void runTQuant(__gm__ uint8_t __out__ *out_e8m0, __gm__ uint8_
         TSTORE(e8Global, e8Tile);
         TSTORE(fp8Global, fp8Tile);
     } else {
-        // NZ mode: quantize with ZZ exponent reordering, then TMOV ND→NZ for fp8.
-        constexpr int idxCount = groupedCols_flattened / 2;
-        using IdxGlobal = GlobalTensor<uint16_t, Shape<1, 1, 1, 1, idxCount>, pto::Stride<1, 1, 1, 1, 1>>;
-        using IdxTile = Tile<TileType::Vec, uint16_t, 1, idxCount, BLayout::RowMajor, -1, -1, SLayout::NoneBox, 512,
-                             PadValue::Zero>;
-        // TMOV fp8 ND→NZ: reuse fp8Tile (int8_t RowMajor at 0x25100)
+        // NZ mode: plain TQUANT (ND output), then TMOV ND→ZZ for e8m0, TMOV ND→NZ for fp8.
+        constexpr int groupedCols_valid = paddedCols / 32;
+
+        // E8M0 ZZ destination: 2D with fractalMxSize=32 for [16,2] inner box
+        using E8ZzTile = Tile<TileType::Vec, uint8_t, validRows, groupedCols_valid, BLayout::RowMajor, -1, -1,
+                              SLayout::RowMajor, 32, PadValue::Zero>;
+        // 1D flat alias at same address for TSTORE (no dispatch path for isRowMajor + SLayout::RowMajor)
+        using E8StoreTile = Tile<TileType::Vec, uint8_t, 1, groupedCols_flattened, BLayout::RowMajor, -1, -1,
+                                 SLayout::NoneBox, 512, PadValue::Zero>;
+        // Scratch tile for TMOV ZZ gather-index generation
+        constexpr int tmpBufSize = (16 + (validRows / 16) * (groupedCols_valid / 2) + 16) * sizeof(uint16_t);
+        constexpr int tmpBufSizeAligned = PTO_CEIL(tmpBufSize, 32);
+        using TmpTile = Tile<TileType::Vec, uint8_t, 1, tmpBufSizeAligned, BLayout::RowMajor, -1, -1, SLayout::NoneBox,
+                             512, PadValue::Zero>;
+
+        // TMOV fp8 ND→NZ
         constexpr int virtualRow = PTO_CEIL(validRows, FRACTAL_NZ_ROW) + 1; // NZ + 1 for reducing bank conflict
         using DstNZ_int8 = Tile<TileType::Vec, int8_t, virtualRow, paddedCols, BLayout::ColMajor, validRows, paddedCols,
                                 SLayout::RowMajor, 512, PadValue::Null, CompactMode::RowPlusOne>;
         DstNZ_int8 fp8TileNZ;
-        IdxGlobal idxGlobal(idx);
-        IdxTile idxTile(1, idxCount);
-        DstE8Tile e8ZZTile(1, groupedCols_flattened);
+        E8ZzTile e8ZzTile(validRows, groupedCols_valid);
+        E8StoreTile e8StoreTile(1, groupedCols_flattened);
+        TmpTile tmpTile(1, tmpBufSizeAligned);
 
-        TASSIGN(fp8TileNZ, 0x0); // reuse src tile address since it's consumed before TMOV
-        TASSIGN(idxTile, 0x30100);
-        TASSIGN(e8ZZTile, 0x20100); // reuse maxPerGpTile address (consumed before ZZ reorder)
-
-        TLOAD(idxTile, idxGlobal);
+        TASSIGN(fp8TileNZ, 0x0);       // reuse src tile address since it's consumed before TMOV
+        TASSIGN(e8ZzTile, 0x20100);    // reuse maxPerGpTile address (consumed after TQUANT)
+        TASSIGN(e8StoreTile, 0x20100); // alias for flat TSTORE at same address
+        TASSIGN(tmpTile, 0x30100);     // scratch for ZZ indices
 
         set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
         wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
 
-        TQUANT<pto::QuantType::MXFP8, pto::VecStoreMode::NZ>(fp8Tile, srcTile, &e8Tile, &maxPerGpTile, &scalingTile,
-                                                             &e8ZZTile, &idxTile);
-
+        // Step 1: Plain TQUANT (ND output), same as mode==0
+        TQUANT<pto::QuantType::MXFP8, DstFP8Tile, SrcTile, DstE8Tile, MaxTile>(fp8Tile, srcTile, &e8Tile, &maxPerGpTile,
+                                                                               &scalingTile);
+        // Step 2: Convert E8M0 exponents ND → ZZ layout
+        TMOV(e8ZzTile, e8Tile, tmpTile);
+        // Step 3: Convert FP8 data ND → NZ layout
         TMOV(fp8TileNZ, fp8Tile);
 
         set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
         wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
 
-        // Store ZZ-reordered e8m0 exponents (instead of ND e8m0)
-        TSTORE(e8Global, e8ZZTile);
+        // Store ZZ-reordered e8m0 exponents
+        TSTORE(e8Global, e8StoreTile);
 
         using DstFp8GlobalNZ = GlobalTensor<int8_t, TileShape2D<int8_t, validRows, paddedCols, Layout::NZ>,
                                             BaseShape2D<int8_t, validRows, paddedCols, Layout::NZ>, Layout::NZ>;

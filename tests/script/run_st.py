@@ -68,8 +68,32 @@ def set_env_variables(run_mode, soc_version):
         else:
             print(f"warning: not found {setenv_path}")
 
-        simulator_lib_path = os.path.join(ascend_home, "tools", "simulator", soc_version, "lib")
+        resolved_soc, resolved_dir = resolve_simulator_dir(ascend_home, soc_version)
+        if resolved_dir:
+            simulator_lib_path = os.path.join(resolved_dir, "lib")
+        else:
+            simulator_lib_path = os.path.join(ascend_home, "tools", "simulator", soc_version, "lib")
         os.environ["LD_LIBRARY_PATH"] = f"{simulator_lib_path}:{os.environ.get('LD_LIBRARY_PATH', '')}"
+
+
+def get_simulator_roots(ascend_home):
+    return [
+        os.path.join(ascend_home, "tools", "simulator"),
+        os.path.join(ascend_home, "x86_64-linux", "simulator"),
+        os.path.join(ascend_home, "aarch64-linux", "simulator"),
+    ]
+
+
+def resolve_simulator_dir(ascend_home, soc_version):
+    soc_candidates = [soc_version]
+    if soc_version == "Ascend950PR_9599":
+        soc_candidates.extend(["Ascend910_9599", "Ascend910B1"])
+    for simulator_root in get_simulator_roots(ascend_home):
+        for candidate in soc_candidates:
+            candidate_dir = os.path.join(simulator_root, candidate)
+            if os.path.isdir(candidate_dir):
+                return candidate, candidate_dir
+    return soc_version, ""
 
 
 def build_project(run_mode, soc_version, testcase="all", debug_enable=False, auto_enable=False):
@@ -81,11 +105,19 @@ def build_project(run_mode, soc_version, testcase="all", debug_enable=False, aut
         shutil.rmtree(build_dir)
     os.makedirs(build_dir, exist_ok=True)
 
+    # Resolve SOC_VERSION for simulator path (e.g. Ascend950PR_9599 -> Ascend910_9599)
+    ascend_home = os.environ.get("ASCEND_HOME_PATH", "")
+    cmake_soc = soc_version
+    if run_mode == "sim" and ascend_home:
+        resolved_soc, resolved_dir = resolve_simulator_dir(ascend_home, soc_version)
+        if resolved_dir:
+            cmake_soc = resolved_soc
+
     try:
         cmake_cmd = [
             "cmake",
             f"-DRUN_MODE={run_mode}",
-            f"-DSOC_VERSION={soc_version}",
+            f"-DSOC_VERSION={cmake_soc}",
             f"-DTEST_CASE={testcase}",
             ".."
         ]

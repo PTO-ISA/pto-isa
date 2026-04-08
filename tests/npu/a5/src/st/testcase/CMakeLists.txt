@@ -230,6 +230,7 @@ set(ALL_TESTCASES
     thistogram
     tinsert
     textract_nd_vec
+    tmov_zz
 )
 
 if(NOT AUTO_MODE)

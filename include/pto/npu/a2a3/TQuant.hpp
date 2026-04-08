@@ -64,7 +64,6 @@ PTO_INTERNAL void TQUANT_IMPL(TileDataOut &dst, TileDataSrc &src, TileDataPara &
     pipe_barrier(PIPE_V);
     TCVT_IMPL(dst, src_f16, RoundMode::CAST_RINT, SaturationMode::ON);
     pipe_barrier(PIPE_V);
-    pipe_barrier(PIPE_V);
 }
 } // namespace pto
 #endif // TQUANT_HPP
