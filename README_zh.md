@@ -82,22 +82,22 @@ PTO Tile Lib 并不面向入门级用户，主要面向：
 
 PTO 指令支持两种模式：**Auto Mode（仅在 CPU 仿真中可用）**（无需手动分配 buffer/管理流水线），以及 **Manual Mode**（需要显式管理 buffer 地址与流水线）。推荐按以下路径推进算子优化：
 
-1. 基于 Auto Mode 开发算子，根据算法逻辑生成 PTO 指令序列。
-2. 在 CPU 仿真中验证功能与正确性。
-3. 将代码移植到昇腾硬件上验证正确性并采集性能数据。
-4. 定位性能瓶颈（CUBE Bound / MTE Bound / Vector Bound），开始优化与调参。
+1. 基于 Auto Mode 开发算子，根据算法逻辑生成 PTO 指令序列。示例见 [demos/auto_mode/baseline/add](demos/auto_mode/baseline/add/README_zh.md) 
+2. 在 CPU 仿真中验证功能与正确性（见：[运行 CPU Simulator](#运行-cpu-simulator建议第一步)）。
+3. 将代码移植到昇腾硬件上验证正确性并采集性能数据。参见 [msprof工具](https://www.hiascend.com/document/detail/zh/canncommercial/850/devaids/Profiling/atlasprofiling_16_0010.html)。
+4. 定位性能瓶颈（CUBE Bound / MTE Bound / Vector Bound），开始优化与调参。参见 [性能优化](docs\coding\opt_zh.md)
 
 每条 PTO 指令会在固定 tile shape 下映射到对应的底层实现（通常由模板与静态选择完成）。通过组合不同 PTO 指令并调整 tile 参数/顺序，可以做端到端的性能调优。
 
 本仓库也展示了标准 tile 操作如何通过模板参数映射到不同流水线实现：
 
-- 静态 tile shape（Row/Col）
-- 动态 tile mask（valid mask）
-- 事件记录与等待（set/wait flag）
+- 静态 tile shape（Row/Col）：[Tile 编程模型](docs/coding/Tile_zh.md)
+- 动态 tile mask（valid mask）：[Tile 编程模型](docs/coding/Tile_zh.md)
+- 事件记录与等待（set/wait flag）：[事件与同步](docs/coding/Event_zh.md)、[通用约定](docs/isa/conventions_zh.md)
 - 专用固定功能（SFU）
 - 固定流水线（FIXP）
 
-PTO ISA 定义了 90+ 条标准操作。本仓库实现了其中不断增长的一部分，并持续补充更多指令实现。
+PTO ISA 定义了 90+ 条标准操作，参见[PTO指令列表](docs/isa/README_zh.md)。本仓库实现了其中不断增长的一部分，并持续补充更多指令实现。
 
 ## 平台支持
 
