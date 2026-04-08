@@ -23,7 +23,7 @@ function(pto_cpu_sim_st NAME)
     )
 
     target_link_libraries(${NAME} PRIVATE
-        GTest::gtest_main
+        ${PTO_CPU_SIM_GTEST_MAIN_TARGET}
         Threads::Threads
     )
     if (UNIX)
@@ -123,13 +123,13 @@ ttest
 ttrans
 ttri
 twait
-txor
-txors
 treshape
 trandom
 thistogram
 timg2col
 tquant
+txor
+txors
 )
 
 foreach(TESTCASE ${ALL_TESTCASES})
