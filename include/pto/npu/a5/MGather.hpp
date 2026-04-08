@@ -33,7 +33,7 @@ constexpr uint32_t TOTAL_THREADS = WARP_SIZE * NUM_WARPS;
 } // namespace mgather_cfg
 
 template <GatherOOB Mode>
-AICORE PTO_INLINE uint32_t apply_gather_oob(uint32_t idx, uint32_t tableSize)
+__simt_callee__ AICORE PTO_INLINE uint32_t apply_gather_oob(uint32_t idx, uint32_t tableSize)
 {
     if constexpr (Mode == GatherOOB::Undefined) {
         return idx;
