@@ -73,7 +73,7 @@ struct SdmaSession {
 };
 
 constexpr uint32_t kAutoChannelGroupIdx = UINT32_MAX;
-constexpr uint64_t kDefaultSdmaBlockBytes = 32 * 1024;
+constexpr uint64_t kDefaultSdmaBlockBytes = 1024 * 1024;
 
 } // namespace sdma
 

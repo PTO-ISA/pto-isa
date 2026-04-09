@@ -276,57 +276,114 @@ PTO_INTERNAL void UpdateSqTailState(__gm__ BatchWriteChannelInfo *batchWriteChan
     }
 }
 
-PTO_INTERNAL bool SdmaTestEvent(uint64_t eventHandle, const SdmaEventContext &eventCtx)
+PTO_INTERNAL bool PrepareEventCheck(const SdmaSession &session, UbTmpBuf &tmpBuf, uint32_t &syncId,
+                                    uint64_t &flagHandle)
 {
-    if (eventHandle == 0) {
-        return true;
-    }
-    if (!IsValidTmpBuffer(eventCtx.tmpBuf)) {
+    const SdmaExecContext &execCtx = session.execCtx;
+    __gm__ uint8_t *contextGm = execCtx.contextGm;
+    if (contextGm == nullptr || !IsValidTmpBuffer(execCtx.tmpBuf)) {
         return false;
     }
 
-    UbTmpBuf tmpBuf = eventCtx.tmpBuf;
-    __gm__ SdmaEventRecord *record = reinterpret_cast<__gm__ SdmaEventRecord *>(eventHandle);
-    const uint32_t sendValue = GetValue<uint32_t>((__gm__ uint8_t *)&record->flag, tmpBuf);
-    return sendValue != 0;
+    tmpBuf = execCtx.tmpBuf;
+    syncId = execCtx.syncId;
+    const uint32_t channelGroupIdx = execCtx.channelGroupIdx;
+
+    SdmaConfig config;
+    config.queue_num = execCtx.baseConfig.queue_num;
+    config.block_bytes = execCtx.baseConfig.block_bytes;
+
+    if (config.queue_num == 0 || channelGroupIdx >= (kSdmaMaxChannel / config.queue_num)) {
+        return false;
+    }
+
+    __gm__ BatchWriteChannelInfo *batchWriteChannelBase =
+        (__gm__ BatchWriteChannelInfo *)(contextGm + sizeof(BatchWriteFlagInfo));
+    __gm__ BatchWriteChannelInfo *batchWriteChannelInfo = batchWriteChannelBase + channelGroupIdx * config.queue_num;
+
+    __gm__ uint8_t *workspace =
+        contextGm + sizeof(BatchWriteFlagInfo) + kSdmaMaxChannel * sizeof(BatchWriteChannelInfo);
+
+    WorkspaceLayout workspaceLayout;
+    PrepareWorkspace(workspace, config, workspaceLayout, channelGroupIdx, tmpBuf, syncId);
+
+    uint32_t sqTail[64] = {0};
+    InitSqTailArray(batchWriteChannelInfo, config.queue_num, sqTail, tmpBuf);
+
+    flagHandle = SubmitFlagTransferSqes(batchWriteChannelInfo, workspaceLayout, config, sqTail, tmpBuf, syncId);
+
+    FlushCacheAndRingDoorbell(batchWriteChannelInfo, config, sqTail, tmpBuf, syncId);
+    UpdateSqTailState(batchWriteChannelInfo, config, sqTail, tmpBuf, syncId);
+    return true;
 }
 
-PTO_INTERNAL bool SdmaWaitEvent(uint64_t eventHandle, const SdmaEventContext &eventCtx)
+PTO_INTERNAL void HandleCompletedEventRecord(__gm__ SdmaEventRecord *record, UbTmpBuf &tmpBuf, uint32_t syncId)
+{
+    SetValue<uint32_t>((__gm__ uint8_t *)&record->flag, tmpBuf, syncId, 0U);
+
+    const uint32_t completedTail = GetValue<uint32_t>((__gm__ uint8_t *)&record->sq_tail, tmpBuf);
+    const uint64_t channelInfoAddr = GetValue<uint64_t>((__gm__ uint8_t *)&record->channel_info, tmpBuf);
+    constexpr uint8_t offset = 4;
+    if (channelInfoAddr != 0) {
+        __gm__ uint8_t *channelInfo = reinterpret_cast<__gm__ uint8_t *>(channelInfoAddr);
+        SetValue<uint32_t>(channelInfo + offset, tmpBuf, syncId, completedTail);
+    }
+}
+
+PTO_INTERNAL bool SdmaTestEvent(uint64_t eventHandle, const SdmaSession &session)
 {
     if (eventHandle == 0) {
         return true;
     }
-    if (!IsValidTmpBuffer(eventCtx.tmpBuf)) {
+
+    UbTmpBuf tmpBuf;
+    uint32_t syncId;
+    uint64_t flagHandle;
+    if (!PrepareEventCheck(session, tmpBuf, syncId, flagHandle)) {
         return false;
     }
-
-    UbTmpBuf tmpBuf = eventCtx.tmpBuf;
-    const uint32_t syncId = eventCtx.syncId;
-    __gm__ SdmaEventRecord *record = reinterpret_cast<__gm__ SdmaEventRecord *>(eventHandle);
-
-    const uint32_t kMaxPollTimes = 1000000;
-    uint32_t sendValue = 0;
-    uint32_t times = 0;
-
-    while (sendValue == 0 && times < kMaxPollTimes) {
-        sendValue = GetValue<uint32_t>((__gm__ uint8_t *)&record->flag, tmpBuf);
-        times++;
+    if (flagHandle == 0) {
+        return true;
     }
 
+    __gm__ SdmaEventRecord *record = reinterpret_cast<__gm__ SdmaEventRecord *>(flagHandle);
+    const uint32_t sendValue = GetValue<uint32_t>((__gm__ uint8_t *)&record->flag, tmpBuf);
     if (sendValue == 0) {
         return false;
     }
 
-    SetValue<uint32_t>((__gm__ uint8_t *)&record->flag, tmpBuf, syncId, 0U);
+    HandleCompletedEventRecord(record, tmpBuf, syncId);
+    return true;
+}
 
-    const uint32_t sqTail = GetValue<uint32_t>((__gm__ uint8_t *)&record->sq_tail, tmpBuf);
-    const uint64_t channelInfoAddr = GetValue<uint64_t>((__gm__ uint8_t *)&record->channel_info, tmpBuf);
-    const uint8_t offset = 4;
-    if (channelInfoAddr != 0) {
-        __gm__ uint8_t *channelInfo = reinterpret_cast<__gm__ uint8_t *>(channelInfoAddr);
-        SetValue<uint32_t>(channelInfo + offset, tmpBuf, syncId, sqTail);
+PTO_INTERNAL bool SdmaWaitEvent(uint64_t eventHandle, const SdmaSession &session)
+{
+    if (eventHandle == 0) {
+        return true;
     }
 
+    UbTmpBuf tmpBuf;
+    uint32_t syncId;
+    uint64_t flagHandle;
+    if (!PrepareEventCheck(session, tmpBuf, syncId, flagHandle)) {
+        return false;
+    }
+    if (flagHandle == 0) {
+        return true;
+    }
+
+    __gm__ SdmaEventRecord *record = reinterpret_cast<__gm__ SdmaEventRecord *>(flagHandle);
+
+    constexpr uint32_t kMaxPollTimes = 1000000;
+    uint32_t sendValue = 0;
+    for (uint32_t i = 0; i < kMaxPollTimes && sendValue == 0; ++i) {
+        sendValue = GetValue<uint32_t>((__gm__ uint8_t *)&record->flag, tmpBuf);
+    }
+    if (sendValue == 0) {
+        return false;
+    }
+
+    HandleCompletedEventRecord(record, tmpBuf, syncId);
     return true;
 }
 
@@ -358,26 +415,17 @@ PTO_INTERNAL uint64_t SdmaPostSendAsyncWithCtx(__gm__ uint8_t *recvBuffer, __gm_
         (__gm__ BatchWriteChannelInfo *)(contextGm + sizeof(BatchWriteFlagInfo));
     __gm__ BatchWriteChannelInfo *batchWriteChannelInfo = batchWriteChannelBase + channelGroupIdx * config.queue_num;
 
-    __gm__ uint8_t *workspace =
-        contextGm + sizeof(BatchWriteFlagInfo) + kSdmaMaxChannel * sizeof(BatchWriteChannelInfo);
-
-    WorkspaceLayout workspaceLayout;
-    PrepareWorkspace(workspace, config, workspaceLayout, channelGroupIdx, tmpBuf, syncId);
-
     uint32_t sqTail[64] = {0};
     InitSqTailArray(batchWriteChannelInfo, config.queue_num, sqTail, tmpBuf);
 
     SubmitDataTransferSqes(batchWriteChannelInfo, sendBuffer, recvBuffer, static_cast<uint32_t>(opcode), config,
                            sqTail);
 
-    uint64_t eventHandle =
-        SubmitFlagTransferSqes(batchWriteChannelInfo, workspaceLayout, config, sqTail, tmpBuf, syncId);
-
     FlushCacheAndRingDoorbell(batchWriteChannelInfo, config, sqTail, tmpBuf, syncId);
     UpdateSqTailState(batchWriteChannelInfo, config, sqTail, tmpBuf, syncId);
 
     pipe_barrier(PIPE_ALL);
-    return eventHandle;
+    return reinterpret_cast<uint64_t>(contextGm);
 }
 
 template <typename T>
