@@ -101,7 +101,7 @@ __tf__ PTO_INTERNAL void TRowSum(typename TileDataOut::TileDType __out__ dstData
         unsigned elemsLessThanBlock = validCol % elemsPerBlock;
 
         set_mask_count();
-        for (unsigned row = 0; row < validRow; ++row, dst += dstRowStride, src += srcRowStride, tmp += tmpRowStride) {
+        for (unsigned row = 0; row < validRow; ++row, dst += dstRowStride, src += srcRowStride) {
             set_vector_mask(0, elemsPerBlock);
 
             // Initialize tmp with 0

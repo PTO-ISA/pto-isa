@@ -13,6 +13,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 #define EVENT_ID_MAX 8
 
+#include <type_traits>
 #include <pto/common/type.hpp>
 
 namespace pto {

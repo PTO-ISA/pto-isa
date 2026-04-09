@@ -247,7 +247,7 @@ PTO_INTERNAL MaskReg GetMaskVal()
 
 template <typename DstTileData, typename SrcTileData, MaskPattern maskPattern>
 __tf__ AICORE void TGather(typename DstTileData::TileDType __out__ dst, typename SrcTileData::TileDType __in__ src,
-                           uint16_t validRow, uint16_t validCol)
+                           unsigned validRow, unsigned validCol)
 {
     using T = typename DstTileData::DType;
     constexpr unsigned rowStride = SrcTileData::RowStride;
@@ -269,7 +269,7 @@ __tf__ AICORE void TGather(typename DstTileData::TileDType __out__ dst, typename
         constexpr unsigned elementsPerRepeat = CCE_VL / sizeof(T);
         uint16_t innerRepeatTimes = CeilDivision(validCol, elementsPerRepeat);
 
-        for (uint16_t i = 0; i < validRow; ++i) {
+        for (uint16_t i = 0; i < (uint16_t)validRow; ++i) {
             uint32_t maskValue = validCol;
             for (uint16_t j = 0; j < innerRepeatTimes; ++j) {
                 loadMask = CreatePredicate<T>(maskValue);
@@ -306,8 +306,8 @@ PTO_INTERNAL void TGATHER_IMPL(DstTileData &dst, SrcTileData &src)
     static_assert((DstTileData::Loc == TileType::Vec) && (SrcTileData::Loc == TileType::Vec),
                   "Fix: TGATHER expect vec TileType");
     static_assert((DstTileData::isRowMajor && SrcTileData::isRowMajor), "Fix: TGATHER expect row major");
-    uint16_t rows = src.GetValidRow();
-    uint16_t cols = src.GetValidCol();
+    unsigned rows = src.GetValidRow();
+    unsigned cols = src.GetValidCol();
     TGather<DstTileData, SrcTileData, maskPattern>(dst.data(), src.data(), rows, cols);
 }
 

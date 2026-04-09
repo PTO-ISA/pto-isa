@@ -72,7 +72,7 @@ __tf__ PTO_INTERNAL void TRowMax(typename TileDataOut::TileDType __out__ dstData
 
         set_mask_count();
 
-        for (unsigned row = 0; row < validRow; ++row, dst += dstRowStride, src += srcRowStride, tmp += tmpRowStride) {
+        for (unsigned row = 0; row < validRow; ++row, dst += dstRowStride, src += srcRowStride) {
             set_vector_mask(0, elemsPerBlock);
 
             // Initialize tmp with minimum value

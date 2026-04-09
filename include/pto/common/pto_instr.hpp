@@ -165,7 +165,8 @@ PTO_INST RecordEvent TPREFETCH(TileData &dst, GlobalData &src)
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
+template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents,
+          std::enable_if_t<all_events_v<WaitEvents...>, int> = 0>
 PTO_INST RecordEvent TCMPS(TileDataDst &dst, TileDataSrc &src0, typename TileDataSrc::DType src1, CmpMode mode,
                            WaitEvents &...events)
 {
@@ -174,8 +175,8 @@ PTO_INST RecordEvent TCMPS(TileDataDst &dst, TileDataSrc &src0, typename TileDat
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1,
-          typename = std::void_t<typename TileDataSrc1::DType>, typename... WaitEvents>
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents,
+          std::enable_if_t<is_tile_data_v<TileDataSrc1> && all_events_v<WaitEvents...>, int> = 0>
 PTO_INST RecordEvent TCMPS(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, CmpMode mode,
                            WaitEvents &...events)
 {
@@ -193,8 +194,9 @@ PTO_INST RecordEvent TCMP(TileDataDst &dst, TileDataSrc &src0, TileDataSrc &src1
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents>
-PTO_INST RecordEvent TCONCAT(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &...events)
+template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename... WaitEvents,
+          std::enable_if_t<all_events_v<WaitEvents...>, int> = 0>
+PTO_INST RecordEvent TCONCAT(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 &src1, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TCONCAT, dst, src0, src1);
@@ -202,8 +204,9 @@ PTO_INST RecordEvent TCONCAT(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1 
 }
 
 template <typename DstTile, typename Src0Tile, typename Src1Tile, typename Src0IdxTile, typename Src1IdxTile,
-          typename = std::void_t<typename Src0IdxTile::DType>, typename = std::void_t<typename Src1IdxTile::DType>,
-          typename... WaitEvents>
+          typename... WaitEvents,
+          std::enable_if_t<is_tile_data_v<Src0IdxTile> && is_tile_data_v<Src1IdxTile> && all_events_v<WaitEvents...>,
+                           int> = 0>
 PTO_INST RecordEvent TCONCAT(DstTile &dst, Src0Tile &src0, Src1Tile &src1, Src0IdxTile &src0Idx, Src1IdxTile &src1Idx,
                              WaitEvents &...events)
 {
@@ -1328,8 +1331,9 @@ PTO_INST RecordEvent TROWEXPANDEXPDIF(TileDataDst &dst, TileDataSrc0 &src0, Tile
     return {};
 }
 
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, WaitEvents &...events)
+template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents,
+          std::enable_if_t<all_events_v<WaitEvents...>, int> = 0>
+PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TRSQRT, dst, src);
@@ -1337,8 +1341,8 @@ PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, WaitEvents &...e
 }
 
 template <typename TileDataDst, typename TileDataSrc, typename TileDataTmp, typename... WaitEvents,
-          typename = std::void_t<typename TileDataTmp::DType>>
-PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, TileDataTmp &tmp, WaitEvents &...events)
+          std::enable_if_t<is_tile_data_v<TileDataTmp> && all_events_v<WaitEvents...>, int> = 0>
+PTO_INST RecordEvent TRSQRT(TileDataDst &dst, TileDataSrc &src, TileDataTmp &tmp, WaitEvents &... events)
 {
     TSYNC(events...);
     MAP_INSTR_IMPL(TRSQRT, dst, src, tmp);

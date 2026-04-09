@@ -14,7 +14,7 @@ The `TPRINT` instruction outputs the logical view of data stored in a Tile or Gl
 > **Important**:
 > - This instruction is **for development and debugging ONLY**.
 > - It incurs **significant runtime overhead** and **must not be used in production kernels**.
-> - Output may be **truncated** if it exceeds the internal print buffer.
+> - Output may be **truncated** if it exceeds the internal print buffer. The print buffer can be adjusted with `-DCCEBlockMaxSize=16384`; the default is 16 KiB.
 > - **Requires CCE compilation option `-D_DEBUG --cce-enable-print`** (see [Behavior](#behavior)).
 
 ## Assembly Syntax
@@ -51,12 +51,17 @@ pto.tprint ins(%src : !pto.tile_buf<...> | !pto.partition_tensor_view<MxNxdtype>
 ## C++ Intrinsic
 Declared in `include/pto/common/pto_instr.hpp`:
 ```cpp
-template <typename TileData, typename... WaitEvents>
-PTO_INST RecordEvent TPRINT(TileData &src, WaitEvents &... events);
+// For printing GlobalTensor or Vec-type Tile
+template <typename TileData>
+PTO_INST void TPRINT(TileData &src);
+
+// For printing Acc-type Tile and Mat-type Tile (Mat printing is currently A3-only)
+template <typename TileData, typename GlobalData>
+PTO_INTERNAL void TPRINT(TileData &src, GlobalData &tmp);
 ```
 
 ### Supported Types for T
-- **Tile**: Must be a vector tile (`TileType::Vec`) with supported element type.
+- **Tile**: `TileType` may be `Vec`, `Acc`, or `Mat` (Mat printing is currently supported on A3 only).
 - **GlobalTensor**: Must use layout `ND`, `DN`, or `NZ`, and have a supported element type.
 
 ## Constraints
@@ -65,8 +70,10 @@ PTO_INST RecordEvent TPRINT(TileData &src, WaitEvents &... events);
     - Floating-point: `float`, `half`
     - Signed integers: `int8_t`, `int16_t`, `int32_t`
     - Unsigned integers: `uint8_t`, `uint16_t`, `uint32_t`
-- **For Tiles**: `TileData::Loc == TileType::Vec` (only vector tiles are printable).
 - **For GlobalTensor**: Layout must be one of `Layout::ND`, `Layout::DN`, or `Layout::NZ`.
+- **For temporary space**: Printing a `Tile` with `TileType::Mat` or `TileType::Acc` requires GM temporary space. The temporary buffer must be at least `TileData::Numel * sizeof(T)`.
+- A5 does not yet support printing `TileType::Mat`.
+- When `TileType` is `Mat`, the output is formatted according to `Layout::ND`; other layouts may appear misaligned.
 
 ## Behavior
 - **Mandatory Compilation Flag**:

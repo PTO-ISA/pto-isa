@@ -129,7 +129,7 @@ pto.ttri ins(%src0, %src1 : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : 
 **AS Level 1 (SSA)：**
 
 ```text
-%dst = pto.tci %key, %counter {rounds = 10} : -> !pto.tile<...>
+%dst = pto.trandom %key, %counter {rounds = 10} : -> !pto.tile<...>
 ```
 
 **AS Level 2 (DPS)：**

@@ -56,7 +56,7 @@ PTO_INTERNAL void TPRINT(TileData &src, GlobalData &tmp);
 ```
 
 ### 支持的 T 类型
-- **Tile**：TileType必须是`Vec`、`Acc`、`Mat(仅A3支持)`，具有支持的元素类型。
+- **Tile**：TileType必须是`Vec`、`Acc`、`Mat(仅A3支持)`，并具有支持的元素类型。
 - **GlobalTensor**：必须使用布局 `ND`、`DN` 或 `NZ`，并具有支持的元素类型。
 
 ## 约束

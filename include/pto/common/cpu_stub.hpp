@@ -16,6 +16,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <cstring>
 #include <cassert>
 #include <cstdio>
+#include <type_traits>
 
 #define __global__
 #define AICORE
@@ -186,4 +187,12 @@ inline uint32_t get_subblockdim()
     return pto::cpu_sim::execution_context.subblock_dim;
 }
 
+namespace pto {
+template <typename T>
+struct is_event : std::false_type {
+};
+
+template <typename... Ts>
+inline constexpr bool all_events_v = (is_event<Ts>::value && ...);
+} // namespace pto
 #endif

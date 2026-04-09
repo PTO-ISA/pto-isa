@@ -140,5 +140,16 @@ struct Event {
         return Init<CrossCoreId>();
     }
 };
+
+template <typename T>
+struct is_event : std::false_type {
+};
+
+template <Op SrcOp, Op DstOp, bool AutoToken, event_t EventID>
+struct is_event<Event<SrcOp, DstOp, AutoToken, EventID>> : std::true_type {
+};
+
+template <typename... Ts>
+inline constexpr bool all_events_v = (is_event<Ts>::value && ...);
 } // namespace pto
 #endif
