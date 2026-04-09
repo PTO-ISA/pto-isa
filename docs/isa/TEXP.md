@@ -48,14 +48,21 @@ pto.texp ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```text
 pto.texp ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
+
 ## C++ Intrinsic
 
 Declared in `include/pto/common/pto_instr.hpp`:
 
 ```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
+template <auto PrecisionType = ExpAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          typename... WaitEvents>
 PTO_INST RecordEvent TEXP(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events);
 ```
+
+`PrecisionType` has the following values available:
+
+- `ExpAlgorithm::DEFAULT`: Normal algorithm, faster but with lower precision.
+- `ExpAlgorithm::HIGH_PRECISION`: High precision algorithm, but slower.
 
 ## Constraints
 
@@ -67,6 +74,8 @@ PTO_INST RecordEvent TEXP(TileDataDst &dst, TileDataSrc &src, WaitEvents &... ev
     - Tile layout must be row-major (`TileData::isRowMajor`).
 - **Valid region**:
     - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
+- **High precision algorithm**:
+    - Only available on A5. `PrecisionType` is ignored on A3.
 
 ## Examples
 
@@ -81,6 +90,7 @@ void example_auto() {
   using TileT = Tile<TileType::Vec, float, 16, 16>;
   TileT src, dst;
   TEXP(dst, src);
+  TEXP<ExpAlgorithm::HIGH_PRECISION>(dst, src);  // A5 only
 }
 ```
 

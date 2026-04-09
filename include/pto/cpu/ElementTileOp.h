@@ -111,16 +111,26 @@ BINARY_OP_DEF(OR)
 BINARY_OP_DEF(XOR)
 BINARY_OP_DEF(MIN)
 
-UNARY_OP_DEF(LOG)
 UNARY_OP_DEF(NEG)
 UNARY_OP_DEF(NOT)
 UNARY_OP_DEF(RELU)
-UNARY_OP_DEF(EXP)
 
 template <auto PrecisionType = RecipAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TRECIP_IMPL(TileDataDst &dst, TileDataSrc &src)
 {
     UnaryElementTileOp_Impl<ElementOp::OP_RECIP>(dst, src);
+}
+
+template <auto PrecisionType = ExpAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
+PTO_INTERNAL void TEXP_IMPL(TileDataDst &dst, TileDataSrc &src)
+{
+    UnaryElementTileOp_Impl<ElementOp::OP_EXP>(dst, src);
+}
+
+template <auto PrecisionType = LogAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
+PTO_INTERNAL void TLOG_IMPL(TileDataDst &dst, TileDataSrc &src)
+{
+    UnaryElementTileOp_Impl<ElementOp::OP_LOG>(dst, src);
 }
 
 template <typename TileDataDst, typename TileDataSrc0, typename TileDataSrc1, typename TileDataTmp>

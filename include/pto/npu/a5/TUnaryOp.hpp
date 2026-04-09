@@ -16,6 +16,8 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <pto/common/type.hpp>
 #include "common.hpp"
 #include "utils.hpp"
+#include "custom/TExp_Custom.hpp"
+#include "custom/TLog_Custom.hpp"
 
 namespace pto {
 template <typename Op, typename T, unsigned nRepeatElem>
@@ -143,14 +145,19 @@ PTO_INTERNAL void TUnaryCheck()
 }
 
 /* TEXP */
-template <typename T>
+template <ExpAlgorithm PrecisionType, typename T>
 struct ExpOp {
     PTO_INTERNAL static void UnaryInstr(RegTensor<T> &dstReg, RegTensor<T> &srcReg, MaskReg &pReg)
     {
-        vexp(dstReg, srcReg, pReg, MODE_ZEROING);
+        if constexpr (PrecisionType == ExpAlgorithm::HIGH_PRECISION &&
+                      (std::is_same_v<T, float> || std::is_same_v<T, half>)) {
+            ExpPrecisionImpl(dstReg, srcReg, pReg);
+        } else {
+            vexp(dstReg, srcReg, pReg, MODE_ZEROING);
+        }
     }
 };
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = ExpAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 __tf__ PTO_INTERNAL OP_NAME(TEXP)
     OP_TYPE(element_wise) void TExp(typename DstTile::TileDType __out__ dstData,
                                     typename SrcTile::TileDType __in__ srcData, unsigned validRow, unsigned validCol,
@@ -159,9 +166,9 @@ __tf__ PTO_INTERNAL OP_NAME(TEXP)
     using T = typename DstTile::DType;
     __ubuf__ T *dst = (__ubuf__ T *)__cce_get_tile_ptr(dstData);
     __ubuf__ T *src = (__ubuf__ T *)__cce_get_tile_ptr(srcData);
-    TUnaryOp<DstTile, SrcTile, ExpOp<T>>(dst, src, validRow, validCol, version);
+    TUnaryOp<DstTile, SrcTile, ExpOp<PrecisionType, T>>(dst, src, validRow, validCol, version);
 }
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = ExpAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 PTO_INTERNAL void TEXP_IMPL(DstTile &dst, SrcTile &src)
 {
     TUnaryCheck<DstTile, SrcTile>();
@@ -169,7 +176,7 @@ PTO_INTERNAL void TEXP_IMPL(DstTile &dst, SrcTile &src)
     unsigned dstValidCol = dst.GetValidCol();
     PTO_ASSERT(dstValidCol == src.GetValidCol(), "TEXP: Number of columns of src and dst must be the same.");
     PTO_ASSERT(dstValidRow == src.GetValidRow(), "TEXP: Number of rows of src and dst must be the same.");
-    TExp<DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
+    TExp<PrecisionType, DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
 }
 
 /* TNOT */
@@ -303,14 +310,19 @@ PTO_INTERNAL void TABS_IMPL(DstTile &dst, SrcTile &src)
 }
 
 /* TLOG */
-template <typename T>
+template <LogAlgorithm PrecisionType, typename T>
 struct LogOp {
     PTO_INTERNAL static void UnaryInstr(RegTensor<T> &dstReg, RegTensor<T> &srcReg, MaskReg &pReg)
     {
-        vln(dstReg, srcReg, pReg, MODE_ZEROING);
+        if constexpr (PrecisionType == LogAlgorithm::HIGH_PRECISION &&
+                      (std::is_same_v<T, float> || std::is_same_v<T, half>)) {
+            LogPrecisionImpl(dstReg, srcReg, pReg);
+        } else {
+            vln(dstReg, srcReg, pReg, MODE_ZEROING);
+        }
     }
 };
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = LogAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 __tf__ PTO_INTERNAL OP_NAME(TLOG)
     OP_TYPE(element_wise) void TLog(typename DstTile::TileDType __out__ dstData,
                                     typename SrcTile::TileDType __in__ srcData, unsigned validRow, unsigned validCol,
@@ -319,9 +331,9 @@ __tf__ PTO_INTERNAL OP_NAME(TLOG)
     using T = typename DstTile::DType;
     __ubuf__ T *dst = (__ubuf__ T *)__cce_get_tile_ptr(dstData);
     __ubuf__ T *src = (__ubuf__ T *)__cce_get_tile_ptr(srcData);
-    TUnaryOp<DstTile, SrcTile, LogOp<T>>(dst, src, validRow, validCol, version);
+    TUnaryOp<DstTile, SrcTile, LogOp<PrecisionType, T>>(dst, src, validRow, validCol, version);
 }
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = LogAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 PTO_INTERNAL void TLOG_IMPL(DstTile &dst, SrcTile &src)
 {
     TUnaryCheck<DstTile, SrcTile>();
@@ -329,7 +341,7 @@ PTO_INTERNAL void TLOG_IMPL(DstTile &dst, SrcTile &src)
     unsigned dstValidCol = dst.GetValidCol();
     PTO_ASSERT(dstValidCol == src.GetValidCol(), "TLOG: Number of columns of src and dst must be the same.");
     PTO_ASSERT(dstValidRow == src.GetValidRow(), "TLOG: Number of rows of src and dst must be the same.");
-    TLog<DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
+    TLog<PrecisionType, DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
 }
 
 /* TNEG */

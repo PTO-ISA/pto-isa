@@ -14,50 +14,54 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 using namespace pto;
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, bool isInPlace = false>
+template <typename T, int dstRow, int dstCol, int srcRow, int srcCol, int validRow, int validCol, bool isInPlace,
+          bool highPrecision>
 __global__ AICORE void runTLog(__gm__ T __out__ *out, __gm__ T __in__ *src)
 {
-    using DynShapeDim5 = Shape<1, 1, 1, kGRows_, kGCols_>;
-    using DynStridDim5 = pto::Stride<1, 1, 1, kGCols_, 1>;
-    using GlobalData = GlobalTensor<T, DynShapeDim5, DynStridDim5>;
-    using TileData = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    TileData srcTile(kTRows_, kTCols_);
-    TileData dstTile(kTRows_, kTCols_);
-    TASSIGN(srcTile, 0x0);
-    if constexpr (isInPlace) {
-        TASSIGN(dstTile, 0x0);
-    } else {
-        TASSIGN(dstTile, 0x20000);
-    }
+    using DynShapeDim5 = Shape<1, 1, 1, -1, -1>;
+    using SrcGlobalData = GlobalTensor<T, DynShapeDim5, pto::Stride<1, 1, srcRow, srcCol, 1>>;
+    using DstGlobalData = GlobalTensor<T, DynShapeDim5, pto::Stride<1, 1, dstRow, dstCol, 1>>;
+    SrcGlobalData srcGlobal(src, DynShapeDim5(validRow, validCol));
+    DstGlobalData dstGlobal(out, DynShapeDim5(validRow, validCol));
 
-    GlobalData srcGlobal(src);
-    GlobalData dstGlobal(out);
+    using DstTileData = Tile<TileType::Vec, T, dstRow, dstCol, BLayout::RowMajor, -1, -1>;
+    using SrcTileData = Tile<TileType::Vec, T, srcRow, srcCol, BLayout::RowMajor, -1, -1>;
+    SrcTileData srcTile(validRow, validCol);
+    DstTileData dstTile(validRow, validCol);
+    TASSIGN(srcTile, 0x0);
+    TASSIGN(dstTile, isInPlace ? 0x0 : srcRow * srcCol * sizeof(T));
 
     TLOAD(srcTile, srcGlobal);
 #ifndef __PTO_AUTO__
     set_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
     wait_flag(PIPE_MTE2, PIPE_V, EVENT_ID0);
 #endif
-    TLOG(dstTile, srcTile);
+    constexpr auto precisionType = highPrecision ? LogAlgorithm::HIGH_PRECISION : LogAlgorithm::DEFAULT;
+    TLOG<precisionType>(dstTile, srcTile);
 #ifndef __PTO_AUTO__
     set_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
     wait_flag(PIPE_V, PIPE_MTE3, EVENT_ID0);
 #endif
     TSTORE(dstGlobal, dstTile);
-    out = dstGlobal.data();
 }
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, bool isInPlace = false>
+template <typename T, int dstRow, int dstCol, int srcRow, int srcCol, int validRow, int validCol,
+          bool isInPlace = false, bool highPrecision = false>
 void LaunchTLog(T *out, T *src, void *stream)
 {
-    if constexpr (std::is_same_v<T, aclFloat16>)
-        runTLog<half, kGRows_, kGCols_, kTRows_, kTCols_, isInPlace>
+    if constexpr (std::is_same_v<T, aclFloat16>) {
+        runTLog<half, dstRow, dstCol, srcRow, srcCol, validRow, validCol, isInPlace, highPrecision>
             <<<1, nullptr, stream>>>((half *)(out), (half *)(src));
-    else
-        runTLog<T, kGRows_, kGCols_, kTRows_, kTCols_, isInPlace><<<1, nullptr, stream>>>(out, src);
+    } else {
+        runTLog<T, dstRow, dstCol, srcRow, srcCol, validRow, validCol, isInPlace, highPrecision>
+            <<<1, nullptr, stream>>>(out, src);
+    }
 }
 
-template void LaunchTLog<float, 64, 64, 64, 64, true>(float *out, float *src, void *stream);
-template void LaunchTLog<float, 64, 64, 64, 64, false>(float *out, float *src, void *stream);
-template void LaunchTLog<aclFloat16, 64, 64, 64, 64, true>(aclFloat16 *out, aclFloat16 *src, void *stream);
-template void LaunchTLog<aclFloat16, 64, 64, 64, 64, false>(aclFloat16 *out, aclFloat16 *src, void *stream);
+template void LaunchTLog<float, 64, 64, 64, 64, 64, 64, true>(float *out, float *src, void *stream);
+template void LaunchTLog<float, 64, 64, 64, 64, 64, 64>(float *out, float *src, void *stream);
+template void LaunchTLog<aclFloat16, 64, 64, 64, 64, 64, 64, true>(aclFloat16 *out, aclFloat16 *src, void *stream);
+template void LaunchTLog<aclFloat16, 64, 64, 64, 64, 64, 64>(aclFloat16 *out, aclFloat16 *src, void *stream);
+template void LaunchTLog<float, 64, 64, 64, 64, 64, 64, false, true>(float *out, float *src, void *stream);
+template void LaunchTLog<aclFloat16, 64, 64, 64, 64, 64, 64, false, true>(aclFloat16 *out, aclFloat16 *src,
+                                                                          void *stream);

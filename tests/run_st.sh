@@ -148,7 +148,7 @@ if [ "$ENABLE_A3" = "true" ]; then                 # A2A3
     python3 tests/script/run_st.py $ARGS -w -v a3 -t texp -g TEXPTest.case_float_64x64_64x64_64x64_inPlace_False
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tabs -g TABSTest.case_float_64x64_64x64_64x64_inPlace_False
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tlog -g TLOGTest.case_float_64x64_64x64_64x64_inPlace_False
-    python3 tests/script/run_st.py $ARGS -w -v a3 -t trecip -g TRECIPTest.case_float_64x64_64x64_64x64
+    python3 tests/script/run_st.py $ARGS -w -v a3 -t trecip -g TRECIPTest.case_float_64x64_64x64_64x64_inPlace_False
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tdivs -g TDIVSTest.case1
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tdivs -g TDIVSTest.case4
     python3 tests/script/run_st.py $ARGS -w -v a3 -t tdivs -g TDIVSTest.case5
@@ -326,6 +326,7 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tdivs -g TDIVSTest.case4
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tdivs -g TDIVSTest.case5
     python3 tests/script/run_st.py $ARGS -w -v a5 -t texp -g TEXPTest.case1
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t tlog -g TLOGTest.case_float_64x64_64x64_64x64
     python3 tests/script/run_st.py $ARGS -w -v a5 -t texpands -g TEXPANDSTest.case_float_64x64_64x64_64x64_PAD_VALUE_NULL
     if [ "$IS_AUTO_MODE" = "false" ]; then
       # this testcase has to directly call CCE intrinsics now, which won't compile for auto mode;
@@ -461,6 +462,7 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tcvt
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tdivs
     python3 tests/script/run_st.py $ARGS -w -v a5 -t texp
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t tlog
     python3 tests/script/run_st.py $ARGS -w -v a5 -t texpands
     if [ "$IS_AUTO_MODE" = "false" ]; then
       # this testcase has to directly call CCE intrinsics now, which won't compile for auto mode;

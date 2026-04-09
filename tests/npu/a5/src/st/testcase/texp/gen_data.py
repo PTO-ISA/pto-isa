@@ -12,27 +12,39 @@
 
 import os
 import numpy as np
-np.random.seed(19)
+import math
+import struct
 
 
 def gen_golden_data(param):
     dtype = param.dtype
-    dst_row, dst_col = [param.dst_row, param.dst_col]
-    src_row, src_col = [param.src_row, param.src_col]
-    valid_row, valid_col = [param.valid_row, param.valid_col]
+    dst_row, dst_col = param.dst_row, param.dst_col
+    src_row, src_col = param.src_row, param.src_col
+    valid_row, valid_col = param.valid_row, param.valid_col
 
-    # Generate random input arrays
-    input_arr = np.random.random(size=(src_row, src_col)).astype(dtype)
+    if dtype in (np.int8, np.uint8, np.int16, np.uint16, np.int32, np.uint32):
+        dtype_info = np.iinfo(dtype)
+        input_arr = np.random.randint(dtype_info.min, math.log(dtype_info.max),
+            size=[src_row, src_col]).astype(dtype)
+    else:
+        dtype_info = np.finfo(dtype)
+        max_val, min_val = dtype_info.min, math.log(dtype_info.max)
+        if param.high_precision:
+            bound_val = struct.unpack('!f', bytes.fromhex('007FFFFF'))[0]
+            max_val = math.log(bound_val)
+            min_val = max_val * 2
+        input_arr = np.random.uniform(min_val, max_val, size=[src_row, src_col]).astype(dtype)
+
     golden = np.zeros((dst_row, dst_col), dtype=dtype)
-    # Perform the operation
     golden[0:valid_row, 0:valid_col] = np.exp(input_arr[0:valid_row, 0:valid_col])
 
-    # Save the input and golden data to binary files
     input_arr.tofile("input.bin")
     golden.tofile("golden.bin")
 
+
 class tunaryParams:
-    def __init__(self, name, dtype, dst_row, dst_col, src_row, src_col, valid_row, valid_col, in_place=False):
+    def __init__(self, name, dtype, dst_row, dst_col, src_row, src_col, valid_row, valid_col,
+        in_place=False, high_precision=False):
         self.name = name
         self.dtype = dtype
         self.dst_row = dst_row
@@ -42,6 +54,7 @@ class tunaryParams:
         self.valid_row = valid_row
         self.valid_col = valid_col
         self.in_place = in_place
+        self.high_precision = high_precision
 
 
 if __name__ == "__main__":
@@ -55,13 +68,15 @@ if __name__ == "__main__":
 
     case_params_list = [
         tunaryParams("TEXPTest.case1", np.float32, 64, 64, 64, 64, 64, 64, True),
-        tunaryParams("TEXPTest.case2", np.float32, 64, 64, 64, 64, 64, 64, False),
+        tunaryParams("TEXPTest.case2", np.float32, 64, 64, 64, 64, 64, 64),
         tunaryParams("TEXPTest.case3", np.float16, 64, 64, 64, 64, 64, 64, True),
-        tunaryParams("TEXPTest.case4", np.float16, 64, 64, 64, 64, 64, 64, False),
+        tunaryParams("TEXPTest.case4", np.float16, 64, 64, 64, 64, 64, 64),
         tunaryParams("TEXPTest.case5", np.float32, 128, 128, 64, 64, 64, 64),
         tunaryParams("TEXPTest.case6", np.float32, 64, 64, 128, 128, 32, 32),
         tunaryParams("TEXPTest.case7", np.float16, 128, 256, 64, 64, 64, 64),
         tunaryParams("TEXPTest.case8", np.float16, 64, 64, 128, 256, 32, 32),
+        tunaryParams("TEXPTest.caseHP1", np.float32, 64, 64, 64, 64, 64, 64, False, True),
+        tunaryParams("TEXPTest.caseHP2", np.float16, 64, 64, 64, 64, 64, 64, False, True),
     ]
 
     for _, param in enumerate(case_params_list):

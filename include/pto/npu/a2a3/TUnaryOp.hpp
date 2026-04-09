@@ -350,7 +350,7 @@ struct ExpOp {
         vexp(dst, src, repeat, 1, 1, dstStride, srcStride);
     }
 };
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = ExpAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 PTO_INTERNAL void TEXP_IMPL(DstTile &dst, SrcTile &src)
 {
     TUNARY_IMPL<ExpOp<typename DstTile::DType>>(dst, src);
@@ -415,7 +415,7 @@ struct LogOp {
         vln(dst, src, repeat, 1, 1, dstStride, srcStride);
     }
 };
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = LogAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 PTO_INTERNAL void TLOG_IMPL(DstTile &dst, SrcTile &src)
 {
     TUNARY_IMPL<LogOp<typename DstTile::DType>>(dst, src);

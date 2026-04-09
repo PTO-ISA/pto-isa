@@ -32,13 +32,16 @@ std::string GetGoldenDir()
     return fullPath;
 }
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, bool isInPlace = false>
+template <typename T, int dstRow, int dstCol, int srcRow, int srcCol, int validRow, int validCol,
+          bool isInPlace = false, bool highPrecision = false>
 void LaunchTLog(T *out, T *src, void *stream);
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_, bool isInPlace = false>
+template <typename T, int dstRow, int dstCol, int srcRow, int srcCol, int validRow, int validCol,
+          bool isInPlace = false, bool highPrecision = false>
 void test_tlog()
 {
-    size_t fileSize = kGRows_ * kGCols_ * sizeof(T);
+    size_t dstSize = dstRow * dstCol * sizeof(T);
+    size_t srcSize = srcRow * srcCol * sizeof(T);
 
     aclInit(nullptr);
     aclrtSetDevice(0);
@@ -48,21 +51,22 @@ void test_tlog()
     T *dstHost, *srcHost;
     T *dstDevice, *srcDevice;
 
-    aclrtMallocHost((void **)(&dstHost), fileSize);
-    aclrtMallocHost((void **)(&srcHost), fileSize);
+    aclrtMallocHost((void **)(&dstHost), dstSize);
+    aclrtMallocHost((void **)(&srcHost), srcSize);
 
-    aclrtMalloc((void **)&dstDevice, fileSize, ACL_MEM_MALLOC_HUGE_FIRST);
-    aclrtMalloc((void **)&srcDevice, fileSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclrtMalloc((void **)&dstDevice, dstSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclrtMalloc((void **)&srcDevice, srcSize, ACL_MEM_MALLOC_HUGE_FIRST);
 
-    ReadFile(GetGoldenDir() + "/input1.bin", fileSize, srcHost, fileSize);
+    ReadFile(GetGoldenDir() + "/input.bin", srcSize, srcHost, srcSize);
 
-    aclrtMemcpy(srcDevice, fileSize, srcHost, fileSize, ACL_MEMCPY_HOST_TO_DEVICE);
-    LaunchTLog<T, kGRows_, kGCols_, kTRows_, kTCols_, isInPlace>(dstDevice, srcDevice, stream);
+    aclrtMemcpy(srcDevice, srcSize, srcHost, srcSize, ACL_MEMCPY_HOST_TO_DEVICE);
+    LaunchTLog<T, dstRow, dstCol, srcRow, srcCol, validRow, validCol, isInPlace, highPrecision>(dstDevice, srcDevice,
+                                                                                                stream);
 
     aclrtSynchronizeStream(stream);
-    aclrtMemcpy(dstHost, fileSize, dstDevice, fileSize, ACL_MEMCPY_DEVICE_TO_HOST);
+    aclrtMemcpy(dstHost, dstSize, dstDevice, dstSize, ACL_MEMCPY_DEVICE_TO_HOST);
 
-    WriteFile(GetGoldenDir() + "/output.bin", dstHost, fileSize);
+    WriteFile(GetGoldenDir() + "/output.bin", dstHost, dstSize);
 
     aclrtFree(dstDevice);
     aclrtFree(srcDevice);
@@ -73,13 +77,15 @@ void test_tlog()
     aclrtResetDevice(0);
     aclFinalize();
 
-    std::vector<T> golden(fileSize);
-    std::vector<T> devFinal(fileSize);
-    ReadFile(GetGoldenDir() + "/golden.bin", fileSize, golden.data(), fileSize);
-    ReadFile(GetGoldenDir() + "/output.bin", fileSize, devFinal.data(), fileSize);
+    std::vector<T> golden(dstSize);
+    std::vector<T> devFinal(dstSize);
+    ReadFile(GetGoldenDir() + "/golden.bin", dstSize, golden.data(), dstSize);
+    ReadFile(GetGoldenDir() + "/output.bin", dstSize, devFinal.data(), dstSize);
 
     float eps = 0.0f;
-    if constexpr (std::is_same_v<T, float>) {
+    if constexpr (highPrecision) {
+        eps = 0.000001f;
+    } else if constexpr (std::is_same_v<T, float>) {
         eps = 0.0001f;
     } else if constexpr (std::is_same_v<T, aclFloat16>) {
         eps = 0.001f;
@@ -89,19 +95,27 @@ void test_tlog()
     EXPECT_TRUE(ret);
 }
 
-TEST_F(TLOGTest, case_float_64x64_64x64_64x64_inPlace_True)
+TEST_F(TLOGTest, case_float_64x64_64x64_64x64_inPlace)
 {
-    test_tlog<float, 64, 64, 64, 64, true>();
+    test_tlog<float, 64, 64, 64, 64, 64, 64, true>();
 }
-TEST_F(TLOGTest, case_float_64x64_64x64_64x64_inPlace_False)
+TEST_F(TLOGTest, case_float_64x64_64x64_64x64)
 {
-    test_tlog<float, 64, 64, 64, 64, false>();
+    test_tlog<float, 64, 64, 64, 64, 64, 64>();
 }
-TEST_F(TLOGTest, case_half_64x64_64x64_64x64_inPlace_True)
+TEST_F(TLOGTest, case_half_64x64_64x64_64x64_inPlace)
 {
-    test_tlog<aclFloat16, 64, 64, 64, 64, true>();
+    test_tlog<aclFloat16, 64, 64, 64, 64, 64, 64, true>();
 }
-TEST_F(TLOGTest, case_half_64x64_64x64_64x64_inPlace_False)
+TEST_F(TLOGTest, case_half_64x64_64x64_64x64)
 {
-    test_tlog<aclFloat16, 64, 64, 64, 64, false>();
+    test_tlog<aclFloat16, 64, 64, 64, 64, 64, 64>();
+}
+TEST_F(TLOGTest, case_float_hp_64x64_64x64_64x64)
+{
+    test_tlog<float, 64, 64, 64, 64, 64, 64, false, true>();
+}
+TEST_F(TLOGTest, case_half_hp_64x64_64x64_64x64)
+{
+    test_tlog<aclFloat16, 64, 64, 64, 64, 64, 64, false, true>();
 }

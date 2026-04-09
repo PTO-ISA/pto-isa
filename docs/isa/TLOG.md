@@ -48,14 +48,21 @@ pto.tlog ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```text
 pto.tlog ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
 ```
+
 ## C++ Intrinsic
 
 Declared in `include/pto/common/pto_instr.hpp`:
 
 ```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
+template <auto PrecisionType = LogAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          typename... WaitEvents>
 PTO_INST RecordEvent TLOG(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events);
 ```
+
+`PrecisionType` has the following values available:
+
+- `LogAlgorithm::DEFAULT`: Normal algorithm, faster but with lower precision.
+- `LogAlgorithm::HIGH_PRECISION`: High precision algorithm, but slower.
 
 ## Constraints
 
@@ -69,8 +76,8 @@ PTO_INST RecordEvent TLOG(TileDataDst &dst, TileDataSrc &src, WaitEvents &... ev
     - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
 - **Domain / NaN**:
     - Domain behavior (e.g., `log(<=0)`) is target-defined.
-
-
+- **High precision algorithm**:
+    - Only available on A5. `PrecisionType` is ignored on A3.
 
 ## Examples
 
@@ -83,6 +90,7 @@ void example() {
   using TileT = Tile<TileType::Vec, float, 16, 16>;
   TileT x, out;
   TLOG(out, x);
+  TLOG<LogAlgorithm::HIGH_PRECISION>(out, x);  // A5 only
 }
 ```
 
