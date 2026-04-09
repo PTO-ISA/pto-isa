@@ -41,7 +41,7 @@ PTO_INTERNAL bool BuildAsyncSession(ScratchTile &scratchTile,
                                     __gm__ uint8_t *workspace,
                                     AsyncSession &session,
                                     uint32_t syncId = 0,
-                                    const sdma::SdmaBaseConfig &baseConfig = {32 * 1024, 0, 1},
+                                    const sdma::SdmaBaseConfig &baseConfig = {1024 * 1024, 0, 1},
                                     uint32_t channelGroupIdx = sdma::kAutoChannelGroupIdx);
 ```
 
@@ -50,7 +50,7 @@ PTO_INTERNAL bool BuildAsyncSession(ScratchTile &scratchTile,
 | 参数 | 默认值 | 说明 |
 |---|---|---|
 | `syncId` | `0` | MTE3/MTE2 管道同步事件 ID（0-7）。若 kernel 在相同 ID 上使用了其他管道屏障，则需覆盖此值。|
-| `baseConfig` | `{32*1024, 0, 1}` | `{block_bytes, comm_block_offset, queue_num}`。适用于大多数单队列传输场景。|
+| `baseConfig` | `{1024*1024, 0, 1}` | `{block_bytes, comm_block_offset, queue_num}`。适用于大多数单队列传输场景。|
 | `channelGroupIdx` | `kAutoChannelGroupIdx` | SDMA 通道组索引。默认内部使用 `get_block_idx()` 映射到当前 AI Core。多 block 或自定义通道映射场景下需覆盖此值。|
 
 ## 约束
@@ -81,15 +81,19 @@ PTO_INTERNAL bool BuildAsyncSession(ScratchTile &scratchTile,
 
 推荐使用：`Tile<TileType::Vec, uint8_t, 1, comm::sdma::UB_ALIGN_SIZE>`（256B）。
 
-## 完成语义
+## 完成语义（Quiet 语义）
 
-使用 `AsyncEvent` 同步：
+`TGET_ASYNC` 仅提交数据传输 SQE，不提交 flag SQE。flag SQE 的提交延迟到 `Wait` 调用时进行。
 
-- `event.Wait(session)` — 阻塞直到传输完成
+- `event.Wait(session)` — 提交 flag SQE 并阻塞，直到**自上次 Wait 以来所有已发出的异步操作**全部完成
 
-wait 成功后，读入 `dstGlobalData` 的数据已全部就绪。
+这意味着多次 `TGET_ASYNC` 调用后，只需对最后一个返回的 `AsyncEvent` 调用一次 `Wait`，即可等待所有 pending 操作完成（类似 shmem 的 quiet 语义）。
+
+wait 成功后，所有已发出的 `dstGlobalData` 读入数据均已全部就绪。
 
 ## 示例
+
+### 单次传输
 
 ```cpp
 #include <pto/comm/pto_comm_inst.hpp>
@@ -121,6 +125,39 @@ __global__ AICORE void SimpleGet(__gm__ T *localDst, __gm__ T *remoteSrc,
 
     auto event = comm::TGET_ASYNC<comm::DmaEngine::SDMA>(dstG, srcG, session);
     (void)event.Wait(session);
+}
+```
+
+### 批量传输（Quiet 语义）
+
+```cpp
+template <typename T>
+__global__ AICORE void BatchGet(__gm__ T *localDstBase, __gm__ T *remoteSrcBase,
+                                __gm__ uint8_t *sdmaWorkspace, int nranks)
+{
+    using ShapeDyn  = Shape<DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC>;
+    using StrideDyn = Stride<DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC>;
+    using GT        = GlobalTensor<T, ShapeDyn, StrideDyn, Layout::ND>;
+    using ScratchTile = Tile<TileType::Vec, uint8_t, 1, comm::sdma::UB_ALIGN_SIZE>;
+
+    ShapeDyn shape(1, 1, 1, 1, 1024);
+    StrideDyn stride(1024, 1024, 1024, 1024, 1);
+
+    ScratchTile scratchTile;
+    TASSIGN(scratchTile, 0x0);
+
+    comm::AsyncSession session;
+    if (!comm::BuildAsyncSession(scratchTile, sdmaWorkspace, session)) {
+        return;
+    }
+
+    comm::AsyncEvent lastEvent;
+    for (int rank = 0; rank < nranks; ++rank) {
+        GT dstG(localDstBase + rank * 1024, shape, stride);
+        GT srcG(remoteSrcBase + rank * 1024, shape, stride);
+        lastEvent = comm::TGET_ASYNC(dstG, srcG, session);
+    }
+    (void)lastEvent.Wait(session);  // 一次 Wait 等待所有 pending 操作
 }
 ```
 

@@ -54,8 +54,6 @@ __global__ AICORE void TPutAsyncKernelImpl(__gm__ T *commBuf, int nranks, int ro
     Global sendG(sendBufCore, shape, stride);
 
     if (my_rank == root_rank) {
-        constexpr int kEventSlots = pto::comm::sdma::SDMA_EVENT_SLOT_COUNT;
-        pto::comm::AsyncEvent events[kEventSlots];
         ScratchTile scratchTile;
         TASSIGN(scratchTile, 0x0);
         pto::comm::AsyncSession session;
@@ -63,23 +61,16 @@ __global__ AICORE void TPutAsyncKernelImpl(__gm__ T *commBuf, int nranks, int ro
             pipe_barrier(PIPE_ALL);
             return;
         }
-        int issued = 0;
+        pto::comm::AsyncEvent lastEvent;
         for (int target_rank = 0; target_rank < nranks; ++target_rank) {
             if (target_rank == root_rank) {
                 continue;
             }
             __gm__ T *remoteRecvBuf = HcclRemotePtr(hcclCtx, recvBuf, target_rank) + elem_offset;
             Global remoteRecvG(remoteRecvBuf, shape, stride);
-            if (issued >= kEventSlots) {
-                (void)events[issued % kEventSlots].Wait(session);
-            }
-            events[issued % kEventSlots] = pto::comm::TPUT_ASYNC(remoteRecvG, sendG, session);
-            issued++;
+            lastEvent = pto::comm::TPUT_ASYNC(remoteRecvG, sendG, session);
         }
-        const int pending = (issued < kEventSlots) ? issued : kEventSlots;
-        for (int i = 0; i < pending; ++i) {
-            (void)events[i].Wait(session);
-        }
+        (void)lastEvent.Wait(session);
     }
 
     pipe_barrier(PIPE_ALL);

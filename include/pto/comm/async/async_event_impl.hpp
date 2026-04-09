@@ -46,7 +46,7 @@ PTO_INTERNAL bool AsyncEvent::Wait(const AsyncSession &session) const
     }
     switch (session.engine) {
         case DmaEngine::SDMA:
-            return sdma::detail::SdmaWaitEvent(handle, session.sdmaSession.eventCtx);
+            return sdma::detail::SdmaWaitEvent(handle, session.sdmaSession);
         default:
             return false;
     }
@@ -59,7 +59,7 @@ PTO_INTERNAL bool AsyncEvent::Test(const AsyncSession &session) const
     }
     switch (session.engine) {
         case DmaEngine::SDMA:
-            return sdma::detail::SdmaTestEvent(handle, session.sdmaSession.eventCtx);
+            return sdma::detail::SdmaTestEvent(handle, session.sdmaSession);
         default:
             return false;
     }
