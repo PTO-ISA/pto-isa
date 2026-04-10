@@ -10,26 +10,25 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 #pragma once
 
+#include <dlfcn.h>
+
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <vector>
-#include <dlfcn.h>
 
-// #include "hccl/hccl.h"
 #include "acl/acl.h"
-
+#include "comm_mpi.h"
 #include "hccl/hccl_comm.h"
 #include "hccl/hccl_types.h"
 #include "hccl_context.h"
-#include "comm_mpi.h"
 #include "pto/npu/comm/async/sdma/sdma_workspace_manager.hpp"
+#include "pto/npu/comm/async/urma/urma_workspace_manager.hpp"
 
 // ============================================================================
-// Debug logging helpers.  Enabled by cmake -DDEBUG_MODE=ON  (defines COMM_DEBUG).
-// Uses COMM_DEBUG instead of _DEBUG to avoid activating PTO's PTO_ASSERT which
-// calls cce::printf (unsupported on A5).
+// Debug logging helpers. Enabled by cmake -DDEBUG_MODE=ON (defines COMM_DEBUG).
+// Uses COMM_DEBUG instead of _DEBUG to avoid activating PTO's PTO_ASSERT which calls cce::printf (unsupported on A5).
 // ============================================================================
 #ifdef COMM_DEBUG
 #include <chrono>
@@ -73,9 +72,9 @@ static constexpr uint32_t COMM_IS_NOT_SET_DEVICE = 0;
 static constexpr uint32_t COMM_TOPO_MESH = 0b1u;
 
 // V2 tiling structures matching PyPTO's hccl_context.h definitions.
-// On A5, PyPTO uses Mc2CommConfigV2 (init.version=100) which routes through HCCL's V2 code
-// path. The V2 path properly fills windowsIn/windowsOut arrays in HcclCombinOpParamA5,
-// unlike the V1 path which only sets windowsOut[0].
+// On A5, PyPTO uses Mc2CommConfigV2 (init.version=100) which routes through
+// HCCL's V2 code path. The V2 path properly fills windowsIn/windowsOut arrays
+// in HcclCombinOpParamA5, unlike the V1 path which only sets windowsOut[0].
 
 static constexpr uint32_t MAX_CC_TILING_NUM = 8U;
 static constexpr uint32_t GROUP_NAME_SIZE = 128U;
@@ -114,8 +113,7 @@ struct Mc2CommConfigV2 {
 };
 
 // ============================================================================
-// Device-side helper: convert a local window pointer to the equivalent address
-// on a remote rank.
+// Device-side helper: convert a local window pointer to the equivalent address on a remote rank.
 // ============================================================================
 template <typename T>
 AICORE inline __gm__ T *HcclRemotePtr(__gm__ HcclDeviceContext *ctx, __gm__ T *localPtr, int pe)
@@ -375,3 +373,146 @@ inline bool ForkAndRunWithHcclRootInfo(int nRanks, int firstRankId, int firstDev
 }
 
 using SdmaWorkspaceManager = pto::comm::sdma::SdmaWorkspaceManager;
+
+using UrmaWorkspaceManager = pto::comm::urma::UrmaWorkspaceManager;
+using UrmaBootstrapHandle = pto::comm::urma::UrmaBootstrapHandle;
+
+static int MpiAllgatherWrapper(const void *sendbuf, void *recvbuf, int size, void *ctx)
+{
+    (void)ctx;
+    return CommMpiAllgather(sendbuf, size, recvbuf, size);
+}
+
+static int MpiBarrierWrapper(void *ctx)
+{
+    (void)ctx;
+    CommMpiBarrier();
+    return 0;
+}
+
+// ============================================================================
+// UrmaTestContext: shared URMA host setup for TGET_ASYNC / TPUT_ASYNC ST.
+//
+// Allocates huge-page symmetric GM, runs UrmaWorkspaceManager::Init (HCCP MR + Jetty + bootstrap allgather).
+// Peer symmetric bases for device code come from UrmaMemInfo in the workspace (UrmaPeerMrBaseAddr),
+// not a separate MPI pointer table — same data as RegMemResultInfo.address.
+// ============================================================================
+struct UrmaTestContext {
+    int deviceId{-1};
+    int rankId{-1};
+    int nRanks{0};
+    int rootRank{0};
+    rtStream_t stream{nullptr};
+    void *devBuf{nullptr};
+    size_t allocSize{0};
+    UrmaWorkspaceManager urmaMgr;
+
+    // Allocate huge-page device memory (2MB aligned, required by URMA MR registration).
+    bool AllocHugePageBuffer(size_t commBytesNeeded)
+    {
+        constexpr size_t kHugePageSize = 2UL * 1024 * 1024;
+        allocSize = (commBytesNeeded + kHugePageSize - 1) & ~(kHugePageSize - 1);
+        if (allocSize < kHugePageSize) {
+            allocSize = kHugePageSize;
+        }
+        aclError aErr = aclrtMalloc(&devBuf, allocSize, ACL_MEM_MALLOC_HUGE_ONLY);
+        if (aErr != ACL_SUCCESS || devBuf == nullptr) {
+            std::cerr << "[ERROR] aclrtMalloc(" << allocSize << ") failed: " << aErr << std::endl;
+            return false;
+        }
+        aclrtMemset(devBuf, allocSize, 0, allocSize);
+        COMM_LOG("[INFO] Rank " << rankId << " devBuf=" << devBuf << " size=" << allocSize);
+        return true;
+    }
+
+    bool Setup(int rank_id, int n_ranks, int n_devices, int first_device_id, int root_rank, size_t commBytesNeeded)
+    {
+        if (n_devices <= 0 || n_ranks <= 0) {
+            std::cerr << "[ERROR] n_devices and n_ranks must be > 0" << std::endl;
+            return false;
+        }
+        rankId = rank_id;
+        nRanks = n_ranks;
+        rootRank = root_rank;
+        deviceId = rank_id % n_devices + first_device_id;
+
+        aclError aErr = aclrtSetDevice(deviceId);
+        if (aErr != ACL_SUCCESS) {
+            std::cerr << "[ERROR] aclrtSetDevice(" << deviceId << ") failed: " << aErr << std::endl;
+            return false;
+        }
+        if (rtStreamCreate(&stream, RT_STREAM_PRIORITY_DEFAULT) != 0) {
+            std::cerr << "[ERROR] rtStreamCreate failed" << std::endl;
+            return false;
+        }
+
+        if (!AllocHugePageBuffer(commBytesNeeded))
+            return false;
+
+        UrmaBootstrapHandle bootstrap{MpiAllgatherWrapper, MpiBarrierWrapper, nullptr};
+        if (!urmaMgr.Init(static_cast<uint32_t>(deviceId), static_cast<uint32_t>(rank_id),
+                          static_cast<uint32_t>(n_ranks), devBuf, allocSize, bootstrap)) {
+            std::cerr << "[ERROR] UrmaWorkspaceManager Init failed!" << std::endl;
+            aclrtFree(devBuf);
+            devBuf = nullptr;
+            return false;
+        }
+        return true;
+    }
+
+    void Cleanup()
+    {
+        urmaMgr.Finalize();
+        if (devBuf) {
+            aclrtFree(devBuf);
+            devBuf = nullptr;
+        }
+        if (stream) {
+            rtStreamDestroy(stream);
+            stream = nullptr;
+        }
+    }
+};
+
+// ============================================================================
+// RunUrmaTestMpiLaunch: MPI-based multi-rank launch for standalone URMA tests.
+// KernelFn: (rank_id, n_ranks, n_devices, first_device_id, first_rank_id, root_rank).
+// URMA peer index in workspace is CommMpiRank() == rank_id - first_rank_id.
+// ============================================================================
+using UrmaKernelFn = bool (*)(int, int, int, int, int, int);
+
+inline bool RunUrmaTestMpiLaunch(int n_ranks, int n_devices, int first_rank_id, int first_device_id,
+                                 UrmaKernelFn kernelFn)
+{
+    int mpiRank = CommMpiRank();
+    int mpiSize = CommMpiSize();
+    int rankId = first_rank_id + mpiRank;
+    int rootRank = first_rank_id;
+
+    if (mpiSize != n_ranks) {
+        if (mpiRank == 0) {
+            std::cerr << "[ERROR] MPI world size (" << mpiSize << ") != expected nRanks (" << n_ranks
+                      << "). Launch with: mpirun -n " << n_ranks << " ./test_binary" << std::endl;
+        }
+        return false;
+    }
+
+    int deviceCount = GetAvailableDeviceCount();
+    if (deviceCount < n_ranks + first_device_id) {
+        if (mpiRank == 0) {
+            std::cerr << "[SKIP] Need " << (n_ranks + first_device_id) << " NPU(s), have " << deviceCount << std::endl;
+        }
+        return true;
+    }
+
+    constexpr int kAclRepeatInit = 100002;
+    aclError aclRet = aclInit(nullptr);
+    if (aclRet != ACL_SUCCESS && static_cast<int>(aclRet) != kAclRepeatInit) {
+        std::cerr << "[ERROR] aclInit failed: " << static_cast<int>(aclRet) << std::endl;
+        return false;
+    }
+
+    bool result = kernelFn(rankId, n_ranks, n_devices, first_device_id, first_rank_id, rootRank);
+    aclFinalize();
+    return result;
+}

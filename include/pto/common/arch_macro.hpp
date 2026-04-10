@@ -15,6 +15,9 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #define PTO_NPU_ARCH_A2A3
 #elif (__NPU_ARCH__ == 3101) || (__NPU_ARCH__ == 3510)
 #define PTO_NPU_ARCH_A5
+#if __NPU_ARCH__ == 3510
+#define PTO_URMA_SUPPORTED
+#endif
 #elif __NPU_ARCH__ == 3113
 #define PTO_COMM_NOT_SUPPORTED
 #define PTO_NPU_ARCH_KIRIN9030

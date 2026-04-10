@@ -78,6 +78,29 @@ constexpr uint64_t kDefaultSdmaBlockBytes = 1024 * 1024;
 } // namespace sdma
 
 // ============================================================================
+// URMA context types for async operations (HCCP V2 Jetty, NPU_ARCH 3510 only)
+// ============================================================================
+namespace urma {
+
+struct UrmaExecContext {
+    __gm__ uint8_t *contextGm{nullptr};
+    uint32_t destRankId{0};
+    uint32_t qpIdx{0};
+};
+
+struct UrmaEventContext {
+    __gm__ uint8_t *contextGm{nullptr};
+};
+
+struct UrmaSession {
+    UrmaExecContext execCtx{};
+    UrmaEventContext eventCtx{};
+    bool valid{false};
+};
+
+} // namespace urma
+
+// ============================================================================
 // AsyncSession: engine-agnostic session for async DMA operations.
 // Users build via comm::BuildAsyncSession<engine>() and pass to
 // TPUT_ASYNC / TGET_ASYNC / event.Wait() without knowing engine internals.
@@ -85,6 +108,7 @@ constexpr uint64_t kDefaultSdmaBlockBytes = 1024 * 1024;
 struct AsyncSession {
     DmaEngine engine{DmaEngine::SDMA};
     sdma::SdmaSession sdmaSession{};
+    urma::UrmaSession urmaSession{};
     bool valid{false};
 };
 

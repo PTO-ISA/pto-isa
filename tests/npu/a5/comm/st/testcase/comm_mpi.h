@@ -144,3 +144,13 @@ inline void CommMpiBarrier()
     if (fn)
         fn(COMM_MPI_COMM_WORLD);
 }
+
+using MpiAllgatherFunc = int (*)(const void *, int, MPI_Datatype, void *, int, MPI_Datatype, MPI_Comm);
+
+inline int CommMpiAllgather(const void *sendbuf, int sendcount, void *recvbuf, int recvcount)
+{
+    auto fn = comm_mpi::GetFunc<MpiAllgatherFunc>("MPI_Allgather");
+    if (!fn)
+        return -1;
+    return fn(sendbuf, sendcount, COMM_MPI_CHAR, recvbuf, recvcount, COMM_MPI_CHAR, COMM_MPI_COMM_WORLD);
+}
