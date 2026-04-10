@@ -17,7 +17,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 namespace pto {
 
-template <typename TileDataDst, typename TileDataSrc>
+template <auto PrecisionType = RsqrtAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TRSQRT_IMPL(TileDataDst &dst, TileDataSrc &src)
 {
     static_assert((std::is_same<typename TileDataDst::DType, half>::value &&
@@ -42,7 +42,8 @@ PTO_INTERNAL void TRSQRT_IMPL(TileDataDst &dst, TileDataSrc &src)
     });
 }
 
-template <typename TileDataDst, typename TileDataSrc, typename TmpTileData>
+template <auto PrecisionType = RsqrtAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc,
+          typename TmpTileData>
 PTO_INTERNAL void TSQRT_IMPL(TileDataDst &dst, TileDataSrc &src, TmpTileData &tmp)
 {
     TRSQRT_IMPL(dst, src);

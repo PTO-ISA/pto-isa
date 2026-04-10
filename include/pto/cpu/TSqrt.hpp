@@ -28,7 +28,7 @@ void TSqrt_Impl(TileDataDst dst, TileDataSrc src, int validRow, int validCol)
     }
 }
 
-template <typename TileDataDst, typename TileDataSrc>
+template <auto PrecisionType = SqrtAlgorithm::DEFAULT, typename TileDataDst, typename TileDataSrc>
 PTO_INTERNAL void TSQRT_IMPL(TileDataDst &dst, TileDataSrc &src)
 {
     static_assert((std::is_same<typename TileDataDst::DType, half>::value &&

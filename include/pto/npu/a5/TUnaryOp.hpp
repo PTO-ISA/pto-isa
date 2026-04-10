@@ -18,6 +18,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include "utils.hpp"
 #include "custom/TExp_Custom.hpp"
 #include "custom/TLog_Custom.hpp"
+#include "custom/TSqrtHp.hpp"
 
 namespace pto {
 template <typename Op, typename T, unsigned nRepeatElem>
@@ -250,14 +251,20 @@ PTO_INTERNAL void TRELU_IMPL(DstTile &dst, SrcTile &src)
 }
 
 /* TSQRT */
-template <typename T>
+template <SqrtAlgorithm PrecisionType, typename T>
 struct SqrtOp {
     PTO_INTERNAL static void UnaryInstr(RegTensor<T> &dstReg, RegTensor<T> &srcReg, MaskReg &pReg)
     {
-        vsqrt(dstReg, srcReg, pReg, MODE_ZEROING);
+        if constexpr (PrecisionType == SqrtAlgorithm::HIGH_PRECISION && std::is_same_v<T, float>) {
+            SqrtFloatImpl<T, RegTensor<T>>(dstReg, srcReg, pReg);
+        } else if constexpr (PrecisionType == SqrtAlgorithm::HIGH_PRECISION && std::is_same_v<T, half>) {
+            SqrtPrecisionImpl<T, RegTensor<T>>(dstReg, srcReg, pReg);
+        } else {
+            vsqrt(dstReg, srcReg, pReg, MODE_ZEROING);
+        }
     }
 };
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = SqrtAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 __tf__ PTO_INTERNAL OP_NAME(TSQRT)
     OP_TYPE(element_wise) void TSqrt(typename DstTile::TileDType __out__ dstData,
                                      typename SrcTile::TileDType __in__ srcData, unsigned validRow, unsigned validCol,
@@ -266,9 +273,9 @@ __tf__ PTO_INTERNAL OP_NAME(TSQRT)
     using T = typename DstTile::DType;
     __ubuf__ T *dst = (__ubuf__ T *)__cce_get_tile_ptr(dstData);
     __ubuf__ T *src = (__ubuf__ T *)__cce_get_tile_ptr(srcData);
-    TUnaryOp<DstTile, SrcTile, SqrtOp<T>>(dst, src, validRow, validCol, version);
+    TUnaryOp<DstTile, SrcTile, SqrtOp<PrecisionType, T>>(dst, src, validRow, validCol, version);
 }
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = SqrtAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 PTO_INTERNAL void TSQRT_IMPL(DstTile &dst, SrcTile &src)
 {
     TUnaryCheck<DstTile, SrcTile>();
@@ -276,7 +283,7 @@ PTO_INTERNAL void TSQRT_IMPL(DstTile &dst, SrcTile &src)
     unsigned dstValidCol = dst.GetValidCol();
     PTO_ASSERT(dstValidCol == src.GetValidCol(), "TSQRT: Number of columns of src and dst must be the same.");
     PTO_ASSERT(dstValidRow == src.GetValidRow(), "TSQRT: Number of rows of src and dst must be the same.");
-    TSqrt<DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
+    TSqrt<PrecisionType, DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
 }
 
 /* TABS */

@@ -311,6 +311,18 @@ enum class DivAlgorithm : uint8_t
     HIGH_PRECISION
 };
 
+enum class SqrtAlgorithm : uint8_t
+{
+    DEFAULT,
+    HIGH_PRECISION
+};
+
+enum class RsqrtAlgorithm : uint8_t
+{
+    DEFAULT,
+    HIGH_PRECISION
+};
+
 enum class RecipAlgorithm : uint8_t
 {
     DEFAULT,

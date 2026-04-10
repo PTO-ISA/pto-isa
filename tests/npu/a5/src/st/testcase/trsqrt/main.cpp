@@ -32,12 +32,12 @@ std::string GetGoldenDir()
     return fullPath;
 }
 
-template <typename T, int dstRow, int dstCol, int srcRow, int srcCol, int validRow, int validCol,
+template <typename T, int dstRow, int dstCol, int srcRow, int srcCol, int validRow, int validCol, bool highPrecision,
           bool isInPlace = false>
 void LaunchTRsqrt(T *out, T *src, void *stream);
 
 template <typename T, int dstRow, int dstCol, int srcRow, int srcCol, int validRow, int validCol,
-          bool isInPlace = false>
+          bool highPrecision = false, bool isInPlace = false>
 void test_trsqrt()
 {
     size_t srcFileSize = srcRow * srcCol * sizeof(T);
@@ -58,7 +58,8 @@ void test_trsqrt()
 
     ReadFile(GetGoldenDir() + "/input.bin", srcFileSize, srcHost, srcFileSize);
     aclrtMemcpy(srcDevice, srcFileSize, srcHost, srcFileSize, ACL_MEMCPY_HOST_TO_DEVICE);
-    LaunchTRsqrt<T, dstRow, dstCol, srcRow, srcCol, validRow, validCol, isInPlace>(dstDevice, srcDevice, stream);
+    LaunchTRsqrt<T, dstRow, dstCol, srcRow, srcCol, validRow, validCol, highPrecision, isInPlace>(dstDevice, srcDevice,
+                                                                                                  stream);
 
     aclrtSynchronizeStream(stream);
     aclrtMemcpy(dstHost, dstFileSize, dstDevice, dstFileSize, ACL_MEMCPY_DEVICE_TO_HOST);
@@ -83,6 +84,7 @@ void test_trsqrt()
     if constexpr (std::is_same_v<T, float>) {
         eps = 0.00005f;
     }
+    eps = highPrecision ? 0.0000001f : eps;
     bool ret = ResultCmp(golden, devFinal, eps);
 
     EXPECT_TRUE(ret);
@@ -90,19 +92,19 @@ void test_trsqrt()
 
 TEST_F(TRSQRTTest, case1)
 {
-    test_trsqrt<float, 64, 64, 64, 64, 64, 64, true>();
+    test_trsqrt<float, 64, 64, 64, 64, 64, 64, true, true>();
 }
 TEST_F(TRSQRTTest, case2)
 {
-    test_trsqrt<float, 64, 64, 64, 64, 64, 64, false>();
+    test_trsqrt<float, 64, 64, 64, 64, 64, 64, true, false>();
 }
 TEST_F(TRSQRTTest, case3)
 {
-    test_trsqrt<aclFloat16, 64, 64, 64, 64, 64, 64, true>();
+    test_trsqrt<aclFloat16, 64, 64, 64, 64, 64, 64, true, true>();
 }
 TEST_F(TRSQRTTest, case4)
 {
-    test_trsqrt<aclFloat16, 64, 64, 64, 64, 64, 64, false>();
+    test_trsqrt<aclFloat16, 64, 64, 64, 64, 64, 64, true, false>();
 }
 TEST_F(TRSQRTTest, case5)
 {

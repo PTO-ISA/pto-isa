@@ -16,9 +16,11 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include <pto/common/type.hpp>
 #include "common.hpp"
 #include "utils.hpp"
+#include "custom/TSqrtHp.hpp"
+#include "custom/Div754.hpp"
 
 namespace pto {
-template <typename Op, typename T, unsigned nRepeatElem>
+template <typename Op, RsqrtAlgorithm PrecisionType, typename T, unsigned nRepeatElem>
 PTO_INTERNAL void TRsqrt_1D_NoPostUpdate(__ubuf__ T *dst, __ubuf__ T *src, unsigned validRow, unsigned validCol)
 {
     uint16_t repeatTimes = CeilDivision(validRow * validCol, nRepeatElem);
@@ -37,14 +39,22 @@ PTO_INTERNAL void TRsqrt_1D_NoPostUpdate(__ubuf__ T *dst, __ubuf__ T *src, unsig
         for (uint16_t i = 0; i < repeatTimes; ++i) {
             pReg = CreatePredicate<T>(sReg);
             vlds(srcReg, src, i * nRepeatElem, NORM);
-            vsqrt(tmpReg, srcReg, pReg, MODE_ZEROING);
-            vdiv(dstReg, oneReg, tmpReg, pReg);
+            if constexpr (std::is_same_v<T, float> && PrecisionType == RsqrtAlgorithm::HIGH_PRECISION) {
+                SqrtFloatImpl<T, RegTensor<T>>(tmpReg, srcReg, pReg);
+                DivIEEE754FloatImpl<T, RegTensor<T>>(dstReg, oneReg, tmpReg, pReg);
+            } else if constexpr (std::is_same_v<T, half> && PrecisionType == RsqrtAlgorithm::HIGH_PRECISION) {
+                SqrtPrecisionImpl<T, RegTensor<T>>(tmpReg, srcReg, pReg);
+                DivIEEE754HalfImpl<T, RegTensor<T>>(dstReg, oneReg, tmpReg, pReg);
+            } else {
+                vsqrt(tmpReg, srcReg, pReg, MODE_ZEROING);
+                vdiv(dstReg, oneReg, tmpReg, pReg);
+            }
             vsts(dstReg, dst, i * nRepeatElem, distValue, pReg);
         }
     }
 }
 
-template <typename Op, typename T, unsigned nRepeatElem>
+template <typename Op, RsqrtAlgorithm PrecisionType, typename T, unsigned nRepeatElem>
 PTO_INTERNAL void TRsqrt_1D_PostUpdate(__ubuf__ T *dst, __ubuf__ T *src, unsigned validRow, unsigned validCol)
 {
     uint16_t repeatTimes = CeilDivision(validRow * validCol, nRepeatElem);
@@ -63,14 +73,23 @@ PTO_INTERNAL void TRsqrt_1D_PostUpdate(__ubuf__ T *dst, __ubuf__ T *src, unsigne
         for (uint16_t i = 0; i < repeatTimes; ++i) {
             pReg = CreatePredicate<T>(sReg);
             vlds(srcReg, src, nRepeatElem, NORM, POST_UPDATE);
-            vsqrt(tmpReg, srcReg, pReg, MODE_ZEROING);
-            vdiv(dstReg, oneReg, tmpReg, pReg);
+            if constexpr (PrecisionType == RsqrtAlgorithm::HIGH_PRECISION && std::is_same_v<T, float>) {
+                SqrtFloatImpl<T, RegTensor<T>>(tmpReg, srcReg, pReg);
+                DivIEEE754FloatImpl<T, RegTensor<T>>(dstReg, oneReg, tmpReg, pReg);
+            } else if constexpr (PrecisionType == RsqrtAlgorithm::HIGH_PRECISION && std::is_same_v<T, half>) {
+                SqrtPrecisionImpl<T, RegTensor<T>>(tmpReg, srcReg, pReg);
+                DivIEEE754HalfImpl<T, RegTensor<T>>(dstReg, oneReg, tmpReg, pReg);
+            } else {
+                vsqrt(tmpReg, srcReg, pReg, MODE_ZEROING);
+                vdiv(dstReg, oneReg, tmpReg, pReg);
+            }
             vsts(dstReg, dst, nRepeatElem, distValue, pReg, POST_UPDATE);
         }
     }
 }
 
-template <typename Op, typename T, unsigned DstRowStride, unsigned SrcRowStride, unsigned nRepeatElem>
+template <typename Op, RsqrtAlgorithm PrecisionType, typename T, unsigned DstRowStride, unsigned SrcRowStride,
+          unsigned nRepeatElem>
 PTO_INTERNAL void TRsqrt_2D(__ubuf__ T *dst, __ubuf__ T *src, unsigned validRow, unsigned validCol)
 {
     uint16_t repeatTimes = CeilDivision(validCol, nRepeatElem);
@@ -91,36 +110,46 @@ PTO_INTERNAL void TRsqrt_2D(__ubuf__ T *dst, __ubuf__ T *src, unsigned validRow,
             for (uint16_t j = 0; j < repeatTimes; ++j) {
                 pReg = CreatePredicate<T>(sReg);
                 vlds(srcReg, src, i * SrcRowStride + j * nRepeatElem, NORM);
-                vsqrt(tmpReg, srcReg, pReg, MODE_ZEROING);
-                vdiv(dstReg, oneReg, tmpReg, pReg);
+                if constexpr (PrecisionType == RsqrtAlgorithm::HIGH_PRECISION && std::is_same_v<T, half>) {
+                    SqrtPrecisionImpl<T, RegTensor<T>>(tmpReg, srcReg, pReg);
+                    DivIEEE754HalfImpl<T, RegTensor<T>>(dstReg, oneReg, tmpReg, pReg);
+                } else if constexpr (PrecisionType == RsqrtAlgorithm::HIGH_PRECISION && std::is_same_v<T, float>) {
+                    SqrtFloatImpl<T, RegTensor<T>>(tmpReg, srcReg, pReg);
+                    DivIEEE754FloatImpl<T, RegTensor<T>>(dstReg, oneReg, tmpReg, pReg);
+                } else {
+                    vsqrt(tmpReg, srcReg, pReg, MODE_ZEROING);
+                    vdiv(dstReg, oneReg, tmpReg, pReg);
+                }
                 vsts(dstReg, dst, i * DstRowStride + j * nRepeatElem, distValue, pReg);
             }
         }
     }
 }
 
-template <typename Op, typename T, typename DstTile, typename SrcTile, unsigned nRepeatElem>
+template <typename Op, RsqrtAlgorithm PrecisionType, typename T, typename DstTile, typename SrcTile,
+          unsigned nRepeatElem>
 PTO_INTERNAL void TRsqrt_1D_Switch(__ubuf__ T *dst, __ubuf__ T *src, unsigned validRow, unsigned validCol,
                                    VFImplKind version)
 {
     switch (version) {
         case VFImplKind::VFIMPL_1D_NO_POST_UPDATE: {
-            TRsqrt_1D_NoPostUpdate<Op, T, nRepeatElem>(dst, src, validRow, validCol);
+            TRsqrt_1D_NoPostUpdate<Op, PrecisionType, T, nRepeatElem>(dst, src, validRow, validCol);
             break;
         }
         case VFImplKind::VFIMPL_2D_POST_UPDATE:
         case VFImplKind::VFIMPL_2D_NO_POST_UPDATE: {
-            TRsqrt_2D<Op, T, DstTile::RowStride, SrcTile::RowStride, nRepeatElem>(dst, src, validRow, validCol);
+            TRsqrt_2D<Op, PrecisionType, T, DstTile::RowStride, SrcTile::RowStride, nRepeatElem>(dst, src, validRow,
+                                                                                                 validCol);
             break;
         }
         default: {
-            TRsqrt_1D_PostUpdate<Op, T, nRepeatElem>(dst, src, validRow, validCol);
+            TRsqrt_1D_PostUpdate<Op, PrecisionType, T, nRepeatElem>(dst, src, validRow, validCol);
             break;
         }
     }
 }
 
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = RsqrtAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 __tf__ PTO_INTERNAL void OP_NAME(TRSQRT) OP_TYPE(element_wise)
     TRsqrt(typename DstTile::TileDType __out__ dstData, typename SrcTile::TileDType __in__ srcData, unsigned validRow,
            unsigned validCol, VFImplKind version = VFImplKind::VFIMPL_DEFAULT)
@@ -131,13 +160,14 @@ __tf__ PTO_INTERNAL void OP_NAME(TRSQRT) OP_TYPE(element_wise)
     constexpr unsigned nRepeatElem = CCE_VL / sizeof(T);
     if constexpr (((DstTile::ValidCol == DstTile::Cols) && (SrcTile::ValidCol == SrcTile::Cols)) ||
                   ((DstTile::Rows == 1) && (SrcTile::Rows == 1))) {
-        TRsqrt_1D_Switch<Op, T, DstTile, SrcTile, nRepeatElem>(dst, src, validRow, validCol, version);
+        TRsqrt_1D_Switch<Op, PrecisionType, T, DstTile, SrcTile, nRepeatElem>(dst, src, validRow, validCol, version);
     } else {
-        TRsqrt_2D<Op, T, DstTile::RowStride, SrcTile::RowStride, nRepeatElem>(dst, src, validRow, validCol);
+        TRsqrt_2D<Op, PrecisionType, T, DstTile::RowStride, SrcTile::RowStride, nRepeatElem>(dst, src, validRow,
+                                                                                             validCol);
     }
 }
 
-template <typename DstTile, typename SrcTile>
+template <auto PrecisionType = RsqrtAlgorithm::DEFAULT, typename DstTile, typename SrcTile>
 PTO_INTERNAL void TRSQRT_IMPL(DstTile &dst, SrcTile &src)
 {
     static_assert(DstTile::isRowMajor && SrcTile::isRowMajor, "TRSQRT: Not supported Layout type");
@@ -161,13 +191,13 @@ PTO_INTERNAL void TRSQRT_IMPL(DstTile &dst, SrcTile &src)
     unsigned dstValidCol = dst.GetValidCol();
     PTO_ASSERT(dstValidCol == src.GetValidCol(), "TRSQRT: Number of columns of src and dst must be the same.");
     PTO_ASSERT(dstValidRow == src.GetValidRow(), "TRSQRT: Number of rows of src and dst must be the same.");
-    TRsqrt<DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
+    TRsqrt<PrecisionType, DstTile, SrcTile>(dst.data(), src.data(), dstValidRow, dstValidCol);
 }
 
-template <typename DstTile, typename SrcTile, typename TmpTile>
+template <auto PrecisionType = RsqrtAlgorithm::DEFAULT, typename DstTile, typename SrcTile, typename TmpTile>
 PTO_INTERNAL void TRSQRT_IMPL(DstTile &dst, SrcTile &src, TmpTile &tmp)
 {
-    TRSQRT_IMPL(dst, src);
+    TRSQRT_IMPL<PrecisionType>(dst, src);
 }
 } // namespace pto
 #endif
