@@ -6,18 +6,18 @@
 
 ## 简介
 
-部分逐元素加法，对不匹配的有效区域具有实现定义的处理方式。
+在目标有效区域内执行逐元素加法。若某个位置上 `src0` 和 `src1` 都有效，则结果为两者之和；若只有一个输入在该位置有效，则结果直接取该输入的值。其余有效区域不匹配的情况由具体实现定义。
 
 ## 数学语义
 
-对每个元素 `(i, j)` 在目标有效区域中：
+对目标有效区域内的每个元素 `(i, j)`：
 
 $$
 \mathrm{dst}_{i,j} =
-\b\begin{cases}
-\mathrm{src0}_{i,j} + \mathrm{src1}_{i,j} & \text{如果两个输入在 } (i,j) \text{ 处有定义} \text{ 处都有定义} \\
-\mathrm{src0}_{i,j} & \text{如果只有 src0 在 } (i,j) \text{ 处有定义} \text{ 处都有定义} \\
-\mathrm{src1}_{i,j} & \text{如果只有 src1 在 } (i,j) \text{ 处有定义}
+\begin{cases}
+\mathrm{src0}_{i,j} + \mathrm{src1}_{i,j} & \text{若两个输入在 } (i,j) \text{ 处均有定义} \\
+\mathrm{src0}_{i,j} & \text{若仅 src0 在 } (i,j) \text{ 处有定义} \\
+\mathrm{src1}_{i,j} & \text{若仅 src1 在 } (i,j) \text{ 处有定义}
 \end{cases}
 $$
 
@@ -54,15 +54,25 @@ PTO_INST RecordEvent TPARTADD(TileDataDst &dst, TileDataSrc0 &src0, TileDataSrc1
 
 ## 约束
 
-- **实现检查 (A2A3)**:
-    - `dst`/`src0`/`src1` 元素类型必须相同，且必须是以下之一：`int32_t`、`int16_t`、`half`、`float`。
-    - 三个 Tile 都必须是行主序（`isRowMajor`）。
-    - 运行时：若 `dst.GetValidRow() == 0` 或 `dst.GetValidCol() == 0`，操作提前返回。
-    - 运行时：实现要求至少一个输入的有效区域与 `dst` 的有效区域匹配，另一个输入的有效区域不大于 `dst` 的有效区域（否则断言失败）。
-- **实现检查 (A5)**:
-    - `dst`/`src0`/`src1` 元素类型必须相同，且必须是以下之一：`uint8_t`、`int8_t`、`uint16_t`、`int16_t`、`uint32_t`、`int32_t`、`half`、`float`、`bfloat16_t`。
-    - 运行时：若 `dst` 的有效区域为零，操作提前返回。
-    - 仅处理特定的部分有效性模式（例如，一个源与 `dst` 相等，另一个源在有效行或有效列上更小）；其他模式不受支持（由目标定义行为）。
+### 通用约束或检查
+
+- `dst`、`src0` 和 `src1` 的元素类型必须一致。
+- 目标有效区域定义结果的计算范围。
+- 对目标有效区域内的每个元素：
+    - 若两个输入都有效，则执行该指令对应的逐元素运算；
+    - 若只有一个输入有效，则结果直接取该输入的值。
+- 若 `dst` 的有效区域为零，指令直接返回。
+- 支持的部分有效区域模式要求至少有一个源 Tile 的有效区域与 `dst` 完全一致，另一个源 Tile 的有效区域在两个维度上都不能超过 `dst`。
+- 上述范围之外的有效区域组合，其行为均由具体实现定义。
+
+### A2A3 实现检查
+
+- 支持的元素类型：`int32_t`、`int16_t`、`half`、`float`。
+- `dst`、`src0` 和 `src1` 必须全部为行主序（`isRowMajor`）。
+
+### A5 实现检查
+
+- 支持的元素类型：`uint8_t`、`int8_t`、`uint16_t`、`int16_t`、`uint32_t`、`int32_t`、`half`、`float`、`bfloat16_t`。
 
 ## 示例
 

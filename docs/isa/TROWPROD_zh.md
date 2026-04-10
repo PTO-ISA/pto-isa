@@ -1,7 +1,6 @@
 ﻿# TROWPROD
 
-
-## Tile 操作图示
+## 指令示意图
 
 ![TROWPROD tile operation](../figures/isa/TROWPROD.svg)
 
@@ -49,28 +48,35 @@ PTO_INST RecordEvent TROWPROD(TileDataOut &dst, TileDataIn &src, TileDataTmp &tm
 
 ## 约束条件
 
-NPU 实现检查：
+### 通用约束或检查
 
-- A2A3:
-    - Tile 位置：`dst` 和 `src` 必须为 `TileType::Vec`。
-    - `src` 的 Tile 布局：ND 分形（`isRowMajor` 且 `SLayout::NoneBox`）。
-    - `dst` 的 Tile 布局：
-    - **推荐**：一维 DN 布局 Tile，例如 `Tile<TileType::Vec, T, ROWS, 1, BLayout::ColMajor, ValidRows, 1>`
-    - **将被移除**：二维 ND 布局 Tile，例如 `Tile<TileType::Vec, T, ROWS, COLS, BLayout::RowMajor, ValidRows, 1>`
-    - 数据类型：`half`、`float`。
-    - DType 一致性：`dst.DType == src.DType`。
-    - 运行时有效性检查：
-    - `srcValidCol != 0` 且 `srcValidRow != 0`。
-    - `srcValidRow == dstValidRow`（输出有效行数必须与输入有效行数匹配）。
-    - `tmp` 必须与 `src` 具有相同的形状。
+- `dst` 和 `src` 必须均为 `TileType::Vec`。
+- `src` 必须使用标准 ND 布局：行主且非分形（`BLayout::RowMajor`、`SLayout::NoneBox`）。
+- `dst` 必须使用以下两种非分形布局之一：
+    - ND 布局（`BLayout::RowMajor`、`SLayout::NoneBox`），或
+    - 列数严格为 1 的 DN 布局（`BLayout::ColMajor`、`SLayout::NoneBox`、`Cols == 1`）。
+- `dst` 和 `src` 的元素类型必须一致。
+- 运行时有效区域检查：
+    - `src.GetValidRow() != 0`
+    - `src.GetValidCol() != 0`
+    - `src.GetValidRow() == dst.GetValidRow()`
+- 内建接口签名要求显式传入 `tmp` 操作数。
+
+### A5 实现检查
+
+- 支持的元素类型：`half`、`float`、`int32_t`、`int16_t`。
+- 当前检查到的实现路径中，实际受约束的是 `src` 和 `dst`。
+- 当前实现路径中，没有额外要求 `tmp` 必须满足特定 shape/layout 约束。
 
 ## 实现说明
 
-与使用 `vcadd`/`vcgadd` 指令的 TROWSUM 不同，TROWPROD 使用 `vmul` 进行二分归约，因为 A2A3 没有 `vcmul` 指令。实现步骤：
+`TROWPROD` 在当前代码库中遵循已实现的 A5 后端路径。该实现会在校验 `src` / `dst` 约束后，直接完成按行乘积归约。
 
-1. 将相邻的重复对相乘，结果存入 `tmp`
-2. 对 `tmp` 迭代执行二分乘法归约
-3. 持续归约直到每行只剩一个元素
+C++ 内建接口中仍然保留 `tmp` 参数，以保持接口形式一致：
+
+1. `tmp` 仍然保留在内建接口签名和 AS lowering 形式中。
+2. 当前检查到的实现路径中，实际被约束的是 `src` 和 `dst`。
+3. 如果后续该指令的其他后端实现对 `tmp` 引入额外要求，文档应再按对应实现同步更新。
 
 ## 示例
 

@@ -47,17 +47,22 @@ PTO_INST RecordEvent TCOLPROD(TileDataOut &dst, TileDataIn &src, WaitEvents &...
 
 ## 约束
 
-实现检查（NPU）：
+### 通用约束或检查
 
-- Tile 位置：`dst`、`src` 必须是 `TileType::Vec`。
-- Tile 布局：两者都必须是 ND fractal（`isRowMajor` 且 `SLayout::NoneBox`）。
-- 数据类型一致性：`dst.DType == src.DType`。
-- 支持的 `src.DType`：
-    - A2A3：`half`、`float`、`int16_t`、`int32_t`。
-    - A5：`half`、`float`、`bfloat16`、`int16_t`、`int32_t`、`uint16_t`、`uint32_t`。
-- 运行期有效区域检查：
-    - `src.GetValidCol() == dst.GetValidCol()`。
-    - 当 `src.GetValidRow() == 0` 或 `src.GetValidCol() == 0` 时，指令实现会提前返回。
+- `dst` 和 `src` 必须为 `TileType::Vec`。
+- `dst` 和 `src` 必须使用标准 ND 布局：行主且非分形（`BLayout::RowMajor`、`SLayout::NoneBox`）。
+- `dst` 和 `src` 的元素类型必须一致。
+- 运行时检查：
+    - `src.GetValidCol() == dst.GetValidCol()`
+- 若 `src.GetValidRow() == 0` 或 `src.GetValidCol() == 0`，实现会直接返回。
+
+### A2A3 实现检查
+
+- 支持的元素类型：`half`、`float`、`int16_t`、`int32_t`。
+
+### A5 实现检查
+
+- 支持的元素类型：`half`、`float`、`bfloat16_t`、`int16_t`、`uint16_t`、`int32_t`、`uint32_t`。
 
 ## 示例
 
