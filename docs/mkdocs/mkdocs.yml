@@ -64,9 +64,6 @@ extra_javascript:
   - assets/javascripts/site-chrome.js
   - assets/javascripts/nav-translator.js
 
-hooks:
-  - hooks/normalize_md_links.py
-
 extra_css:
   - assets/stylesheets/custom.css
 
