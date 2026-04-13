@@ -6,6 +6,11 @@ config:
   MD041: false
 ignores:
   - "build/**"
+  - "docs/**"
+  - "docs/isa/**"
+  - "docs/reference/**"
+  - "docs/mkdocs/src/manual/**"
+  - "docs/mkdocs/src/docs/isa/**"
   - "site/**"
   - "tests/cpu/st/build*/**"
   - "tests/npu/**/build/**"
