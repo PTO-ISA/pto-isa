@@ -1,10 +1,12 @@
-# PTO AS Operations Reference
+# PTO-AS Reference
 
-This directory contains comprehensive documentation for PTO AS operations, covering ISA-level tile operations and auxiliary IR constructs used in PTO Level-1 and Level-2 intermediate representations.
+This directory documents PTO-AS, the textual assembly form used to describe PTO programs, operands, and operation spelling. PTO-AS is not the PTO ISA itself. It is one textual and toolchain-facing representation of PTO ISA.
+
+If you need architecture-visible semantics, legality, machine model, memory model, or target-profile boundaries, start from [PTO ISA](../isa/README.md). If you need textual syntax, operand spelling, AS-level forms, or assembly conventions, stay in this tree.
 
 ---
 
-## Overview
+## Scope
 
 PTO AS provides **117 tile operations**, **11 auxiliary functions**, **47 scalar arithmetic operations**, and **7 control flow operations**.
 

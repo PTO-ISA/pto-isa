@@ -28,13 +28,13 @@ PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS.md)。
 trandom %dst, %key, %counter : !pto.tile<...>
 ```
 
-### AS Level 1 (SSA)
+### AS Level 1（SSA）
 
 ```text
 %dst = pto.trandom %key, %counter : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
-### AS Level 2 (DPS)
+### AS Level 2（DPS）
 
 ```text
 pto.trandom ins(%key, %counter : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)

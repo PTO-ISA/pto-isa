@@ -22,28 +22,16 @@ Schematic form:
 tset_img2col_rpt %cfg
 ```
 
-### AS Level 1 (SSA)
+### AS Level 1（SSA）
 
 ```text
 pto.tset_img2col_rpt %cfg : !pto.fmatrix_config -> ()
 ```
 
-### AS Level 2 (DPS)
-
-```text
-pto.tset_img2col_rpt ins(%cfg : !pto.fmatrix_config) outs()
-```
-
-### AS Level 1（SSA）
-
-```text
-pto.tset_img2col_rpt %cfg
-```
-
 ### AS Level 2（DPS）
 
 ```text
-pto.tset_img2col_rpt ins(%cfg) outs()
+pto.tset_img2col_rpt ins(%cfg : !pto.fmatrix_config) outs()
 ```
 
 ## C++ 内建接口

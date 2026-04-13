@@ -405,7 +405,7 @@ ______________________________________________________________________
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-org/pto-isa.git
+git clone https://github.com/PTO-ISA/pto-isa.git
 cd pto-isa
 
 # 运行兼容性测试套件

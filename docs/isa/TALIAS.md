@@ -14,7 +14,7 @@ Semantics are instruction-specific. Unless stated otherwise, behavior is defined
 
 ## Assembly Syntax
 
-PTO-AS form: see `docs/assembly/PTO-AS.md`.
+Textual spelling is defined by the PTO ISA syntax-and-operands pages.
 
 ### IR Level 1 (SSA)
 

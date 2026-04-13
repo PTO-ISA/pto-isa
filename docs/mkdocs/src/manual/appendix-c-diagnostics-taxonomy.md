@@ -1,10 +1,10 @@
-# Appendix C. Diagnostics Taxonomy
+# Diagnostics Taxonomy
 
-## C.1 Scope
+## Scope
 
 This appendix defines the diagnostic taxonomy and stability requirements for PTO Virtual ISA toolchains.
 
-## C.2 Diagnostic quality contract
+## Diagnostic quality contract
 
 All diagnostics SHOULD satisfy:
 
@@ -13,9 +13,9 @@ All diagnostics SHOULD satisfy:
 - actionable context (expected vs actual)
 - source location when available
 
-## C.3 Primary diagnostic classes
+## Primary diagnostic classes
 
-### C.3.1 Parse diagnostics (`PARSE_*`)
+### Parse diagnostics (`PARSE_*`)
 
 Use for textual PTO-AS errors:
 
@@ -23,7 +23,7 @@ Use for textual PTO-AS errors:
 - grammar violation
 - invalid literal/attribute syntax
 
-### C.3.2 Structural diagnostics (`STRUCT_*`)
+### Structural diagnostics (`STRUCT_*`)
 
 Use for IR shape violations:
 
@@ -31,7 +31,7 @@ Use for IR shape violations:
 - missing required attributes
 - incompatible type classes
 
-### C.3.3 Legality diagnostics (`LEGAL_*`)
+### Legality diagnostics (`LEGAL_*`)
 
 Use for backend/profile legality failures:
 
@@ -39,7 +39,7 @@ Use for backend/profile legality failures:
 - unsupported mode combination
 - unsupported instruction variant in selected profile
 
-### C.3.4 Ordering diagnostics (`ORDER_*`)
+### Ordering diagnostics (`ORDER_*`)
 
 Use for synchronization/ordering failures:
 
@@ -47,7 +47,7 @@ Use for synchronization/ordering failures:
 - invalid synchronization form
 - ordering contract violation
 
-### C.3.5 Bytecode diagnostics (`BCODE_*`)
+### Bytecode diagnostics (`BCODE_*`)
 
 Use for interchange/serialization failures:
 
@@ -55,7 +55,7 @@ Use for interchange/serialization failures:
 - malformed section/record
 - unknown required field/opcode
 
-## C.4 Recommended message fields
+## Recommended message fields
 
 Diagnostics SHOULD include:
 
@@ -65,13 +65,13 @@ Diagnostics SHOULD include:
 - actual offending value/shape/type/mode
 - location or source context
 
-## C.5 Stability policy
+## Stability policy
 
 - Error class identifiers MUST be stable across patch releases.
 - Message wording SHOULD remain stable for CI snapshots.
 - If message wording changes materially, release notes SHOULD document the change.
 
-## C.6 Example format
+## Example format
 
 ```text
 LEGAL_UNSUPPORTED_TUPLE: tmatmul operand src1 has unsupported tuple

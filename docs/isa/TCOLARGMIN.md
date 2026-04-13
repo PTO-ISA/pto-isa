@@ -1,4 +1,4 @@
-# TCOLARGMIN
+# pto.tcolargmin
 
 ## Tile Operation Diagram
 
@@ -16,7 +16,7 @@ $$ \mathrm{dst}_{0,j} = \underset{0 \le i < R}{\operatorname{argmin}} \; \mathrm
 
 ## Assembly Syntax
 
-PTO-AS form: see `docs/grammar/PTO-AS.md`.
+Textual spelling is defined by the PTO ISA syntax-and-operands pages.
 
 Synchronous form:
 

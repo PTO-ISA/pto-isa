@@ -1,4 +1,4 @@
-﻿# TROWPROD
+# TROWPROD
 
 ## 指令示意图
 
@@ -26,13 +26,13 @@ PTO-AS 形式：参见 [PTO-AS 规范](../assembly/PTO-AS_zh.md)。
 
 降级可能引入内部临时 tile；C++ 内建函数需要显式的 `tmp` 操作数。
 
-### AS Level 1 (SSA)
+### AS Level 1（SSA）
 
 ```text
 %dst = pto.trowprod %src, %tmp : (!pto.tile<...>, !pto.tile<...>) -> !pto.tile<...>
 ```
 
-### AS Level 2 (DPS)
+### AS Level 2（DPS）
 
 ```text
 pto.trowprod ins(%src, %tmp : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)

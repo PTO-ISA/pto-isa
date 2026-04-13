@@ -1,107 +1,14 @@
-﻿# TFMODS
+# pto.tfmods
 
+This compatibility page points to the canonical tile-instruction reference page for [pto.tfmods](./tile/ops/tile-scalar-and-immediate/tfmods.md).
 
-## Tile Operation Diagram
+The PTO ISA manual now treats tile, vector, and scalar/control operations consistently: the canonical per-op pages live under `docs/isa/tile/ops/`, `docs/isa/vector/ops/`, and `docs/isa/scalar/ops/`.
 
-![TFMODS tile operation](../figures/isa/TFMODS.svg)
+## Canonical Location
 
-## Introduction
+- Instruction set overview: [Tile Scalar And Immediate](./tile/tile-scalar-and-immediate.md)
+- Canonical per-op page: [pto.tfmods](./tile/ops/tile-scalar-and-immediate/tfmods.md)
 
-Elementwise floor with a scalar: `fmod(src, scalar)`.
+## Compatibility Note
 
-## Math Interpretation
-
-For each element `(i, j)` in the valid region:
-
-$$\mathrm{dst}_{i,j} = \mathrm{fmod}(\mathrm{src}_{i,j}, \mathrm{scalar})$$
-
-## Assembly Syntax
-
-PTO-AS form: see [PTO-AS Specification](../assembly/PTO-AS.md).
-
-Synchronous form:
-
-```text
-%dst = tfmods %src, %scalar : !pto.tile<...>, f32
-```
-
-### AS Level 1 (SSA)
-
-```text
-%dst = pto.tfmods %src, %scalar : !pto.tile<...>, f32
-```
-
-### AS Level 2 (DPS)
-
-```text
-pto.tfmods ins(%src, %scalar : !pto.tile_buf<...>, f32) outs(%dst : !pto.tile_buf<...>)
-```
-## C++ Intrinsic
-
-Declared in `include/pto/common/pto_instr.hpp`:
-
-```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TFMODS(TileDataDst &dst, TileDataSrc &src, typename TileDataSrc::DType scalar, WaitEvents &... events);
-```
-
-## Constraints
-
-- **Implementation checks (A2A3)**:
-    - `dst` and `src` must use the same element type.
-    - Supported element types are `float` and `float32_t`.
-    - `dst` and `src` must be vector tiles.
-    - `dst` and `src` must be row-major.
-    - Runtime: `dst.GetValidRow() == src.GetValidRow() > 0` and `dst.GetValidCol() == src.GetValidCol() > 0`.
-- **Implementation checks (A5)**:
-    - `dst` and `src` must use the same element type.
-    - Supported element types are 2-byte or 4-byte types supported by the target implementation (including `half` and `float`).
-    - `dst` and `src` must be vector tiles.
-    - Static valid bounds must satisfy `ValidRow <= Rows` and `ValidCol <= Cols` for both tiles.
-    - Runtime: `dst.GetValidRow() == src.GetValidRow()` and `dst.GetValidCol() == src.GetValidCol()`.
-- **Division-by-zero**:
-    - Behavior is target-defined; the CPU simulator asserts in debug builds.
-- **Valid region**:
-    - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
-
-## Examples
-
-```cpp
-#include <pto/pto-inst.hpp>
-
-using namespace pto;
-
-void example() {
-  using TileT = Tile<TileType::Vec, float, 16, 16>;
-  TileT x, out;
-  TFMODS(out, x, 3.0f);
-}
-```
-
-## ASM Form Examples
-
-### Auto Mode
-
-```text
-# Auto mode: compiler/runtime-managed placement and scheduling.
-%dst = pto.tfmods %src, %scalar : !pto.tile<...>, f32
-```
-
-### Manual Mode
-
-```text
-# Manual mode: bind resources explicitly before issuing the instruction.
-# Optional for tile operands:
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.tfmods %src, %scalar : !pto.tile<...>, f32
-```
-
-### PTO Assembly Form
-
-```text
-%dst = tfmods %src, %scalar : !pto.tile<...>, f32
-# AS Level 2 (DPS)
-pto.tfmods ins(%src, %scalar : !pto.tile_buf<...>, f32) outs(%dst : !pto.tile_buf<...>)
-```
-
+Old links into the root-level tile pages continue to resolve through this wrapper, but new PTO ISA documentation should link to the grouped tile instruction path.

@@ -1,10 +1,10 @@
-# 5. Synchronization
+# Synchronization
 
-## 5.1 Scope
+## Scope
 
 This chapter defines architecture-visible synchronization and ordering behavior for PTO Virtual ISA programs.
 
-## 5.2 Synchronization primitives
+## Synchronization primitives
 
 PTO synchronization includes:
 
@@ -14,7 +14,7 @@ PTO synchronization includes:
 
 Programs MAY use implicit tool-managed synchronization in Auto mode, but explicit synchronization remains architecturally valid in all modes.
 
-## 5.3 TSYNC contract
+## TSYNC contract
 
 `TSYNC` establishes ordering between operation sets.
 A conforming implementation MUST ensure that:
@@ -23,7 +23,7 @@ A conforming implementation MUST ensure that:
 - synchronization semantics are preserved through optimization and lowering
 - unsupported synchronization forms are rejected with deterministic diagnostics
 
-## 5.4 Hazard classes
+## Hazard classes
 
 Synchronization requirements commonly arise from:
 
@@ -34,7 +34,7 @@ Synchronization requirements commonly arise from:
 
 A backend MAY internally optimize hazard handling, but MUST preserve architecture-observable ordering.
 
-## 5.5 Event and dependency model
+## Event and dependency model
 
 The event model MUST provide a deterministic dependency relation suitable for:
 
@@ -42,13 +42,13 @@ The event model MUST provide a deterministic dependency relation suitable for:
 - safe reuse of tile and memory resources
 - reproducible execution under equivalent program order and dependency specification
 
-## 5.6 Auto vs Manual synchronization responsibilities
+## Auto vs Manual synchronization responsibilities
 
 - In Auto mode, compiler/runtime SHOULD insert required synchronization for legal execution.
 - In Manual mode, programmers MUST provide required synchronization when dependencies are not otherwise guaranteed.
 - Toolchains MUST NOT remove required user-authored synchronization unless a provably equivalent ordering is preserved.
 
-## 5.7 Diagnostics requirements
+## Diagnostics requirements
 
 Synchronization diagnostics SHOULD include:
 

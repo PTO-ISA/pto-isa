@@ -1,11 +1,11 @@
-# Appendix B. Instruction Contract Template
+# Instruction Contract Template
 
-## B.1 Purpose
+## Purpose
 
 This template defines the canonical section structure for PTO per-instruction documentation.
 Use this template for new instruction pages and during refactors.
 
-## B.2 Required section order
+## Required section order
 
 1. `# <INSTR>`
 2. `## Scope`
@@ -18,11 +18,11 @@ Use this template for new instruction pages and during refactors.
 9. `## Compatibility`
 10. `## Examples`
 
-## B.3 Normative requirements per section
+## Normative requirements per section
 
 ### Scope
 
-- MUST identify instruction family and intent.
+- MUST identify instruction set and intent.
 - MUST state whether this page defines architecture semantics or backend-specific supplement.
 
 ### Syntax
@@ -65,7 +65,7 @@ For each operand/result, MUST define:
 - MUST state versioning/migration notes when behavior changed.
 - SHOULD include additive-vs-breaking classification.
 
-## B.4 Template body (copy/paste)
+## Template body (copy/paste)
 
 ```markdown
 # <INSTR>

@@ -1,54 +1,66 @@
-# 11. Memory Ordering and Consistency
+# Memory Ordering And Consistency
 
-## 11.1 Scope
+## Why PTO Needs A Memory Chapter
 
-This chapter defines architecture-visible memory ordering and visibility guarantees for PTO Virtual ISA operations.
+Many PTO bugs are not arithmetic bugs. They are ordering bugs that happened to pass once because a backend or simulator behaved generously. PTO therefore needs to say not only what `TLOAD` and `TSTORE` do, but also when their effects are required to become visible.
 
-## 11.2 Memory objects and domains
+This chapter defines that visible contract without pretending to standardize every cache policy or internal pipeline detail.
+
+## A Concrete Scenario
+
+Imagine one tile program stores data that a later tile program loads. If the programmer or toolchain expressed a required producer and consumer edge, the consumer must not observe stale data just because the target happened to buffer aggressively. On the other hand, if no dependency or synchronization edge exists, PTO should not invent a global-ordering guarantee out of thin air.
+
+That is the balance this chapter defines.
+
+## Memory Objects And Domains
 
 Architecture-visible memory domains include:
 
 - tile-local values
 - global memory views accessed by memory operations
-- synchronization state affecting visibility boundaries
+- synchronization state that affects visibility boundaries
 
-Backend-private caches/buffers are implementation-defined, but MUST respect architecture-visible ordering outcomes.
+Backend-private caches and buffers are implementation-defined, but they MUST respect architecture-visible ordering outcomes.
 
-## 11.3 Consistency baseline
+## Consistency Baseline
 
-The baseline model is dependency-ordered consistency:
+PTO uses dependency-ordered consistency as the baseline model:
 
 - data dependencies and explicit synchronization define required visibility order
 - independent operations MAY be reordered internally
 - required synchronization points MUST establish visibility as specified
 
-## 11.4 Ordering guarantees
+This is a deliberate middle ground. PTO does not promise full global ordering everywhere, but it also does not let targets erase programmer-visible dependency structure.
+
+## Ordering Guarantees
 
 A conforming implementation MUST ensure:
 
-- producer writes become visible to dependent consumers after required synchronization/ordering points
-- memory operations participating in explicit dependency chains preserve those chains
+- producer writes become visible to dependent consumers after the required synchronization or ordering points
+- memory operations in explicit dependency chains preserve those chains
 - semantics defined by `TSYNC` and event dependencies are reflected in memory visibility
 
-## 11.5 Unspecified and implementation-defined behavior
+## Unspecified Versus Implementation-Defined
 
-The following are architecture-restricted:
+PTO needs both terms here, and they mean different things.
 
 - accesses or interpretations outside defined domains may be unspecified
-- timing and cache policy details are implementation-defined
+- timing, cache policy, and similar internal details are implementation-defined
 - backend-specific memory optimizations are allowed only when they preserve required visible behavior
 
-## 11.6 Programming requirements
+The practical rule is simple: unspecified behavior is not portable data; implementation-defined behavior must be documented if users are expected to rely on it.
+
+## Programming Requirements
 
 Programs SHOULD:
 
-- use explicit synchronization at producer/consumer boundaries
+- use explicit synchronization at producer and consumer boundaries
 - avoid assuming implicit global ordering without a defined dependency
 - avoid relying on unspecified out-of-domain values
 
-Manual mode programmers MUST ensure required ordering when tool-managed synchronization is not used.
+Manual-mode programmers MUST ensure required ordering when tool-managed synchronization is not used.
 
-## 11.7 Diagnostics and conformance tests
+## Diagnostics And Conformance
 
 Backends SHOULD provide diagnostics for:
 
@@ -56,4 +68,4 @@ Backends SHOULD provide diagnostics for:
 - unsupported memory-ordering forms
 - profile-specific restrictions
 
-Conformance tests SHOULD include ordered visibility scenarios across representative dependency patterns.
+Conformance tests SHOULD include ordered-visibility scenarios across representative dependency patterns.

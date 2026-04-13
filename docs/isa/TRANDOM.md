@@ -20,7 +20,7 @@ The algorithm uses:
 
 ## Assembly Syntax
 
-PTO-AS form: see [PTO-AS Specification](../assembly/PTO-AS.md).
+Textual spelling is defined by the PTO ISA syntax-and-operands pages.
 
 Synchronous form:
 

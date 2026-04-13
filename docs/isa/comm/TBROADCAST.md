@@ -18,7 +18,7 @@ where $N$ is the number of ranks and `root` is the calling NPU.
 
 ## Assembly Syntax
 
-PTO-AS form: see [PTO-AS Specification](../../assembly/PTO-AS.md).
+Textual spelling is defined by the PTO ISA syntax-and-operands pages.
 
 Synchronous form:
 

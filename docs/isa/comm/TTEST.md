@@ -22,7 +22,7 @@ where `cmp` ∈ {`EQ`, `NE`, `GT`, `GE`, `LT`, `LE`}
 
 ## Assembly Syntax
 
-PTO-AS form: see [PTO-AS Specification](../../assembly/PTO-AS.md).
+Textual spelling is defined by the PTO ISA syntax-and-operands pages.
 
 ```text
 %result = ttest %signal, %cmp_value {cmp = #pto.cmp<EQ>} : (!pto.memref<i32>, i32) -> i1
@@ -71,7 +71,7 @@ using namespace pto;
 
 bool check_ready(__gm__ int32_t* local_signal) {
     comm::Signal sig(local_signal);
-    
+
     // Check if signal == 1
     return comm::TTEST(sig, 1, comm::WaitCmp::EQ);
 }
@@ -87,7 +87,7 @@ using namespace pto;
 // Test if all signals from a 4x8 dense grid of workers are ready
 bool check_worker_grid(__gm__ int32_t* signal_matrix) {
     comm::Signal2D<4, 8> grid(signal_matrix);
-    
+
     // Returns true only if all 32 signals == 1
     return comm::TTEST(grid, 1, comm::WaitCmp::EQ);
 }
@@ -102,7 +102,7 @@ using namespace pto;
 
 bool poll_with_timeout(__gm__ int32_t* local_signal, int max_iterations) {
     comm::Signal sig(local_signal);
-    
+
     for (int i = 0; i < max_iterations; ++i) {
         if (comm::TTEST(sig, 1, comm::WaitCmp::EQ)) {
             return true;  // Signal received
@@ -122,7 +122,7 @@ using namespace pto;
 
 void process_with_progress(__gm__ int32_t* local_counter, int expected_count) {
     comm::Signal counter(local_counter);
-    
+
     while (!comm::TTEST(counter, expected_count, comm::WaitCmp::GE)) {
         // Do some useful work while waiting
         // ...

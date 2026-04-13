@@ -1,85 +1,14 @@
-﻿# TIMG2COL
+# pto.timg2col
 
+This compatibility page points to the canonical tile-instruction reference page for [pto.timg2col](./tile/ops/layout-and-rearrangement/timg2col.md).
 
-## Tile Operation Diagram
+The PTO ISA manual now treats tile, vector, and scalar/control operations consistently: the canonical per-op pages live under `docs/isa/tile/ops/`, `docs/isa/vector/ops/`, and `docs/isa/scalar/ops/`.
 
-![TIMG2COL tile operation](../figures/isa/TIMG2COL.svg)
+## Canonical Location
 
-## Introduction
+- Instruction set overview: [Layout And Rearrangement](./tile/layout-and-rearrangement.md)
+- Canonical per-op page: [pto.timg2col](./tile/ops/layout-and-rearrangement/timg2col.md)
 
-Transform an input feature-map tile (e.g. NC1HWC0 layout) into an im2col-style matrix tile for convolution-like workloads. Parameters are provided via `Img2colTileConfig` and `(posM, posK)` offsets.
+## Compatibility Note
 
-## C++ Intrinsic
-
-Declared in `include/pto/common/pto_instr.hpp`:
-
-```cpp
-PTO_INST RecordEvent TIMG2COL(TileData &dst, ConvTileData &src, uint16_t posM = 0, uint16_t posK = 0,
-                              WaitEvents&... events);
-```
-
-## Constraints
-
-- This instruction is target/implementation-specific. See `include/pto/npu/*/TImg2col.hpp` for the supported tile types/layouts and config fields.
-
-## Math Interpretation
-
-Unless otherwise specified, semantics are defined over the valid region and target-dependent behavior is marked as implementation-defined.
-
-## Assembly Syntax
-
-PTO-AS form: see [PTO-AS Specification](../assembly/PTO-AS.md).
-
-### AS Level 1 (SSA)
-
-```text
-%dst = pto.timg2col %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### AS Level 2 (DPS)
-
-```text
-pto.timg2col ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-
-### IR Level 1 (SSA)
-
-```text
-%dst = pto.timg2col %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### IR Level 2 (DPS)
-
-```text
-pto.timg2col ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-## Examples
-
-See related examples in `docs/isa/` and `docs/coding/tutorials/`.
-
-## ASM Form Examples
-
-### Auto Mode
-
-```text
-# Auto mode: compiler/runtime-managed placement and scheduling.
-%dst = pto.timg2col %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### Manual Mode
-
-```text
-# Manual mode: bind resources explicitly before issuing the instruction.
-# Optional for tile operands:
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.timg2col %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### PTO Assembly Form
-
-```text
-%dst = pto.timg2col %src : !pto.tile<...> -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.timg2col ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
+Old links into the root-level tile pages continue to resolve through this wrapper, but new PTO ISA documentation should link to the grouped tile instruction path.

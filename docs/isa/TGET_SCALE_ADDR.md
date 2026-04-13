@@ -1,83 +1,14 @@
-# TGET_SCALE_ADDR
+# pto.tget_scale_addr
 
-## Tile Operation Diagram
+This compatibility page points to the canonical tile-instruction reference page for [pto.tget_scale_addr](./tile/ops/sync-and-config/tget-scale-addr.md).
 
-![TGET_SCALE_ADDR tile operation](../figures/isa/TGET_SCALE_ADDR.svg)
+The PTO ISA manual now treats tile, vector, and scalar/control operations consistently: the canonical per-op pages live under `docs/isa/tile/ops/`, `docs/isa/vector/ops/`, and `docs/isa/scalar/ops/`.
 
-## Introduction
+## Canonical Location
 
-Bind the on-chip address of output tile as a scaled address of the input tile.
+- Instruction set overview: [Sync And Config](./tile/sync-and-config.md)
+- Canonical per-op page: [pto.tget_scale_addr](./tile/ops/sync-and-config/tget-scale-addr.md)
 
-The scaling factor is defined by a right-shift amount `SHIFT_MX_ADDR` in `include/pto/npu/a5/utils.hpp`.
+## Compatibility Note
 
-## Math Interpretation
-
-Address(`dst`) = Address(`src`) >> `SHIFT_MX_ADDR`
-
-## Assembly Syntax
-
-PTO-AS form: see [PTO-AS Specification](../assembly/PTO-AS.md).
-
-### IR Level 1 (SSA)
-
-TODO
-
-### IR Level 2 (DPS)
-
-TODO
-
-## C++ Intrinsic
-
-Declared in `include/pto/common/pto_instr.hpp`:
-
-```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TGET_SCALE_ADDR(TileDataDst &dst, TileDataSrc &src, aitEvents&... events);
-```
-
-## Constraints
-
-Enforced by `TGET_SCALE_ADDR_IMPL`:
-
-- **Both `src` and `dst` must be Tile instances**
-- **Currently only work in auto mode** (will support manual mode in the future)
-
-## Examples
-
-```cpp
-#include <pto/pto-inst.hpp>
-
-> wa
-using namespace pto;
-
-template <typename T, int ARows, int ACols, BRows, BCols> 
-void example() {
-    using LeftTile = TileLeft<T, ARows, ACols>;
-    using RightTile = TileRight<T, BRows, BCols>;
-
-    using LeftScaleTile = TileLeftScale<T, ARows, ACols>;
-    using RightScaleTile = TileRightScale<T, BRows, BCols>;
-
-    LeftTile aTile;
-    RightTile bTile;
-    LeftScaleTile aScaleTile;
-    RightScaleTile bScaleTile;
-
-    TGET_SCALE_ADDR(aScaleTile, aTile);
-    TGET_SCALE_ADDR(bScaleTile, bTile);
-}
-```
-
-## asm form examples
-
-### Auto Mode
-
-TODO
-
-### Manual Mode
-
-TODO
-
-### PTO Assembly Form
-
-TODO
+Old links into the root-level tile pages continue to resolve through this wrapper, but new PTO ISA documentation should link to the grouped tile instruction path.

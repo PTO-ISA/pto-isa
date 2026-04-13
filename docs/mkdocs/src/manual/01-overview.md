@@ -1,67 +1,98 @@
-# 1. Overview
+# Overview
 
-## 1.1 Design goals
+## What This Chapter Answers
 
-The PTO Virtual ISA is designed to provide:
+This chapter answers a simple question: why does PTO need its own architectural manual instead of looking like a thin wrapper around a generic GPU-style ISA?
 
-- a stable architecture contract across evolving hardware generations
-- tile-centric semantics with explicit valid-region behavior
-- explicit boundaries between architecture-defined and implementation-defined behavior
-- a practical bridge from intrinsics and PTO-AS to IR and backend codegen
+The short answer is that PTO is not trying to expose "threads plus opaque local memory." It is trying to expose the objects that PTO programmers and PTO toolchains already reason about: tiles, valid regions, location intent, explicit synchronization, and a split between auto-managed and manually scheduled code. Those choices are visible enough that hiding them behind a generic execution model makes programs harder to write and harder to verify.
 
-## 1.2 PTO architectural identity
+## Why PTO Exists
 
-PTO distinguishes itself from generic GPU ISAs by making the following architecture concepts first-class:
+PTO sits in an awkward but useful place. Hardware generations change quickly, on-chip storage details move around, and backends keep learning new tricks. At the same time, kernel authors need a stable vocabulary for describing data movement and compute, and compiler or simulator engineers need contracts they can test. PTO exists to hold that middle layer steady.
 
-- **Tile as primary compute unit**: instruction semantics are defined over tile domains.
-- **Valid-region-first semantics**: `Rv/Cv` define architectural compute coverage.
-- **Location-intent model**: tile classes such as `Mat/Left/Right/Acc/Bias/Scale` participate in legality rules.
-- **Dual programming model**: Auto and Manual modes are both architectural citizens.
-- **Event-centric synchronization**: ordering is explicit through events and `TSYNC`.
+That is why PTO is tile-first. Most PTO kernels are already written in terms of tile-sized chunks, not individual scalar threads. A generic SIMD or SIMT abstraction can describe the same hardware eventually, but it pushes the interesting questions down into backend folklore: which data shape is legal, which region is meaningful, when can two tiles alias, where does synchronization actually matter. PTO makes those questions first-class because users already have to answer them.
 
-## 1.3 Architecture boundary
+## A Running Example
 
-The architecture defines:
+The smallest useful PTO story is still a tile program:
 
-- observable instruction results in valid regions
-- required ordering and synchronization semantics
-- legality boundaries exposed to users and toolchains
+```cpp
+TileT a(rows, cols), b(rows, cols), c(rows, cols);
+GT ga(src0), gb(src1), gc(dst);
 
-The architecture does **not** define:
+TLOAD(a, ga);
+TLOAD(b, gb);
+TADD(c, a, b);
+TSTORE(gc, c);
+```
+
+This is deliberately boring, and that is the point. Even this tiny example already depends on the PTO programmer's model:
+
+- the fundamental unit of compute is a tile, not a scalar lane
+- the result is only defined on the tile's valid region
+- the legality of the operation depends on dtype, shape, layout, and tile role
+- ordering is explicit when the dataflow alone is not enough
+
+The rest of the manual keeps unpacking those ideas.
+
+## What Makes PTO Different
+
+### Tile-First Semantics
+
+PTO defines most instruction semantics over tile domains. This is not just a convenience wrapper over vector instructions. It means the architecture cares about tile shape, valid rows and columns, and location intent as part of legality, not merely as backend lowering detail.
+
+The practical consequence is that legality questions show up early. A backend is not free to silently reinterpret an illegal tile combination into "something close enough." It must either accept a documented tuple or reject it with a deterministic diagnostic.
+
+### Valid-Region-First Behavior
+
+PTO does not pretend that every element in a rectangular tile is always meaningful. `Rv` and `Cv` are part of the architectural story because edge tiles, partial tiles, and padded tiles are normal in real kernels.
+
+This is one of the places where PTO is easier to reason about than a generic low-level ISA. Instead of leaving edge behavior to custom conventions in every backend, PTO makes it explicit which region contributes to semantics and which region is unspecified unless an instruction page says otherwise.
+
+### Location Intent, Not Just Raw Storage
+
+Tile roles such as `Mat`, `Left`, `Right`, `Acc`, `Bias`, and `Scale` are not cosmetic. They tell the toolchain and the backend what kind of use a tile is meant for, and they participate in legality checks.
+
+Why not treat every tile as an untyped byte container and let the backend infer intent? Because that would move real architectural errors into late backend heuristics. PTO chooses the opposite tradeoff: make intent visible early, catch mismatches early, and let profile documents explain the supported subsets.
+
+### Auto and Manual Are Both Real PTO
+
+PTO has two programming styles for a reason. Auto mode exists because most users want portability and a reasonable default schedule. Manual mode exists because some kernels only make sense when the author controls placement, synchronization, and pipeline reuse precisely.
+
+The architecture therefore treats both as first-class citizens. Auto mode is not "high-level PTO" and Manual mode is not "escape hatch assembly." They are two responsibility splits over the same visible semantics.
+
+### Synchronization Is Architectural
+
+PTO uses events and `TSYNC` because the pipeline and data-movement boundaries matter. The architecture does not expose every microarchitectural detail, but it does require that ordering edges which are visible to a programmer stay visible through lowering and execution.
+
+## Architecture Boundary
+
+PTO defines:
+
+- observable instruction results inside the valid region
+- legality boundaries that users and toolchains can check
+- ordering and synchronization semantics that survive lowering
+
+PTO does not define:
 
 - microarchitectural scheduling details
-- exact on-chip layout implementation
-- backend-specific optimization choices
+- exact on-chip storage layout
+- backend-specific optimization strategies
 
-Backend-specific details MUST be documented as implementation-defined constraints.
+Backend-specific behavior is allowed, but it must be documented as implementation-defined rather than smuggled in as "implied architecture."
 
-## 1.4 Source of truth
+## Source Of Truth
 
-Authoritative PTO sources:
+The manual does not replace the rest of the repository. It composes the other sources into a system-level contract:
 
-- per-op semantics: [PTO ISA Reference](/docs/isa/README.md)
-- public API signatures: `include/pto/common/pto_instr.hpp`
-- assembly grammar: [PTO-AS Specification](/docs/assembly/PTO-AS.md) and `docs/assembly/PTO-AS.bnf`
+- [PTO ISA Reference](../docs/isa/README.md) for per-instruction semantics
+- `include/pto/common/pto_instr.hpp` for public API signatures and overload instruction set
+- [PTO-AS Specification](../docs/assembly/PTO-AS.md) and `docs/assembly/PTO-AS.bnf` for textual assembly forms
 
-This chaptered manual composes those sources into a complete Virtual ISA contract.
+## Compatibility Principles
 
-## 1.5 Instruction-family taxonomy
+PTO should evolve by adding capability and tightening documentation, not by silently changing old meaning. The practical rules are simple:
 
-PTO instruction families are organized as:
-
-- synchronization and resource binding
-- elementwise and scalar/tile operations
-- reduce/expand operations
-- memory movement (`GM <-> Tile`) and indexed memory operations
-- matrix and vector matrix operations
-- layout/data-movement transforms
-- irregular and complex operations
-
-[Family-level contracts](07-instructions.md) are defined in `manual/07-instructions.md`.
-[Per-op semantics](/docs/isa/README.md) remain in `docs/isa/*.md`.
-
-## 1.6 Compatibility principles
-
-- Additive evolution SHOULD be preferred over breaking changes.
-- Breaking architectural behavior changes MUST include explicit versioning and migration notes.
-- Implementation-defined behavior MUST remain explicitly tagged in all layers (manual, IR, backend docs).
+- additive evolution SHOULD be preferred over breaking changes
+- breaking architectural changes MUST carry explicit versioning and migration notes
+- implementation-defined behavior MUST stay tagged consistently across the manual, IR contracts, and backend profile documents

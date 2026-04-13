@@ -1,4 +1,4 @@
-﻿# TROWPROD
+# pto.trowprod
 
 ## Tile Operation Diagram
 
@@ -16,7 +16,7 @@ $$ \mathrm{dst}_{i,0} = \prod_{j=0}^{C-1} \mathrm{src}_{i,j} $$
 
 ## Assembly Syntax
 
-PTO-AS form: see [PTO-AS Specification](../assembly/PTO-AS.md).
+Textual spelling is defined by the PTO ISA syntax-and-operands pages.
 
 Synchronous form:
 

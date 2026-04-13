@@ -14,8 +14,8 @@ Data flow:
     - `DmaEngine::SDMA` (default)
     - `DmaEngine::URMA` (todo)
 
-> **Important (SDMA path)**  
-> `TGET_ASYNC` with `DmaEngine::SDMA` currently supports **only flat contiguous logical 1D tensors**.  
+> **Important (SDMA path)**
+> `TGET_ASYNC` with `DmaEngine::SDMA` currently supports **only flat contiguous logical 1D tensors**.
 > Non-1D or non-contiguous layouts are not supported by the current SDMA async implementation.
 
 ## C++ Intrinsic
@@ -69,7 +69,7 @@ If the 1D contiguous requirement is not met, current implementation returns an i
 
 ## scratchTile Role
 
-`scratchTile` is **not** used to hold transferred payload data.  
+`scratchTile` is **not** used to hold transferred payload data.
 It is converted to `TmpBuffer` and used as temporary UB workspace for:
 
 - writing/reading SDMA control words (flag, sq_tail, channel_info)

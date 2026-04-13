@@ -11,9 +11,11 @@
 /**
  * Navigation collapse control.
  *
- * The ReadTheDocs theme already renders expandable first-level sections. We
- * keep that behavior, but remove the previous jQuery + timeout dependency and
- * manage the expanded state directly from the DOM.
+ * The ReadTheDocs theme inserts expand buttons and binds its own handlers after
+ * theme.js loads. Patch those hooks before the theme enables itself so we can:
+ * - keep left-nav scrolling independent from page scrolling
+ * - make expand/collapse work consistently for nested sections
+ * - keep current-page branches open without forcing the whole tree open
  */
 (function () {
     'use strict';
@@ -24,12 +26,28 @@
         }) || null;
     }
 
+    function getItemButton(item) {
+        return item.querySelector(':scope > a > button.toctree-expand');
+    }
+
+    function getChildMenu(item) {
+        return directChild(item, 'ul');
+    }
+
+    function getSectionAnchor(item) {
+        return directChild(item, 'a.reference.internal');
+    }
+
+    function hasChildMenu(item) {
+        return !!getChildMenu(item);
+    }
+
     function hydrateSectionLinks() {
         document.querySelectorAll('.wy-menu-vertical li').forEach(function (item) {
-            var anchor = directChild(item, 'a.reference.internal:not([href])');
-            var subMenu = directChild(item, 'ul');
+            var anchor = getSectionAnchor(item);
+            var subMenu = getChildMenu(item);
 
-            if (!anchor || !subMenu) {
+            if (!anchor || !subMenu || anchor.getAttribute('href')) {
                 return;
             }
 
@@ -48,65 +66,137 @@
     }
 
     function setExpanded(item, expanded) {
-        var subMenu = directChild(item, 'ul');
+        var subMenu = getChildMenu(item);
+        var button = getItemButton(item);
         if (!subMenu) {
             return;
         }
 
-        var button = item.querySelector(':scope > a > button.toctree-expand');
-        var initialCurrent = item.getAttribute('data-initial-current') === 'true';
-
+        subMenu.hidden = !expanded;
         subMenu.style.display = expanded ? 'block' : 'none';
+        item.setAttribute('data-nav-expanded', expanded ? 'true' : 'false');
         item.setAttribute('aria-expanded', expanded ? 'true' : 'false');
 
         if (button) {
+            button.setAttribute('type', 'button');
             button.setAttribute('data-expanded', expanded ? 'true' : 'false');
             button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        }
-
-        if (!initialCurrent) {
-            item.classList.toggle('current', expanded);
+            button.setAttribute('aria-label', expanded ? 'Collapse section' : 'Expand section');
         }
     }
 
-    function initializeTree() {
-        document.querySelectorAll('.wy-menu-vertical li.toctree-l1').forEach(function (item) {
-            var subMenu = directChild(item, 'ul');
-            if (!subMenu) {
+    function collapseDescendants(item) {
+        item.querySelectorAll('li').forEach(function (child) {
+            if (hasChildMenu(child)) {
+                setExpanded(child, false);
+            }
+        });
+    }
+
+    function scrollCurrentIntoMenu() {
+        var menu = document.querySelector('.wy-menu.wy-menu-vertical');
+        var currentLink = document.querySelector('.wy-menu-vertical li.current > a.reference.internal[href]');
+        if (!menu || !currentLink) {
+            return;
+        }
+
+        var menuRect = menu.getBoundingClientRect();
+        var linkRect = currentLink.getBoundingClientRect();
+        var topPadding = 16;
+        var bottomPadding = 24;
+
+        if (linkRect.top < menuRect.top + topPadding) {
+            menu.scrollTop -= (menuRect.top + topPadding) - linkRect.top;
+            return;
+        }
+
+        if (linkRect.bottom > menuRect.bottom - bottomPadding) {
+            menu.scrollTop += linkRect.bottom - (menuRect.bottom - bottomPadding);
+        }
+    }
+
+    function syncExpandedState() {
+        document.querySelectorAll('.wy-menu-vertical li').forEach(function (item) {
+            if (!hasChildMenu(item)) {
                 return;
             }
 
-            var isCurrent = item.classList.contains('current') || item.classList.contains('on');
-            item.setAttribute('data-initial-current', isCurrent ? 'true' : 'false');
-            setExpanded(item, isCurrent);
+            var expanded = item.classList.contains('current') || item.classList.contains('on');
+            setExpanded(item, expanded);
         });
+
+        scrollCurrentIntoMenu();
     }
 
     function bindButtons() {
-        document.querySelectorAll('.wy-menu-vertical li.toctree-l1 > a > button.toctree-expand').forEach(function (button) {
+        document.querySelectorAll('.wy-menu-vertical button.toctree-expand').forEach(function (button) {
+            if (button.hasAttribute('data-pto-bound')) {
+                return;
+            }
+
+            button.setAttribute('data-pto-bound', 'true');
             button.addEventListener('click', function (event) {
-                var item = button.closest('li.toctree-l1');
-                if (!item) {
+                var item = button.closest('li');
+                var expanded;
+                if (!item || !hasChildMenu(item)) {
                     return;
                 }
 
-                var expanded = button.getAttribute('data-expanded') === 'true';
+                expanded = item.getAttribute('data-nav-expanded') === 'true';
+                if (expanded) {
+                    collapseDescendants(item);
+                }
                 setExpanded(item, !expanded);
+
                 event.preventDefault();
                 event.stopPropagation();
-            });
+                event.stopImmediatePropagation();
+            }, true);
         });
     }
 
-    function init() {
+    function bootstrapTree() {
         hydrateSectionLinks();
-        initializeTree();
         bindButtons();
+        syncExpandedState();
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    function patchThemeNav() {
+        var themeNav = window.SphinxRtdTheme && window.SphinxRtdTheme.Navigation;
+        var originalInit;
+        var originalReset;
+
+        if (!themeNav || themeNav.__ptoNavPatched) {
+            return;
+        }
+
+        themeNav.__ptoNavPatched = true;
+        originalInit = themeNav.init;
+        originalReset = themeNav.reset;
+
+        themeNav.onScroll = function () {
+            this.winScroll = false;
+        };
+
+        themeNav.init = function (jquery) {
+            originalInit.call(this, jquery);
+            bootstrapTree();
+        };
+
+        themeNav.reset = function () {
+            var scrollX = window.scrollX;
+            var scrollY = window.scrollY;
+
+            originalReset.call(this);
+            window.scrollTo(scrollX, scrollY);
+            syncExpandedState();
+        };
+    }
+
+    patchThemeNav();
+    window.addEventListener('load', bootstrapTree, { once: true });
+
+    if (document.readyState !== 'loading') {
+        bootstrapTree();
     }
 })();

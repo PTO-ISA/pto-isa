@@ -84,6 +84,9 @@ article .toctree-expand,
     --pto-ink-100: #fff5f4;
     --pto-ink-200: #ffd6d3;
     --pto-ink-300: #f6b1ab;
+    --pto-code-bg: #fbf7f7;
+    --pto-code-border: rgba(78, 9, 12, 0.12);
+    --pto-code-shadow: rgba(78, 9, 12, 0.06);
 }
 
 .wy-nav-side {
@@ -189,6 +192,10 @@ article .toctree-expand,
     background: rgba(255, 255, 255, 0.07);
 }
 
+.wy-menu.wy-menu-vertical {
+    overscroll-behavior: contain;
+}
+
 /* MkDocs/ReadTheDocs renders section labels as <a> tags without href.
  * Make those look like labels rather than broken links.
  */
@@ -204,11 +211,108 @@ article .toctree-expand,
  * default ReadTheDocs max-width cap.
  */
 @media screen and (min-width: 769px) {
+    .wy-nav-side {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wy-side-scroll {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .wy-side-nav-search {
+        flex: 0 0 auto;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+
+    .wy-menu.wy-menu-vertical {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding-bottom: 24px;
+    }
+
     .wy-nav-content {
         max-width: none;
         width: 100%;
         margin: 0;
     }
+}
+
+.rst-content code,
+.rst-content tt,
+.rst-content pre,
+.rst-content kbd,
+.rst-content samp {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-variant-ligatures: none;
+}
+
+.rst-content code,
+.rst-content tt {
+    background: rgba(78, 9, 12, 0.06);
+    border-radius: 0.35rem;
+    color: #7b1217;
+    padding: 0.12rem 0.35rem;
+}
+
+.rst-content pre,
+.rst-content .highlight {
+    background: var(--pto-code-bg);
+    border: 1px solid var(--pto-code-border);
+    border-radius: 14px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 10px 24px var(--pto-code-shadow);
+    margin: 18px 0;
+    overflow-x: auto;
+}
+
+.rst-content pre {
+    padding: 16px 18px;
+}
+
+.rst-content .highlight pre {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 16px 18px;
+}
+
+.rst-content pre code,
+.rst-content .highlight code,
+.rst-content .hljs {
+    background: transparent !important;
+    color: #1f2328;
+    display: block;
+    font-size: 14px;
+    line-height: 1.65;
+    padding: 0 !important;
+    tab-size: 4;
+    text-align: left;
+    white-space: pre;
+    word-break: normal;
+    word-spacing: 0;
+}
+
+.rst-content p code,
+.rst-content li code,
+.rst-content td code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.rst-content img,
+.rst-content svg,
+.rst-content table {
+    max-width: 100%;
 }
 
 .language-switcher {
@@ -430,6 +534,10 @@ article .toctree-expand,
 }
 
 @media screen and (max-width: 768px) {
+    .wy-body-for-nav {
+        overflow-x: hidden;
+    }
+
     .wy-nav-top {
         align-items: center;
         background:
@@ -438,13 +546,18 @@ article .toctree-expand,
         display: flex;
         gap: 12px;
         line-height: 1;
+        min-height: 62px;
         padding: 12px 14px;
+        position: sticky;
+        top: 0;
+        z-index: 1200;
     }
 
     .wy-nav-top i {
         float: none;
         font-size: 22px;
         padding-top: 0;
+        width: 22px;
     }
 
     .wy-nav-top a {
@@ -455,12 +568,32 @@ article .toctree-expand,
         white-space: nowrap;
     }
 
+    .wy-nav-side {
+        width: min(88vw, 360px);
+    }
+
+    .wy-side-scroll {
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    }
+
+    .wy-menu.wy-menu-vertical a {
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+
     .wy-nav-content {
-        padding: 1.1rem 1rem;
+        padding: 1rem 0.9rem 1.25rem;
+    }
+
+    .wy-nav-content-wrap {
+        background: #fff;
+        margin-left: 0;
     }
 
     .wy-breadcrumbs {
         overflow-wrap: anywhere;
+        font-size: 13px;
+        margin-bottom: 10px;
     }
 
     .language-switcher {
@@ -469,8 +602,9 @@ article .toctree-expand,
     }
 
     .language-switcher--in-header {
+        flex: 0 0 auto;
         margin-left: auto;
-        position: static;
+        position: relative;
     }
 
     .language-switcher--in-header .language-switcher__button {
@@ -478,7 +612,8 @@ article .toctree-expand,
         border-color: rgba(255, 255, 255, 0.24);
         box-shadow: none;
         color: #ffffff;
-        padding: 8px 9px;
+        min-height: 38px;
+        padding: 8px 10px;
     }
 
     .language-switcher--in-header .language-switcher__menu {
@@ -486,6 +621,7 @@ article .toctree-expand,
         margin-top: 10px;
         position: absolute;
         right: 0;
+        top: 100%;
     }
 
     .landing-hero {
@@ -500,6 +636,14 @@ article .toctree-expand,
         font-size: 16px;
     }
 
+    .landing-action-card {
+        min-height: 0;
+    }
+
+    .landing-panel {
+        padding: 18px 16px 16px;
+    }
+
     .landing-actions,
     .landing-grid {
         grid-template-columns: 1fr;
@@ -508,10 +652,69 @@ article .toctree-expand,
     .manual-utility-bar {
         align-items: stretch;
         flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .manual-utility-links {
+        display: grid;
+        grid-template-columns: 1fr;
     }
 
     .manual-search-form {
+        flex-direction: column;
         min-width: 0;
         width: 100%;
+    }
+
+    .manual-search-form button,
+    .manual-utility-link {
+        justify-content: center;
+    }
+
+    .rst-content pre,
+    .rst-content .highlight,
+    .rst-content .highlight pre {
+        margin-left: -2px;
+        margin-right: -2px;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .rst-content pre code,
+    .rst-content .highlight code,
+    .rst-content .hljs {
+        font-size: 12.5px;
+        line-height: 1.55;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .wy-nav-top {
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .wy-nav-top a {
+        font-size: 16px;
+    }
+
+    .landing-hero > h2 {
+        font-size: 26px;
+    }
+
+    .landing-kicker,
+    .landing-action-eyebrow {
+        letter-spacing: 0.06em;
+    }
+
+    .landing-action-card strong {
+        font-size: 20px;
+    }
+
+    .manual-utility-link,
+    .manual-search-form input,
+    .manual-search-form button {
+        font-size: 14px;
     }
 }

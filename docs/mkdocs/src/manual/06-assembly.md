@@ -1,6 +1,6 @@
-# 6. PTO assembly (PTO-AS)
+# PTO assembly (PTO-AS)
 
-## 6.1 Scope
+## Scope
 
 This chapter defines the Virtual ISA contract of PTO-AS as the textual form of PTO programs.
 The normative grammar remains:
@@ -8,7 +8,7 @@ The normative grammar remains:
 - `docs/assembly/PTO-AS.md`
 - `docs/assembly/PTO-AS.bnf`
 
-## 6.2 Core form
+## Core form
 
 PTO-AS uses an instruction-centric SSA-like textual form.
 A typical statement shape is:
@@ -19,7 +19,7 @@ A typical statement shape is:
 
 The textual form SHOULD remain deterministic under round-trip tooling.
 
-## 6.3 Operand classes
+## Operand classes
 
 PTO-AS operands include:
 
@@ -29,9 +29,9 @@ PTO-AS operands include:
 - event/dependency operands (where applicable)
 - attributes/modifiers expressed by dictionary form
 
-Each instruction family MUST define required operand classes and positional constraints.
+Each instruction set MUST define required operand classes and positional constraints.
 
-## 6.4 Attribute and modifier contract
+## Attribute and modifier contract
 
 Attributes MUST define:
 
@@ -41,7 +41,7 @@ Attributes MUST define:
 - semantic impact
 - diagnostics behavior for invalid values
 
-## 6.5 Structural validity rules
+## Structural validity rules
 
 A structurally valid PTO-AS program MUST satisfy:
 
@@ -50,7 +50,7 @@ A structurally valid PTO-AS program MUST satisfy:
 - required attribute presence
 - parseable and schema-valid statement forms
 
-## 6.6 Diagnostics contract
+## Diagnostics contract
 
 PTO-AS diagnostics MUST be:
 
@@ -58,7 +58,7 @@ PTO-AS diagnostics MUST be:
 - deterministic for equivalent inputs
 - actionable with expected-vs-actual constraints
 
-## 6.7 Compatibility and evolution
+## Compatibility and evolution
 
 PTO-AS evolution SHOULD be additive.
 Breaking textual-syntax changes MUST be versioned and accompanied by migration guidance.

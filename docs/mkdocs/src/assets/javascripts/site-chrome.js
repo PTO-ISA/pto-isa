@@ -12,6 +12,7 @@
  * PTO site chrome helpers:
  * - mount the language switcher inside the mobile header so it is always visible
  * - add a compact manual utility bar on deep pages with home/reference/search
+ * - re-run syntax highlighting after the DOM exists
  */
 (function () {
     'use strict';
@@ -125,10 +126,36 @@
         breadcrumbs.insertAdjacentElement('afterend', bar);
     }
 
+    function enhanceCodeBlocks() {
+        if (!window.hljs) {
+            return;
+        }
+
+        document.querySelectorAll('pre code').forEach(function (block) {
+            var isPtoBlock = block.classList.contains('language-pto') ||
+                block.classList.contains('language-pto-as') ||
+                block.classList.contains('language-pto-ir');
+
+            if (block.getAttribute('data-highlighted') === 'yes' && !isPtoBlock) {
+                return;
+            }
+
+            try {
+                if (isPtoBlock) {
+                    block.removeAttribute('data-highlighted');
+                }
+                window.hljs.highlightElement(block);
+            } catch (_error) {
+                // Leave the block readable even if highlight.js cannot parse it.
+            }
+        });
+    }
+
     function init() {
         window.requestAnimationFrame(function () {
             mountLanguageSwitcher();
             buildUtilityBar();
+            enhanceCodeBlocks();
         });
 
         window.addEventListener('resize', function () {

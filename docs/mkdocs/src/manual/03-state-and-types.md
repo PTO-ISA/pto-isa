@@ -1,66 +1,90 @@
-# 3. State and types
+# State And Types
 
-## 3.1 Scope
+## What This Chapter Answers
 
-This chapter defines the architecture-visible state model and the type-level contracts that PTO Virtual ISA operations consume and produce.
+This chapter explains how to tell whether a PTO program is well-typed, well-formed, and legal before a backend ever starts "being clever."
 
-## 3.2 Architectural state model
+The common failure mode in PTO is not misunderstanding the mathematical meaning of `TADD` or `TMATMUL`. It is assuming that a tile which looks plausible is automatically a legal operand. In PTO, legality lives in the combination of type class, shape, valid region, layout, and location intent. That is why this chapter exists.
 
-The architecture models the following conceptual state:
+## What Counts As Architectural State
 
-- tile values and metadata (including valid-region metadata)
-- scalar values and immediate attributes
+PTO models four kinds of state that matter to visible behavior:
+
+- tile values together with tile metadata, including valid-region metadata
+- scalar values and immediate-style attributes
 - global memory views and addresses
-- synchronization/event state visible to ordering operations
+- synchronization or event state that participates in ordering
 
-Backend-internal transient state is out of scope unless it changes architectural behavior.
+Backend-private transient state is intentionally out of scope unless it changes visible behavior. That separation matters. A backend may use extra temporary buffers or hidden scheduling state, but it is not allowed to make those hidden choices observable as architecture behavior.
 
-## 3.3 Type classes
+## The Main Type Classes
 
-PTO Virtual ISA type classes include:
+PTO Virtual ISA uses a small set of type classes repeatedly:
 
-- tile-like values (`!pto.tile<...>` class)
-- memory/global views (`!pto.memref<...>` or equivalent class)
-- scalar/integer/float/index classes
-- event/token class for synchronization dependencies
+- tile-like values such as `!pto.tile<...>`
+- memory or global-view values such as `!pto.memref<...>` or equivalent forms
+- scalar values such as integer, float, and index-like classes
+- event or token-like values for synchronization dependencies
 
-Each instruction family MUST define accepted type classes for each operand/result position.
+Each instruction set MUST define which type classes are accepted for every operand and result position. That requirement exists to keep legality checkable at the verifier boundary instead of leaving it to backend guesswork.
 
-## 3.4 Tile legality dimensions
+## The Real Shape Of Tile Legality
 
-Tile legality is constrained by:
+When PTO users say "is this tile legal here?", they usually mean a combination question, not a single-property question.
 
-- element type (`dtype`)
-- shape and valid-region compatibility
-- location-intent role (`Mat/Left/Right/Acc/Bias/Scale` and related forms)
-- layout class and alignment constraints (backend-dependent subset)
+### Element Type
 
-The virtual ISA defines the legality interface; concrete support sets are backend-profile-specific.
+`dtype` is the obvious part of legality, but it is rarely the whole story. The same operation form may accept one dtype in a vector tile, another in an accumulator tile, and a narrower subset in a backend profile.
 
-## 3.5 Valid-region semantics
+### Shape And Valid Region
 
-Valid-region semantics are first-class:
+PTO distinguishes the physical tile extent from the part that carries meaningful semantics. That distinction is why `Rv` and `Cv` matter so much. They tell you which rows and columns are part of the defined result and which are only storage.
 
-- semantic definitions apply to indices in the declared valid domain
-- values outside valid domain are unspecified unless explicitly defined
-- multi-operand operations MUST define domain compatibility rules
+Why not force every tile to be fully valid? Because real kernels would immediately recreate edge-tile conventions in ad hoc ways. PTO chooses to model partial validity directly so the rules can be shared across toolchains and backends.
 
-The standard notation uses `Rv` and `Cv` for valid rows/columns.
+### Location Intent
 
-## 3.6 Attribute contracts
+Roles such as `Mat`, `Left`, `Right`, `Acc`, `Bias`, and `Scale` participate in legality. They are not comments for the reader. They tell the toolchain what kind of producer/consumer structure the tile is meant to enter.
 
-Instruction attributes (for example compare mode, rounding mode, transform mode) MUST define:
+### Layout And Alignment
 
-- type/domain constraints
-- default behavior (if any)
-- interaction with semantics and legality checks
-- diagnostics requirements for invalid values
+Layout and alignment are part of the legality instruction set, but they are also where backend profiles often narrow support. The virtual ISA defines the dimensions that must be checked; the profile documents define which subsets are actually supported on a target.
 
-## 3.7 Diagnostics requirements
+## Valid Region Semantics
 
-Type/state verification diagnostics SHOULD include:
+Valid-region semantics are first-class in PTO:
+
+- semantics apply to indices inside the declared valid domain
+- values outside the valid domain are unspecified unless an instruction page defines them
+- multi-operand operations MUST define the compatibility rule between the participating valid domains
+
+The standard notation uses `Rv` and `Cv` for valid rows and valid columns. If a backend, verifier, or example ignores those symbols, it is usually hiding a real edge-case question rather than simplifying one.
+
+## Attributes Are Part Of The Contract
+
+Instruction attributes such as compare mode, rounding mode, and transform mode are not loose modifiers. They are part of the operation contract. A conforming specification for an attribute MUST define:
+
+- its type and allowed value domain
+- its default behavior, if one exists
+- how it changes semantics or legality
+- what diagnostic should appear when the value is invalid
+
+## Common Legality Mistakes
+
+The most common PTO mistakes are predictable:
+
+- treating "same dtype" as sufficient legality proof
+- forgetting that valid-region compatibility is separate from rectangular shape compatibility
+- assuming location intent can be inferred safely after lowering
+- depending on backend-private layout behavior without profile gating
+
+## Diagnostics Requirements
+
+Type and legality diagnostics SHOULD report:
 
 - operand position
-- expected type class and received type class
-- relevant legality dimensions (dtype/layout/location/shape)
-- deterministic error identifiers for CI stability
+- expected and actual type class
+- the legality dimensions that caused rejection, such as dtype, layout, location, or shape
+- deterministic identifiers or stable wording suitable for CI
+
+If a diagnostic only says "illegal tile," it is usually not precise enough for a backend engineer or a kernel author to act on it.

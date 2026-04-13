@@ -1,106 +1,14 @@
-﻿# TANDS
+# pto.tands
 
+This compatibility page points to the canonical tile-instruction reference page for [pto.tands](./tile/ops/tile-scalar-and-immediate/tands.md).
 
-## Tile Operation Diagram
+The PTO ISA manual now treats tile, vector, and scalar/control operations consistently: the canonical per-op pages live under `docs/isa/tile/ops/`, `docs/isa/vector/ops/`, and `docs/isa/scalar/ops/`.
 
-![TANDS tile operation](../figures/isa/TANDS.svg)
+## Canonical Location
 
-## Introduction
+- Instruction set overview: [Tile Scalar And Immediate](./tile/tile-scalar-and-immediate.md)
+- Canonical per-op page: [pto.tands](./tile/ops/tile-scalar-and-immediate/tands.md)
 
-Elementwise bitwise AND of a tile and a scalar.
+## Compatibility Note
 
-## Math Interpretation
-
-For each element `(i, j)` in the valid region:
-
-$$ \mathrm{dst}_{i,j} = \mathrm{src}_{i,j} \;\&\; \mathrm{scalar} $$
-
-## Assembly Syntax
-
-PTO-AS form: see [PTO-AS Specification](../assembly/PTO-AS.md).
-
-Synchronous form:
-
-```text
-%dst = tands %src, %scalar : !pto.tile<...>, i32
-```
-
-### AS Level 1 (SSA)
-
-```text
-%dst = pto.tands %src, %scalar : (!pto.tile<...>, dtype) -> !pto.tile<...>
-```
-
-### AS Level 2 (DPS)
-
-```text
-pto.tands ins(%src, %scalar : !pto.tile_buf<...>, dtype) outs(%dst : !pto.tile_buf<...>)
-```
-## C++ Intrinsic
-
-Declared in `include/pto/common/pto_instr.hpp`:
-
-```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TANDS(TileDataDst &dst, TileDataSrc &src, typename TileDataDst::DType scalar, WaitEvents &... events);
-```
-
-## Constraints
-
-- **Implementation checks (A2A3)**:
-    - Intended for integral element types.
-    - `dst` and `src` must use the same element type.
-    - `dst` and `src` must be vector tiles.
-    - Runtime: `src.GetValidRow() == dst.GetValidRow()` and `src.GetValidCol() == dst.GetValidCol()`.
-    - In manual mode, setting the source tile and destination tile to the same memory is unsupported.
-- **Implementation checks (A5)**:
-    - Intended for integral element types supported by `TEXPANDS` and `TAND`.
-    - `dst` and `src` must use the same element type.
-    - `dst` and `src` must be vector tiles.
-    - In manual mode, setting the source tile and destination tile to the same memory is unsupported.
-- **Valid region**:
-    - The op uses `dst.GetValidRow()` / `dst.GetValidCol()` as the iteration domain.
-
-## Examples
-
-```cpp
-#include <pto/pto-inst.hpp>
-
-using namespace pto;
-
-void example() {
-  using TileDst = Tile<TileType::Vec, uint16_t, 16, 16>;
-  using TileSrc = Tile<TileType::Vec, uint16_t, 16, 16>;
-  TileDst dst;
-  TileSrc src;
-  TANDS(dst, src, 0xffu);
-}
-```
-
-## ASM Form Examples
-
-### Auto Mode
-
-```text
-# Auto mode: compiler/runtime-managed placement and scheduling.
-%dst = pto.tands %src, %scalar : (!pto.tile<...>, dtype) -> !pto.tile<...>
-```
-
-### Manual Mode
-
-```text
-# Manual mode: bind resources explicitly before issuing the instruction.
-# Optional for tile operands:
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.tands %src, %scalar : (!pto.tile<...>, dtype) -> !pto.tile<...>
-```
-
-### PTO Assembly Form
-
-```text
-%dst = tands %src, %scalar : !pto.tile<...>, i32
-# AS Level 2 (DPS)
-pto.tands ins(%src, %scalar : !pto.tile_buf<...>, dtype) outs(%dst : !pto.tile_buf<...>)
-```
-
+Old links into the root-level tile pages continue to resolve through this wrapper, but new PTO ISA documentation should link to the grouped tile instruction path.

@@ -23,7 +23,7 @@ where `cmp` ∈ {`EQ`, `NE`, `GT`, `GE`, `LT`, `LE`}
 
 ## Assembly Syntax
 
-PTO-AS form: see [PTO-AS Specification](../../assembly/PTO-AS.md).
+Textual spelling is defined by the PTO ISA syntax-and-operands pages.
 
 ```text
 twait %signal, %cmp_value {cmp = #pto.cmp<EQ>} : (!pto.memref<i32>, i32)
@@ -69,7 +69,7 @@ using namespace pto;
 
 void wait_for_ready(__gm__ int32_t* local_signal) {
     comm::Signal sig(local_signal);
-    
+
     // Wait until signal == 1
     comm::TWAIT(sig, 1, comm::WaitCmp::EQ);
 }
@@ -85,7 +85,7 @@ using namespace pto;
 // Wait for signals from a 4x8 dense grid of workers
 void wait_worker_grid(__gm__ int32_t* signal_matrix) {
     comm::Signal2D<4, 8> grid(signal_matrix);
-    
+
     // Wait until all 32 signals == 1
     comm::TWAIT(grid, 1, comm::WaitCmp::EQ);
 }
@@ -100,7 +100,7 @@ using namespace pto;
 
 void wait_for_count(__gm__ int32_t* local_counter, int expected_count) {
     comm::Signal counter(local_counter);
-    
+
     // Wait until counter >= expected_count
     comm::TWAIT(counter, expected_count, comm::WaitCmp::GE);
 }
@@ -116,7 +116,7 @@ using namespace pto;
 // Producer: notify when data is ready
 void producer(__gm__ int32_t* remote_flag) {
     // ... produce data ...
-    
+
     comm::Signal flag(remote_flag);
     comm::TNOTIFY(flag, 1, comm::NotifyOp::Set);
 }
@@ -125,7 +125,7 @@ void producer(__gm__ int32_t* remote_flag) {
 void consumer(__gm__ int32_t* local_flag) {
     comm::Signal flag(local_flag);
     comm::TWAIT(flag, 1, comm::WaitCmp::EQ);
-    
+
     // ... consume data ...
 }
 ```

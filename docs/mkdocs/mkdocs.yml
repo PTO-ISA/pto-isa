@@ -61,14 +61,12 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
   - assets/javascripts/nav-collapse.js
   - assets/javascripts/language-switcher.js
+  - assets/javascripts/pto-syntax.js
   - assets/javascripts/site-chrome.js
   - assets/javascripts/nav-translator.js
 
 extra_css:
   - assets/stylesheets/custom.css
-
-hooks:
-  - hooks/normalize_md_links.py
 
 nav:
   - 1. Introduction:
@@ -176,12 +174,12 @@ nav:
               - Instruction Set Contract: docs/isa/tile/reduce-and-expand.md
               - pto.trowsum: docs/isa/tile/ops/reduce-and-expand/trowsum.md
               - pto.tcolsum: docs/isa/tile/ops/reduce-and-expand/tcolsum.md
-              - pto.trowprod: docs/isa/TROWPROD.md
+              - pto.trowprod: docs/isa/tile/ops/reduce-and-expand/trowprod.md
               - pto.tcolprod: docs/isa/tile/ops/reduce-and-expand/tcolprod.md
               - pto.tcolmax: docs/isa/tile/ops/reduce-and-expand/tcolmax.md
               - pto.tcolmin: docs/isa/tile/ops/reduce-and-expand/tcolmin.md
-              - pto.tcolargmax: docs/isa/TCOLARGMAX.md
-              - pto.tcolargmin: docs/isa/TCOLARGMIN.md
+              - pto.tcolargmax: docs/isa/tile/ops/reduce-and-expand/tcolargmax.md
+              - pto.tcolargmin: docs/isa/tile/ops/reduce-and-expand/tcolargmin.md
               - pto.trowmax: docs/isa/tile/ops/reduce-and-expand/trowmax.md
               - pto.trowmin: docs/isa/tile/ops/reduce-and-expand/trowmin.md
               - pto.trowargmax: docs/isa/tile/ops/reduce-and-expand/trowargmax.md
@@ -369,6 +367,7 @@ nav:
               - pto.vmula: docs/isa/vector/ops/sfu-and-dsa-ops/vmula.md
               - pto.vtranspose: docs/isa/vector/ops/sfu-and-dsa-ops/vtranspose.md
               - pto.vsort32: docs/isa/vector/ops/sfu-and-dsa-ops/vsort32.md
+              - pto.vbitsort: docs/isa/vector/ops/sfu-and-dsa-ops/vbitsort.md
               - pto.vmrgsort: docs/isa/vector/ops/sfu-and-dsa-ops/vmrgsort.md
   - 11. Scalar And Control Reference:
           - Overview: docs/isa/scalar/README.md
@@ -432,29 +431,29 @@ nav:
           - Communication And Runtime:
               - Instruction Set Contract: docs/isa/other/communication-and-runtime.md
               - Communication Overview: docs/isa/comm/README.md
-              - TBROADCAST: docs/isa/comm/TBROADCAST_zh.md
-              - TGET: docs/isa/comm/TGET_zh.md
-              - TGET_ASYNC: docs/isa/comm/TGET_ASYNC_zh.md
-              - TGATHER: docs/isa/comm/TGATHER_zh.md
-              - TNOTIFY: docs/isa/comm/TNOTIFY_zh.md
-              - TPUT: docs/isa/comm/TPUT_zh.md
-              - TPUT_ASYNC: docs/isa/comm/TPUT_ASYNC_zh.md
-              - TREDUCE: docs/isa/comm/TREDUCE_zh.md
-              - TSCATTER: docs/isa/comm/TSCATTER_zh.md
-              - TTEST: docs/isa/comm/TTEST_zh.md
-              - TWAIT: docs/isa/comm/TWAIT_zh.md
+              - TBROADCAST: docs/isa/comm/TBROADCAST.md
+              - TGET: docs/isa/comm/TGET.md
+              - TGET_ASYNC: docs/isa/comm/TGET_ASYNC.md
+              - TGATHER: docs/isa/comm/TGATHER.md
+              - TNOTIFY: docs/isa/comm/TNOTIFY.md
+              - TPUT: docs/isa/comm/TPUT.md
+              - TPUT_ASYNC: docs/isa/comm/TPUT_ASYNC.md
+              - TREDUCE: docs/isa/comm/TREDUCE.md
+              - TSCATTER: docs/isa/comm/TSCATTER.md
+              - TTEST: docs/isa/comm/TTEST.md
+              - TWAIT: docs/isa/comm/TWAIT.md
           - Non ISA And Supporting Ops:
               - Instruction Set Contract: docs/isa/other/non-isa-and-supporting-ops.md
-              - TALIAS: docs/isa/TALIAS_zh.md
-              - TAXPY: docs/isa/TAXPY_zh.md
-              - TCONCAT: docs/isa/TCONCAT_zh.md
-              - TDEQUANT: docs/isa/TDEQUANT_zh.md
-              - TFREE: docs/isa/TFREE_zh.md
-              - THISTOGRAM: docs/isa/THISTOGRAM_zh.md
-              - TPACK: docs/isa/TPACK_zh.md
-              - TPOP: docs/isa/TPOP_zh.md
-              - TPUSH: docs/isa/TPUSH_zh.md
-              - TRANDOM: docs/isa/TRANDOM_zh.md
+              - TALIAS: docs/isa/TALIAS.md
+              - TAXPY: docs/isa/TAXPY.md
+              - TCONCAT: docs/isa/TCONCAT.md
+              - TDEQUANT: docs/isa/TDEQUANT.md
+              - TFREE: docs/isa/TFREE.md
+              - THISTOGRAM: docs/isa/THISTOGRAM.md
+              - TPACK: docs/isa/TPACK.md
+              - TPOP: docs/isa/TPOP.md
+              - TPUSH: docs/isa/TPUSH.md
+              - TRANDOM: docs/isa/TRANDOM.md
   - 13. Reference Notes:
       - Overview: docs/isa/reference/README.md
       - Format Of Instruction Descriptions: docs/isa/reference/format-of-instruction-descriptions.md

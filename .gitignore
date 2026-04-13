@@ -39,3 +39,4 @@ docs/mkdocs/src/scripts/
 docs/mkdocs/src/tests/
 kernels/**/**/**/build/
 PROF*/
+.omx/

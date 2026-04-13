@@ -444,8 +444,8 @@
 
 本文档会持续更新，添加更多有价值的参考资料。如果您有推荐的资源，欢迎贡献：
 
-- 提交 Issue：https://github.com/your-org/pto-isa/issues
-- 提交 PR：https://github.com/your-org/pto-isa/pulls
+- 提交 Issue：https://github.com/PTO-ISA/pto-isa/issues
+- 提交 PR：https://github.com/PTO-ISA/pto-isa/pulls
 - 联系我们：support@example.com
 
 ---

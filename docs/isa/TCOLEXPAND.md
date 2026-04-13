@@ -1,103 +1,14 @@
-﻿# TCOLEXPAND
+# pto.tcolexpand
 
+This compatibility page points to the canonical tile-instruction reference page for [pto.tcolexpand](./tile/ops/reduce-and-expand/tcolexpand.md).
 
-## Tile Operation Diagram
+The PTO ISA manual now treats tile, vector, and scalar/control operations consistently: the canonical per-op pages live under `docs/isa/tile/ops/`, `docs/isa/vector/ops/`, and `docs/isa/scalar/ops/`.
 
-![TCOLEXPAND tile operation](../figures/isa/TCOLEXPAND.svg)
+## Canonical Location
 
-## Introduction
+- Instruction set overview: [Reduce And Expand](./tile/reduce-and-expand.md)
+- Canonical per-op page: [pto.tcolexpand](./tile/ops/reduce-and-expand/tcolexpand.md)
 
-Broadcast the first element of each source column across the destination column.
+## Compatibility Note
 
-## Math Interpretation
-
-Let `R = dst.GetValidRow()` and `C = dst.GetValidCol()`. For `0 <= i < R` and `0 <= j < C`:
-
-$$ \mathrm{dst}_{i,j} = \mathrm{src}_{0,j} $$
-
-## Assembly Syntax
-
-PTO-AS form: see [PTO-AS Specification](../assembly/PTO-AS.md).
-
-Synchronous form:
-
-```text
-%dst = tcolexpand %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### AS Level 1 (SSA)
-
-```text
-%dst = pto.tcolexpand %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### AS Level 2 (DPS)
-
-```text
-pto.tcolexpand ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-
-### IR Level 1 (SSA)
-
-```text
-%dst = pto.tcolexpand %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### IR Level 2 (DPS)
-
-```text
-pto.tcolexpand ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
-## C++ Intrinsic
-
-Declared in `include/pto/common/pto_instr.hpp`:
-
-```cpp
-template <typename TileDataDst, typename TileDataSrc, typename... WaitEvents>
-PTO_INST RecordEvent TCOLEXPAND(TileDataDst &dst, TileDataSrc &src, WaitEvents &... events);
-```
-
-## Constraints
-
-- The op iterates over `dst.GetValidRow()` / `dst.GetValidCol()`.
-
-## Examples
-
-```cpp
-#include <pto/pto-inst.hpp>
-
-using namespace pto;
-
-void example() {
-  using TileT = Tile<TileType::Vec, float, 16, 16>;
-  TileT src, dst;
-  TCOLEXPAND(dst, src);
-}
-```
-
-## ASM Form Examples
-
-### Auto Mode
-
-```text
-# Auto mode: compiler/runtime-managed placement and scheduling.
-%dst = pto.tcolexpand %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### Manual Mode
-
-```text
-# Manual mode: bind resources explicitly before issuing the instruction.
-# Optional for tile operands:
-# pto.tassign %arg0, @tile(0x1000)
-# pto.tassign %arg1, @tile(0x2000)
-%dst = pto.tcolexpand %src : !pto.tile<...> -> !pto.tile<...>
-```
-
-### PTO Assembly Form
-
-```text
-%dst = tcolexpand %src : !pto.tile<...> -> !pto.tile<...>
-# AS Level 2 (DPS)
-pto.tcolexpand ins(%src : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
-```
+Old links into the root-level tile pages continue to resolve through this wrapper, but new PTO ISA documentation should link to the grouped tile instruction path.
