@@ -83,6 +83,6 @@ if __name__ == "__main__":
         if not os.path.exists(case_name):
             os.makedirs(case_name)
         original_dir = os.getcwd()
-        os.chdir(output_dir)
+        os.chdir(case_name)
         gen_golden_data_trelu(case_name, param)
         os.chdir(original_dir)

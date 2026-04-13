@@ -48,7 +48,7 @@ def generate_case_name(param):
     dtype_str = normalize_case_dtype_name(param.dtype, {
         np.float32: 'float',
         np.float16: 'half',
-    }[param.dtype]
+    })
 
     def substring(a, b) -> str:
         return f"_{a}x{b}"
