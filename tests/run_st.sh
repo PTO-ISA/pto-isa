@@ -427,6 +427,8 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tinsert -g TInsertTest.case_nd_1
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tinsert -g TInsertTest.case_nz_2
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tinsert -g TInsertTest.case_nz_6
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t tinsert_acc2vec -g TMOVTest.case_nz2nd_fb_quant_1
+
 
   elif [ "$ENABLE_ALL" = "true" ]; then            # 所有用例
     python3 tests/script/build_st.py $ARGS -v a5 -t all
@@ -547,6 +549,7 @@ if [ "$ENABLE_A5" = "true" ]; then
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tpack
     python3 tests/script/run_st.py $ARGS -w -v a5 -t thistogram
     python3 tests/script/run_st.py $ARGS -w -v a5 -t tinsert
+    python3 tests/script/run_st.py $ARGS -w -v a5 -t tinsert_acc2vec
   fi
 fi
 
