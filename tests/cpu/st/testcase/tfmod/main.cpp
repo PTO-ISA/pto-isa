@@ -16,9 +16,9 @@ using namespace std;
 using namespace PtoTestCommon;
 
 template <int32_t tilingKey>
-void launchTREM_demo(uint8_t *out, uint8_t *src, void *stream);
+void launchTFMOD_demo(uint8_t *out, uint8_t *src, void *stream);
 
-class TREMTest : public testing::Test {
+class TFMODTest : public testing::Test {
 protected:
     void SetUp() override
     {}
@@ -36,10 +36,10 @@ std::string GetGoldenDir()
 }
 
 template <typename T, int kDRows_, int kDCols_, int kTRows_, int kTCols_>
-void LaunchTRem(T *out, T *src0, T *src1, void *stream);
+void LaunchTFmod(T *out, T *src0, T *src1, void *stream);
 
 template <typename T, int kDRows_, int kDCols_, int kTRows_, int kTCols_>
-void test_trem()
+void test_tfmod()
 {
     size_t fileSize = kDRows_ * kDCols_ * sizeof(T);
     aclInit(nullptr);
@@ -63,7 +63,7 @@ void test_trem()
 
     aclrtMemcpy(src0Device, fileSize, src0Host, fileSize, ACL_MEMCPY_HOST_TO_DEVICE);
     aclrtMemcpy(src1Device, fileSize, src1Host, fileSize, ACL_MEMCPY_HOST_TO_DEVICE);
-    LaunchTRem<T, kDRows_, kDCols_, kTRows_, kTCols_>(dstDevice, src0Device, src1Device, stream);
+    LaunchTFmod<T, kDRows_, kDCols_, kTRows_, kTCols_>(dstDevice, src0Device, src1Device, stream);
 
     aclrtSynchronizeStream(stream);
     aclrtMemcpy(dstHost, fileSize, dstDevice, fileSize, ACL_MEMCPY_DEVICE_TO_HOST);
@@ -95,29 +95,29 @@ const int NUM_32 = 32;
 const int NUM_64 = 64;
 const int NUM_256 = 256;
 const int NUM_512 = 256;
-TEST_F(TREMTest, case_float_64x64_64x64)
+TEST_F(TFMODTest, case_float_64x64_64x64)
 {
-    test_trem<float, NUM_64, NUM_64, NUM_64, NUM_64>();
+    test_tfmod<float, NUM_64, NUM_64, NUM_64, NUM_64>();
 }
-TEST_F(TREMTest, case_half_16x256_16x256)
+TEST_F(TFMODTest, case_half_16x256_16x256)
 {
-    test_trem<aclFloat16, NUM_16, NUM_256, NUM_16, NUM_256>();
+    test_tfmod<aclFloat16, NUM_16, NUM_256, NUM_16, NUM_256>();
 }
-TEST_F(TREMTest, case_float_64x512_64x64)
+TEST_F(TFMODTest, case_float_64x512_64x64)
 {
-    test_trem<float, NUM_64, NUM_512, NUM_64, NUM_64>();
+    test_tfmod<float, NUM_64, NUM_512, NUM_64, NUM_64>();
 }
-TEST_F(TREMTest, case_half_32x512_16x256)
+TEST_F(TFMODTest, case_half_32x512_16x256)
 {
-    test_trem<aclFloat16, NUM_32, NUM_512, NUM_16, NUM_256>();
+    test_tfmod<aclFloat16, NUM_32, NUM_512, NUM_16, NUM_256>();
 }
 #ifdef CPU_SIM_BFLOAT_ENABLED
-TEST_F(TREMTest, case_bf16_16x256_16x256)
+TEST_F(TFMODTest, case_bf16_16x256_16x256)
 {
-    test_trem<bfloat16_t, NUM_16, NUM_256, NUM_16, NUM_256>();
+    test_tfmod<bfloat16_t, NUM_16, NUM_256, NUM_16, NUM_256>();
 }
-TEST_F(TREMTest, case_bf16_32x256_16x256)
+TEST_F(TFMODTest, case_bf16_32x256_16x256)
 {
-    test_trem<bfloat16_t, NUM_32, NUM_256, NUM_16, NUM_256>();
+    test_tfmod<bfloat16_t, NUM_32, NUM_256, NUM_16, NUM_256>();
 }
 #endif

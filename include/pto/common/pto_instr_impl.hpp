@@ -263,7 +263,6 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #include "pto/cpu/TMax.hpp"
 #include "pto/cpu/TExtract.hpp"
 #include "pto/cpu/TFillPad.hpp"
-#include "pto/cpu/TFMod.hpp"
 #include "pto/cpu/TTrans.hpp"
 #include "pto/cpu/TSelS.hpp"
 #include "pto/cpu/TColSum.hpp"

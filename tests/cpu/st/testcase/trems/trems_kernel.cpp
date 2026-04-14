@@ -13,22 +13,24 @@ See LICENSE in the root of the software repository for the full text of the Lice
 
 using namespace pto;
 
-template <typename T, int kGRows_, int kGCols_, int kTRows_, int kTCols_>
+template <typename T, int kDRows_, int kDCols_, int kTRows_, int kTCols_>
 AICORE void runTRems(__gm__ T __out__ *out, __gm__ T __in__ *src, __gm__ T __in__ *scalar)
 {
-    using DynShapeDim5 = Shape<1, 1, 1, kGRows_, kGCols_>;
-    using DynStridDim5 = Stride<1, 1, 1, kGCols_, 1>;
+    using DynShapeDim5 = Shape<1, 1, 1, kTRows_, kTCols_>;
+    using DynStridDim5 = Stride<1, 1, 1, kTCols_, 1>;
     using GlobalData = GlobalTensor<T, DynShapeDim5, DynStridDim5>;
-    using TileData = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
-    TileData srcTile(kTRows_, kTCols_);
-    TileData dstTile(kTRows_, kTCols_);
-    TileData tmpTile(1, kTCols_);
+    using TileDataDst = Tile<TileType::Vec, T, kDRows_, kDCols_, BLayout::RowMajor, -1, -1>;
+    using TileDataSrc = Tile<TileType::Vec, T, kTRows_, kTCols_, BLayout::RowMajor, -1, -1>;
+
+    TileDataSrc srcTile(kTRows_, kTCols_);
+    TileDataDst dstTile(kTRows_, kTCols_);
+    TileDataDst tmpTile(1, kTCols_);
 
     GlobalData srcGlobal(src);
     GlobalData dstGlobal(out);
 
     TASSIGN(srcTile, 0);
-    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileData::DType));
+    TASSIGN(dstTile, kTRows_ * kTCols_ * sizeof(typename TileDataSrc::DType));
 
     TLOAD(srcTile, srcGlobal);
     TREMS(dstTile, srcTile, scalar[0], tmpTile);
@@ -45,12 +47,30 @@ void LaunchTRems(T *out, T *src, T *scalar, void *stream)
         runTRems<T, kGRows_, kGCols_, kTRows_, kTCols_>(out, src, scalar);
 }
 const int NUM_16 = 16;
+const int NUM_32 = 64;
 const int NUM_64 = 64;
 const int NUM_256 = 256;
+const int NUM_512 = 512;
+
 template void LaunchTRems<float, NUM_64, NUM_64, NUM_64, NUM_64>(float *out, float *src, float *scalar, void *stream);
 template void LaunchTRems<int32_t, NUM_64, NUM_64, NUM_64, NUM_64>(int32_t *out, int32_t *src, int32_t *scalar,
                                                                    void *stream);
-template void LaunchTRems<aclFloat16, NUM_16, NUM_256, NUM_16, NUM_256>(aclFloat16 *out, aclFloat16 *src,
-                                                                        aclFloat16 *scalar, void *stream);
 template void LaunchTRems<int16_t, NUM_64, NUM_64, NUM_64, NUM_64>(int16_t *out, int16_t *src, int16_t *scalar,
                                                                    void *stream);
+template void LaunchTRems<aclFloat16, NUM_16, NUM_256, NUM_16, NUM_256>(aclFloat16 *out, aclFloat16 *src,
+                                                                        aclFloat16 *scalar, void *stream);
+
+template void LaunchTRems<float, NUM_64, NUM_512, NUM_64, NUM_64>(float *out, float *src, float *scalar, void *stream);
+template void LaunchTRems<int32_t, NUM_64, NUM_512, NUM_64, NUM_64>(int32_t *out, int32_t *src, int32_t *scalar,
+                                                                    void *stream);
+template void LaunchTRems<int16_t, NUM_64, NUM_512, NUM_64, NUM_64>(int16_t *out, int16_t *src, int16_t *scalar,
+                                                                    void *stream);
+template void LaunchTRems<aclFloat16, NUM_32, NUM_512, NUM_16, NUM_256>(aclFloat16 *out, aclFloat16 *src,
+                                                                        aclFloat16 *scalar, void *stream);
+#ifdef CPU_SIM_BFLOAT_ENABLED
+template void LaunchTRems<bfloat16_t, NUM_16, NUM_256, NUM_16, NUM_256>(bfloat16_t *out, bfloat16_t *src0,
+                                                                        bfloat16_t *src1, void *stream);
+template void LaunchTRems<bfloat16_t, NUM_32, NUM_256, NUM_16, NUM_256>(bfloat16_t *out, bfloat16_t *src0,
+                                                                        bfloat16_t *src1, void *stream);
+
+#endif

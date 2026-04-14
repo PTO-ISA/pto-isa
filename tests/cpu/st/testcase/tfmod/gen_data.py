@@ -16,7 +16,7 @@ from utils import NumExt
 np.random.seed(19)
 
 
-def gen_golden_data_trem(case_name, param):
+def gen_golden_data_tfmod(case_name, param):
     dtype = param.dtype
 
     row, col = [param.valid_row, param.valid_col]
@@ -29,9 +29,7 @@ def gen_golden_data_trem(case_name, param):
     input2[input2 == 0] = 1
 
     # Perform the operation
-    # Note that % operation in Python have different behavior on negatives comparing to C++
-    # (C++ truncates during division, Python floors)
-    golden = input1 % input2
+    golden = golden = np.fmod(input1, input2)
 
     # Save the input and golden data to binary files
     NumExt.write_array("input1.bin", input1, dtype)
@@ -39,7 +37,7 @@ def gen_golden_data_trem(case_name, param):
     NumExt.write_array("golden.bin", golden, dtype)
 
 
-class TRemParams:
+class TFmodParams:
     def __init__(self, dtype, dst_tile_row, dst_tile_col, valid_row, valid_col):
         self.dtype = dtype
         self.dst_tile_row = dst_tile_row
@@ -54,7 +52,7 @@ def generate_case_name(param):
     def substring(a, b) -> str:
         return f"_{a}x{b}"
 
-    name = f"TREMTest.case_{dtype_str}"
+    name = f"TFMODTest.case_{dtype_str}"
     name += substring(param.dst_tile_row, param.dst_tile_col)
     name += substring(param.valid_row, param.valid_col)
 
@@ -71,14 +69,14 @@ if __name__ == "__main__":
         os.makedirs(testcases_dir)
 
     case_params_list = [
-        TRemParams(np.float32, 64, 64, 64, 64),
-        TRemParams(np.float16, 16, 256, 16, 256),
-        TRemParams(np.float32, 64, 512, 64, 64),
-        TRemParams(np.float16, 32, 512, 16, 256)
+        TFmodParams(np.float32, 64, 64, 64, 64),
+        TFmodParams(np.float16, 16, 256, 16, 256),
+        TFmodParams(np.float32, 64, 512, 64, 64),
+        TFmodParams(np.float16, 32, 512, 16, 256)
     ]
     if os.getenv("PTO_CPU_SIM_ENABLE_BF16") == "1":
-        case_params_list.append(TRemParams(NumExt.bf16, 16, 256, 16, 256))
-        case_params_list.append(TRemParams(NumExt.bf16, 32, 256, 16, 256))
+        case_params_list.append(TFmodParams(NumExt.bf16, 16, 256, 16, 256))
+        case_params_list.append(TFmodParams(NumExt.bf16, 32, 256, 16, 256))
 
     for i, param in enumerate(case_params_list):
         case_name = generate_case_name(param)
@@ -86,5 +84,5 @@ if __name__ == "__main__":
             os.makedirs(case_name)
         original_dir = os.getcwd()
         os.chdir(case_name)
-        gen_golden_data_trem(case_name, param)
+        gen_golden_data_tfmod(case_name, param)
         os.chdir(original_dir)

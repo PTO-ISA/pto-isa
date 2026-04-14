@@ -211,7 +211,11 @@ template <typename TileDst, typename TileSrc>
 PTO_INTERNAL void TREMS_IMPL(TileDst &dst, TileSrc &src, typename TileSrc::DType scalar, TileDst &tmp)
 {
     (void)tmp;
-    TREMS_IMPL(dst, src, scalar);
+    if (scalar != static_cast<TileSrc::DType>(0)) {
+        TREMS_IMPL(dst, src, scalar);
+    } else {
+        PTO_ASSERT(false, "illegal src is zero");
+    }
 }
 
 template <typename TileDst, typename TileSrc>
@@ -254,7 +258,11 @@ PTO_INTERNAL void TLRELU_IMPL(TileDst &dst, TileSrc &src, typename TileSrc::DTyp
 template <typename TileDst, typename TileSrc>
 PTO_INTERNAL void TFMODS_IMPL(TileDst &dst, TileSrc &src, typename TileSrc::DType scalar)
 {
-    UnaryTileScalarOpImpl<TileDst, TileSrc, ElementOp::OP_FMODS>(dst, src, scalar);
+    if (scalar != static_cast<TileSrc::DType>(0)) {
+        UnaryTileScalarOpImpl<TileDst, TileSrc, ElementOp::OP_FMODS>(dst, src, scalar);
+    } else {
+        PTO_ASSERT(false, "illegal src is zero");
+    }
 }
 
 template <typename TileDst, typename TileSrc>

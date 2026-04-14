@@ -66,6 +66,8 @@ texpands
 textract
 tfillpad
 tflashattn
+tfmod
+tfmods
 tgather
 tgatherb
 tget
