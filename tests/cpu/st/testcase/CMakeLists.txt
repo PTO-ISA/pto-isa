@@ -111,7 +111,9 @@ tscatter
 tsel
 tsels
 tshl
+tshls
 tshr
+tshrs
 tsort32
 tsqrt
 tstore
