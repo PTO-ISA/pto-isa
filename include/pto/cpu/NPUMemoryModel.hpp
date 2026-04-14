@@ -186,6 +186,28 @@ public:
         return initialized_;
     }
 
+    // Returns true when rawAddr already points into one of this thread's
+    // simulated on-chip memory buffers. This is needed for patterns like:
+    //   TASSIGN(alias_tile, reinterpret_cast<uintptr_t>(base_tile.data()));
+    // where the "address" is not an offset but an actual host pointer into UB/L1/L0.
+    bool ContainsAddress(std::uintptr_t rawAddr) const
+    {
+        if (!initialized_) {
+            return false;
+        }
+        for (const auto &buf : buffers_) {
+            if (buf.empty()) {
+                continue;
+            }
+            const auto begin = reinterpret_cast<std::uintptr_t>(buf.data());
+            const auto end = begin + buf.size();
+            if (rawAddr >= begin && rawAddr < end) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Clear all memory (zero-fill)
     void Clear()
     {
