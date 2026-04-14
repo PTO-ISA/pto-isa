@@ -46,6 +46,7 @@ tadd
 taddc
 tadds
 taddsc
+tassign_alias
 tand
 tands
 tbroadcast
