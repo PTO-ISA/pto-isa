@@ -32,6 +32,23 @@ log() {
   echo "[$(date -Is)] $*"
 }
 
+restore_github_docs_surface() {
+  local source_ref="$1"
+  shift || true
+  local preserve_paths=("$@")
+  if [[ ${#preserve_paths[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  if git diff --quiet "${source_ref}" -- "${preserve_paths[@]}"; then
+    log "GitHub-owned docs surface unchanged; nothing to restore"
+    return 0
+  fi
+
+  log "restoring GitHub-owned docs surface from ${source_ref}"
+  git checkout "${source_ref}" -- "${preserve_paths[@]}"
+}
+
 write_summary() {
   cat > "${SUMMARY_FILE}" <<EOF
 status=${SYNC_STATUS}
@@ -158,6 +175,17 @@ else
     git merge --abort || true
     die "merge conflict while merging cann/master into main"
   }
+fi
+
+DOCS_PRESERVE_PATHS=(
+  docs/mkdocs/src/assets
+  docs/figures/pto_logo.svg
+)
+restore_github_docs_surface "${HEAD_BEFORE}" "${DOCS_PRESERVE_PATHS[@]}"
+if [[ -n "$(git status --porcelain=v1 -- "${DOCS_PRESERVE_PATHS[@]}")" ]]; then
+  log "committing preserved GitHub docs surface"
+  git add -- "${DOCS_PRESERVE_PATHS[@]}"
+  git commit -m "Preserve GitHub-owned docs chrome during GitCode sync" -m "The GitCode sync is allowed to update shared source content, but the GitHub docs chrome and branding assets remain GitHub-owned and must not be clobbered by upstream sync merges. Restore those assets from the pre-sync GitHub main tip before pushing the sync result."
 fi
 
 HEAD_AFTER="$(git rev-parse HEAD)"
