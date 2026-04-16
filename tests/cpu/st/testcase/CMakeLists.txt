@@ -147,6 +147,9 @@ txor
 txors
 tget_async
 tput_async
+tpushpop_cv_nosplit
+tpushpop_cv
+tpushpop_vc_nosplit
 )
 
 foreach(TESTCASE ${ALL_TESTCASES})
