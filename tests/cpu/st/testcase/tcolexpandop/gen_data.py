@@ -20,23 +20,28 @@ def gen_golden_data_tcolexpandop(param, kind: str):
     dtype = param.dtype
     row, col = [param.tile_row, param.tile_col]
 
-    input1 = np.random.uniform(low=-2, high=2, size=[row, col]).astype(dtype)
-    input2 = np.random.uniform(low=1, high=2, size=[1, col]).astype(dtype)
+    input1 = np.random.uniform(low=-2, high=2, size=[param.src_row, param.src_col]).astype(dtype)
+    input2 = np.random.uniform(low=1, high=2, size=[1, param.src_col]).astype(dtype)
+    golden = np.zeros((param.dst_row, param.dst_col)).astype(dtype)
+
+    input1_valid = input1[:row, :col]
+    input2_valid = input2[:1, :col]
+
 
     if kind == "div":
-        golden = input1 / input2
+        golden[:row, :col] = input1_valid / input2_valid
     elif kind == "mul":
-        golden = input1 * input2
+        golden[:row, :col] = input1_valid * input2_valid
     elif kind == "sub":
-        golden = input1 - input2
+        golden[:row, :col] = input1_valid - input2_valid
     elif kind == "add":
-        golden = input1 + input2
+        golden[:row, :col] = input1_valid + input2_valid
     elif kind == "min":
-        golden = np.minimum(input1, input2)
+        golden[:row, :col] = np.minimum(input1_valid, input2_valid)
     elif kind == "max":
-        golden = np.maximum(input1, input2)
+        golden[:row, :col] = np.maximum(input1_valid, input2_valid)
     elif kind == "expdif":
-        golden = np.exp(input1 - input2)
+        golden[:row, :col] = np.exp(input1_valid - input2_valid)
     else:
         raise ValueError(kind)
 
@@ -46,10 +51,14 @@ def gen_golden_data_tcolexpandop(param, kind: str):
 
 
 class TColExpandOpParams:
-    def __init__(self, dtype, tile_row, tile_col):
+    def __init__(self, dtype, tile_row, tile_col, src_row=None, src_col=None, dst_row=None, dst_col=None):
         self.dtype = dtype
         self.tile_row = tile_row
         self.tile_col = tile_col
+        self.src_row = tile_row if src_row is None else src_row
+        self.src_col = tile_col if src_col is None else src_col
+        self.dst_row = tile_row if dst_row is None else dst_row
+        self.dst_col = tile_col if dst_col is None else dst_col
 
 
 def generate_case_name(param, kind: str):
@@ -60,6 +69,8 @@ def generate_case_name(param, kind: str):
 
     name = f"TCOLEXPANDOPTest.case_{kind}_{dtype_str}"
     name += substring(param.tile_row, param.tile_col)
+    name += substring(param.src_row, param.src_col)
+    name += substring(param.dst_row, param.dst_col)
     return name
 
 
@@ -67,6 +78,7 @@ if __name__ == "__main__":
     case_params_list = [
         TColExpandOpParams(np.float32, 64, 64),
         TColExpandOpParams(np.float16, 16, 256),
+        TColExpandOpParams(np.float32, 16, 16, 32, 32, 64, 64),
     ]
     kind_list = ["div", "mul", "sub", "add", "min", "max", "expdif"]
 
