@@ -512,16 +512,16 @@ PTO_INTERNAL void GenCastCallFp16ToInt8_NonSatTorch(__ubuf__ typename TileDataD:
     //   3. Be even when factor > 1, so that hwFp16Stride/2 gives an integer int8 dest stride.
     // We pick the largest valid divisor (prefer 4, then 2).
     // Examples: S=8 → hw=4,f=2;  S=6 → hw=2,f=3;  S=10 → hw=2,f=5;  S=12 → hw=4,f=3.
-    const uint16_t hwFp16Stride =
-        (srcRepeatStride <= 4) ?
-            srcRepeatStride :
-            (srcRepeatStride % 4 == 0) ? (uint16_t)4 : (srcRepeatStride % 2 == 0) ? (uint16_t)2 : (uint16_t)1;
+    const uint16_t hwFp16Stride = (srcRepeatStride <= 4)     ? srcRepeatStride :
+                                  (srcRepeatStride % 4 == 0) ? (uint16_t)4 :
+                                  (srcRepeatStride % 2 == 0) ? (uint16_t)2 :
+                                                               (uint16_t)1;
     const uint16_t factor = srcRepeatStride / hwFp16Stride;
     const uint16_t totalHwRepeats = static_cast<uint16_t>(repeatNum) * factor;
-    const uint16_t hwInt32Stride = hwFp16Stride * 2;        // int32 is 2x wider than fp16 in blocks
-    const uint16_t hwInt16Stride = hwFp16Stride;            // int16 same width as fp16 in blocks
+    const uint16_t hwInt32Stride = hwFp16Stride * 2; // int32 is 2x wider than fp16 in blocks
+    const uint16_t hwInt16Stride = hwFp16Stride;     // int16 same width as fp16 in blocks
     const uint16_t hwDstStride =
-        (hwFp16Stride + 1) / 2; // int8 is half as wide as fp16 in blocks (ceiling division, min 1)
+        (hwFp16Stride + 1) / 2;                      // int8 is half as wide as fp16 in blocks (ceiling division, min 1)
 
     constexpr uint16_t int16ElemsPerBlock = BLOCK_BYTE_SIZE / sizeof(int16_t);
     constexpr uint16_t fp16ElemsPerBlock = BLOCK_BYTE_SIZE / sizeof(half);
