@@ -39,6 +39,17 @@ def rand_data(dtype, shape):
     return np.random.uniform(-10, 10, size=shape).astype(dtype)
 
 
+def rand_nonzero(dtype, shape):
+    """Generate random data guaranteed to contain no zero-valued elements."""
+    if dtype == np.int8:
+        return np.random.randint(1, 127, size=shape).astype(dtype)
+    if dtype == np.uint8:
+        return np.random.randint(1, 256, size=shape, dtype=np.uint8)
+    if dtype in (np.uint16, np.int16):
+        return np.random.randint(1, 65536, size=shape, dtype=np.uint16)
+    return np.random.uniform(1, 10, size=shape).astype(dtype)
+
+
 def run_case(name, gen_fn, *args):
     os.makedirs(name, exist_ok=True)
     orig = os.getcwd()
@@ -128,9 +139,9 @@ def gen_nd_vec_valid(p):
 
 def gen_nz_unaligned(dtype, src_rows, dst_rows, cols, idx_row):
     ds = np.dtype(dtype).itemsize
-    arr = rand_data(dtype, (src_rows, cols))
+    arr = rand_nonzero(dtype, (src_rows, cols))
     arr.tofile("input_arr.bin")
-    result = np.zeros((dst_rows, cols), dtype=dtype)
+    result = np.full((dst_rows, cols), dtype(1), dtype=dtype)
     r_end = idx_row + src_rows
     result[idx_row:r_end, :] = arr
     nd_to_nz(result, dst_rows, cols, ds).tofile("golden_output.bin")
@@ -148,11 +159,11 @@ class NzTwoInsertParams:
 
 def gen_nz_two_insert(p):
     ds = np.dtype(p.dtype).itemsize
-    src1 = rand_data(p.dtype, (p.src_rows1, p.cols))
-    src2 = rand_data(p.dtype, (p.src_rows2, p.cols))
+    src1 = rand_nonzero(p.dtype, (p.src_rows1, p.cols))
+    src2 = rand_nonzero(p.dtype, (p.src_rows2, p.cols))
     src1.tofile("src1_input.bin")
     src2.tofile("src2_input.bin")
-    result = np.zeros((p.dst_rows, p.cols), dtype=p.dtype)
+    result = np.full((p.dst_rows, p.cols), p.dtype(1), dtype=p.dtype)
     result[0 : p.src_rows1, :] = src1
     r2_end = p.idx_row2 + p.src_rows2
     result[p.idx_row2 : r2_end, :] = src2
@@ -183,11 +194,11 @@ class NzLargeTileParams:
 
 def gen_nz_large_tile(p):
     ds = np.dtype(p.dtype).itemsize
-    nd_data = rand_data(p.dtype, (p.valid_row, p.cols))
-    padded = np.zeros((p.tile_rows, p.cols), dtype=p.dtype)
+    nd_data = rand_nonzero(p.dtype, (p.valid_row, p.cols))
+    padded = np.full((p.tile_rows, p.cols), p.dtype(1), dtype=p.dtype)
     padded[: p.valid_row, :] = nd_data
     nd_to_nz(padded, p.tile_rows, p.cols, ds).tofile("input_arr.bin")
-    result = np.zeros((p.dst_rows, p.cols), dtype=p.dtype)
+    result = np.full((p.dst_rows, p.cols), p.dtype(1), dtype=p.dtype)
     r_end = p.idx_row + p.valid_row
     result[p.idx_row : r_end, :] = nd_data
     nd_to_nz(result, p.dst_rows, p.cols, ds).tofile("golden_output.bin")
@@ -205,9 +216,9 @@ class NzVecParams:
 
 def gen_nz_vec(p):
     ds = np.dtype(p.dtype).itemsize
-    arr = rand_data(p.dtype, (p.src_rows, p.src_cols))
+    arr = rand_nonzero(p.dtype, (p.src_rows, p.src_cols))
     arr.tofile("input_arr.bin")
-    result = np.zeros((p.dst_rows, p.dst_cols), dtype=p.dtype)
+    result = np.full((p.dst_rows, p.dst_cols), p.dtype(1), dtype=p.dtype)
     r_end = p.idx_row + p.src_rows
     result[p.idx_row : r_end, : p.src_cols] = arr
     nd_to_nz(result, p.dst_rows, p.dst_cols, ds).tofile("golden_output.bin")
@@ -215,9 +226,9 @@ def gen_nz_vec(p):
 
 def gen_nz_split_custom(dtype, valid_row, dst_rows, cols):
     ds = np.dtype(dtype).itemsize
-    arr = rand_data(dtype, (valid_row, cols))
+    arr = rand_nonzero(dtype, (valid_row, cols))
     arr.tofile("input_arr.bin")
-    result = np.zeros((dst_rows, cols), dtype=dtype)
+    result = np.full((dst_rows, cols), dtype(1), dtype=dtype)
     result[:valid_row, :] = arr
     nd_to_nz(result, dst_rows, cols, ds).tofile("golden_output.bin")
 
@@ -253,10 +264,12 @@ def gen_twoinput(p):
     else:
         dt = np.uint8
 
-    src1 = rand_data(dt, (p.valid_row1, p.cols))
-    src2 = rand_data(dt, (p.valid_row2, p.cols))
+    src1 = rand_nonzero(dt, (p.valid_row1, p.cols))
+    src2 = rand_nonzero(dt, (p.valid_row2, p.cols))
 
-    combined = np.zeros((aligned_row, p.cols), dtype=dt)
+    bg = rand_nonzero(dt, (p.dst_rows, p.cols))
+
+    combined = bg[:aligned_row, :].copy()
     r1_end = p.idx_row1 + p.valid_row1
     r2_end = p.idx_row2 + p.valid_row2
     combined[p.idx_row1 : r1_end, :] = src1
@@ -267,10 +280,10 @@ def gen_twoinput(p):
     gap = np.zeros((burst_num, c0), dtype=dt)
     nz1_data = np.concatenate([nz_flat, gap], axis=1).flatten()
 
-    zero_region = np.zeros(p.dst_rows * p.cols, dtype=dt)
-    np.concatenate([zero_region, nz1_data]).tofile("input_arr.bin")
+    init_nz = nd_to_nz(bg, p.dst_rows, p.cols, p.dtype_size).flatten()
+    np.concatenate([init_nz, nz1_data]).tofile("input_arr.bin")
 
-    result = np.zeros((p.dst_rows, p.cols), dtype=dt)
+    result = bg.copy()
     result[p.idx_row1 : r1_end, :] = src1
     result[p.idx_row2 : r2_end, :] = src2
     result.reshape(p.dst_rows // nz_row, nz_row, burst_num, c0).transpose(2, 0, 1, 3).flatten().tofile(
@@ -303,8 +316,8 @@ def gen_double_twoinput(p):
     else:
         dt = np.uint8
 
-    src1 = rand_data(dt, (p.valid_row1, p.cols))
-    src2 = rand_data(dt, (p.valid_row2, p.cols))
+    src1 = rand_nonzero(dt, (p.valid_row1, p.cols))
+    src2 = rand_nonzero(dt, (p.valid_row2, p.cols))
 
     def make_nz1(data, valid_rows):
         padded = np.zeros((aligned_row, p.cols), dtype=dt)
@@ -317,10 +330,11 @@ def gen_double_twoinput(p):
     nz1_src1 = make_nz1(src1, p.valid_row1)
     nz1_src2 = make_nz1(src2, p.valid_row2)
 
-    zero_region = np.zeros(p.dst_rows * p.cols, dtype=dt)
-    np.concatenate([zero_region, nz1_src1, nz1_src2]).tofile("input_arr.bin")
+    bg = rand_nonzero(dt, (p.dst_rows, p.cols))
+    init_nz = nd_to_nz(bg, p.dst_rows, p.cols, p.dtype_size).flatten()
+    np.concatenate([init_nz, nz1_src1, nz1_src2]).tofile("input_arr.bin")
 
-    result = np.zeros((p.dst_rows, p.cols), dtype=dt)
+    result = bg.copy()
     r1_end = p.idx_row1 + p.valid_row1
     r2_end = p.idx_row2 + p.valid_row2
     result[p.idx_row1 : r1_end, :] = src1
@@ -345,15 +359,16 @@ def gen_fp4_offset(p):
     c0 = 32
     nz_row = 16
 
-    src = rand_data(np.uint8, (p.valid_rows, p.src_byte_cols))
+    src = rand_nonzero(np.uint8, (p.valid_rows, p.src_byte_cols))
     src_padded = np.zeros((p.src_rows, p.src_byte_cols), dtype=np.uint8)
     src_padded[: p.valid_rows, :] = src
     src_nz = src_padded.reshape(p.src_rows // nz_row, nz_row, p.src_byte_cols // c0, c0).transpose(2, 0, 1, 3)
 
-    zeros = np.zeros(p.dst_rows * p.dst_byte_cols, dtype=np.uint8)
-    np.concatenate([zeros, src_nz.flatten()]).tofile("input_arr.bin")
+    bg = rand_nonzero(np.uint8, (p.dst_rows, p.dst_byte_cols))
+    init_nz = bg.reshape(p.dst_rows // nz_row, nz_row, p.dst_byte_cols // c0, c0).transpose(2, 0, 1, 3).flatten()
+    np.concatenate([init_nz, src_nz.flatten()]).tofile("input_arr.bin")
 
-    result = np.zeros((p.dst_rows, p.dst_byte_cols), dtype=np.uint8)
+    result = bg.copy()
     r_end = p.idx_row + p.valid_rows
     c_end = p.idx_byte_col + p.src_byte_cols
     result[p.idx_row : r_end, p.idx_byte_col : c_end] = src
