@@ -480,7 +480,7 @@ TEST_F(TPushPopTest, v2c_split_with_injected_pipe_hook_waits_for_both_lanes_befo
     std::fill(dst.data(), dst.data() + dst.Numel, 0.0f);
 
     {
-        cpu_sim::ScopedExecutionContext ctx(0, 0, 1);
+        cpu_sim::ScopedExecutionContext ctx(0, 0, 2);
         EXPECT_EQ(cpu_pipe::GetActiveSplitCount<TileSplitAxis::TILE_UP_DOWN>(), 2u);
         EXPECT_EQ(cpu_pipe::GetActiveSplitLaneMask<TileSplitAxis::TILE_UP_DOWN>(), 0x3u);
         TPUSH<HookedV2CPipe, VecTile, TileSplitAxis::TILE_UP_DOWN>(producer0, topHalf);
@@ -493,7 +493,7 @@ TEST_F(TPushPopTest, v2c_split_with_injected_pipe_hook_waits_for_both_lanes_befo
     EXPECT_EQ(state.producers_allocated[0], 0x1u);
 
     {
-        cpu_sim::ScopedExecutionContext ctx(0, 1, 1);
+        cpu_sim::ScopedExecutionContext ctx(0, 1, 2);
         EXPECT_EQ(cpu_pipe::GetActiveSplitCount<TileSplitAxis::TILE_UP_DOWN>(), 2u);
         EXPECT_EQ(cpu_pipe::GetActiveSplitLaneMask<TileSplitAxis::TILE_UP_DOWN>(), 0x3u);
         TPUSH<HookedV2CPipe, VecTile, TileSplitAxis::TILE_UP_DOWN>(producer1, bottomHalf);
@@ -522,6 +522,39 @@ TEST_F(TPushPopTest, v2c_split_with_injected_pipe_hook_waits_for_both_lanes_befo
     EXPECT_GT(g_pipe_hook_call_count.load(std::memory_order_relaxed), 0u);
     EXPECT_EQ(g_pipe_hook_size, sizeof(HookedV2CPipe::SharedStateStorage));
     EXPECT_NE(g_pipe_hook_last_key, 0u);
+}
+
+TEST_F(TPushPopTest, v2c_split_single_subblock_with_injected_pipe_hook_tracks_one_active_lane)
+{
+    using VecTile = Tile<TileType::Vec, float, 8, 16, BLayout::RowMajor, 8, 16>;
+    using MatTile = Tile<TileType::Mat, float, 16, 16, BLayout::RowMajor, 16, 16>;
+
+    HookedV2CPipe::SharedStateStorage storage{};
+    g_pipe_hook_call_count.store(0, std::memory_order_relaxed);
+    g_pipe_hook_storage = &storage;
+    g_pipe_hook_size = 0;
+    g_pipe_hook_last_key = 0;
+
+    ScopedCpuStubHooks hooks(nullptr, reinterpret_cast<void *>(MockPipeSharedStateHook));
+    HookedV2CPipe::reset_for_cpu_sim();
+
+    HookedV2CPipe producer((__gm__ void *)nullptr, 0x0, 0x10000);
+    VecTile src;
+    TASSIGN(src, 0);
+    fillTile<float, 8, 16, TileType::Vec>(src, 0);
+
+    {
+        cpu_sim::ScopedExecutionContext ctx(0, 0, 1);
+        EXPECT_EQ(cpu_pipe::GetActiveSplitCount<TileSplitAxis::TILE_UP_DOWN>(), 1u);
+        EXPECT_EQ(cpu_pipe::GetActiveSplitLaneMask<TileSplitAxis::TILE_UP_DOWN>(), 0x1u);
+        TPUSH<HookedV2CPipe, VecTile, TileSplitAxis::TILE_UP_DOWN>(producer, src);
+    }
+
+    auto &state = HookedV2CPipe::GetSharedState();
+    EXPECT_EQ(state.occupied, 1);
+    EXPECT_EQ(state.next_producer_slot, 1);
+    EXPECT_EQ(state.producers_done[0], 0u);
+    EXPECT_EQ(state.producers_allocated[0], 0u);
 }
 
 TEST_F(TPushPopTest, a5_style_dir_both_updown_waits_for_matching_direction)
