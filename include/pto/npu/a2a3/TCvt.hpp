@@ -512,17 +512,10 @@ PTO_INTERNAL void GenCastCallFp16ToInt8_NonSatTorch(__ubuf__ typename TileDataD:
     //   3. Be even when factor > 1, so that hwFp16Stride/2 gives an integer int8 dest stride.
     // We pick the largest valid divisor (prefer 4, then 2).
     // Examples: S=8 → hw=4,f=2;  S=6 → hw=2,f=3;  S=10 → hw=2,f=5;  S=12 → hw=4,f=3.
-<<<<<<< HEAD
     const uint16_t hwFp16Stride = (srcRepeatStride <= 4)     ? srcRepeatStride :
                                   (srcRepeatStride % 4 == 0) ? (uint16_t)4 :
                                   (srcRepeatStride % 2 == 0) ? (uint16_t)2 :
                                                                (uint16_t)1;
-=======
-    const uint16_t hwFp16Stride =
-        (srcRepeatStride <= 4) ?
-            srcRepeatStride :
-            (srcRepeatStride % 4 == 0) ? (uint16_t)4 : (srcRepeatStride % 2 == 0) ? (uint16_t)2 : (uint16_t)1;
->>>>>>> dc185bfe (GenCastCallFp16ToInt8_NonSatTorch improve hardware repeat stride calculation and mask handling)
     const uint16_t factor = srcRepeatStride / hwFp16Stride;
     const uint16_t totalHwRepeats = static_cast<uint16_t>(repeatNum) * factor;
     const uint16_t hwInt32Stride = hwFp16Stride * 2; // int32 is 2x wider than fp16 in blocks

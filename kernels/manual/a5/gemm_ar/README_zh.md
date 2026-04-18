@@ -59,7 +59,6 @@ $$
 
 本示例以 2 卡 Ascend950PR 平台作为性能验证平台。Ascend950PR（DAV_3510 / arch35）采用分离模式架构：Cube（AIC）与 Vector（AIV）物理分立，可配合双流做计算通信重叠。
 
-<<<<<<< HEAD
 > **核数以 CANN** `platform_config` **为准（推荐），以**`950PR_958b为例`：
 >
 > - `cube_core_cnt=32`（Cube / AIC 侧并行度）
@@ -404,8 +403,3 @@ cmake -DCONFIG_G_M=8192 -DCONFIG_G_K=8192 -DCONFIG_G_N=2048 ..
 | 日期         | 变更                                               |
 | ---------- | ------------------------------------------------ |            |
 | 2026-04-15 | gemm_ar 增加a5版本的适配 |
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 7e768fad (allgather_gemm 和gemm_ar 增加a5版本的适配)

@@ -24,10 +24,6 @@ PTO_INTERNAL void TASSIGN_IMPL(T &obj, AddrType addr)
 {
     if constexpr (is_tile_data_v<T>) {
         static_assert(std::is_integral_v<AddrType>, "Tile can only be assigned with address of int type.");
-<<<<<<< HEAD
-=======
-
->>>>>>> 479bef71 (Update TAssign kernel for CPU-SIM)
         obj.assignData(NPUMemoryModel::Instance().ResolveAssignedAddress<T>(static_cast<std::uintptr_t>(addr)));
     } else {
         static_assert(is_global_data_v<T>, "Only Tile and GlobalTensor data types are supported.");
